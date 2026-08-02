@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		24C6218430041974004B7C11 /* HelloSwift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HelloSwift.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		24C6218430041974004B7C11 /* BusinessSimulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BusinessSimulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		24C6218630041974004B7C11 /* HelloSwift */ = {
+		24C6218630041974004B7C11 /* BusinessSimulator */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = HelloSwift;
+			path = BusinessSimulator;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		24C6217B30041974004B7C11 = {
 			isa = PBXGroup;
 			children = (
-				24C6218630041974004B7C11 /* HelloSwift */,
+				24C6218630041974004B7C11 /* BusinessSimulator */,
 				24C6218530041974004B7C11 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		24C6218530041974004B7C11 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				24C6218430041974004B7C11 /* HelloSwift.app */,
+				24C6218430041974004B7C11 /* BusinessSimulator.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		24C6218330041974004B7C11 /* HelloSwift */ = {
+		24C6218330041974004B7C11 /* BusinessSimulator */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 24C6218F30041976004B7C11 /* Build configuration list for PBXNativeTarget "HelloSwift" */;
+			buildConfigurationList = 24C6218F30041976004B7C11 /* Build configuration list for PBXNativeTarget "BusinessSimulator" */;
 			buildPhases = (
 				24C6218030041974004B7C11 /* Sources */,
 				24C6218130041974004B7C11 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				24C6218630041974004B7C11 /* HelloSwift */,
+				24C6218630041974004B7C11 /* BusinessSimulator */,
 			);
-			name = HelloSwift;
+			name = BusinessSimulator;
 			packageProductDependencies = (
 			);
 			productName = HelloSwift;
-			productReference = 24C6218430041974004B7C11 /* HelloSwift.app */;
+			productReference = 24C6218430041974004B7C11 /* BusinessSimulator.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 24C6217F30041974004B7C11 /* Build configuration list for PBXProject "HelloSwift" */;
+			buildConfigurationList = 24C6217F30041974004B7C11 /* Build configuration list for PBXProject "BusinessSimulator" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				24C6218330041974004B7C11 /* HelloSwift */,
+				24C6218330041974004B7C11 /* BusinessSimulator */,
 			);
 		};
 /* End PBXProject section */
@@ -326,7 +326,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		24C6217F30041974004B7C11 /* Build configuration list for PBXProject "HelloSwift" */ = {
+		24C6217F30041974004B7C11 /* Build configuration list for PBXProject "BusinessSimulator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				24C6218D30041976004B7C11 /* Debug */,
@@ -335,7 +335,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		24C6218F30041976004B7C11 /* Build configuration list for PBXNativeTarget "HelloSwift" */ = {
+		24C6218F30041976004B7C11 /* Build configuration list for PBXNativeTarget "BusinessSimulator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				24C6219030041976004B7C11 /* Debug */,
