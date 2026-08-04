@@ -157,17 +157,7 @@ struct ProductCatalog {
                 instructions: pieInstructions,
                 baseIdealPrice: 16.00,
                 idealUnitsSold: 38,
-                priceSensitivity: 6.0,
-                createDimensions: { product, inventoryStates in
-                    BusinessDimensions(
-                        production: [
-                            InventoryControl(
-                                productInventories: product.productInventories,
-                                inventoryStates: inventoryStates
-                            )
-                        ]
-                    )
-                }
+                priceSensitivity: 6.0
             ),
             Product(
                 id: .lemonade,
@@ -184,17 +174,7 @@ struct ProductCatalog {
                 instructions: lemonadeInstructions,
                 baseIdealPrice: 2.50,
                 idealUnitsSold: 240,
-                priceSensitivity: 6.0,
-                createDimensions: { product, inventoryStates in
-                    BusinessDimensions(
-                        production: [
-                            InventoryControl(
-                                productInventories: product.productInventories,
-                                inventoryStates: inventoryStates
-                            )
-                        ]
-                    )
-                }
+                priceSensitivity: 6.0
             ),
             Product(
                 id: .hotDogs,
@@ -211,17 +191,7 @@ struct ProductCatalog {
                 instructions: hotDogInstructions,
                 baseIdealPrice: 4.00,
                 idealUnitsSold: 150,
-                priceSensitivity: 6.0,
-                createDimensions: { product, inventoryStates in
-                    BusinessDimensions(
-                        production: [
-                            InventoryControl(
-                                productInventories: product.productInventories,
-                                inventoryStates: inventoryStates
-                            )
-                        ]
-                    )
-                }
+                priceSensitivity: 6.0
             )
         ]
     }

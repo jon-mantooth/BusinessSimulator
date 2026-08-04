@@ -67,4 +67,21 @@ struct BusinessDimensions {
         self.marketing = marketing
         self.finance = finance
     }
+
+    /// Creates the common simulation structure used by every product.
+    /// Product-specific behavior should be supplied through product
+    /// configuration so the available gameplay systems remain parallel.
+    static func create(
+        product: Product,
+        inventoryStates: [InventoryState]
+    ) -> BusinessDimensions {
+        BusinessDimensions(
+            production: [
+                InventoryControl(
+                    productInventories: product.productInventories,
+                    inventoryStates: inventoryStates
+                )
+            ]
+        )
+    }
 }

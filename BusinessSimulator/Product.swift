@@ -18,9 +18,6 @@ struct Product: Identifiable {
     let baseIdealPrice: Double
     let idealUnitsSold: Int
     let priceSensitivity: Double
-    
-    let createDimensions:
-        (Product, [InventoryState]) -> BusinessDimensions
 }
 
 enum ProductID: String {
