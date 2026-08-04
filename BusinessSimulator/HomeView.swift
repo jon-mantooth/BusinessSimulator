@@ -23,11 +23,3 @@ struct HomeView: View {
         .padding()
     }
 }
-
-#Preview {
-    HomeView(
-        onBeginJourney: {
-            print("Begin Journey pressed")
-        }
-    )
-}

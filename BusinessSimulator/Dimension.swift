@@ -49,6 +49,10 @@ extension Dimension {
     }
 }
 
+/// Each department will have multiple dimensions that will affect
+/// the game simulation financials through demand, production capacity, costs etc
+/// This struct defines the dimensions for each department so we know which dimensions
+/// to iterate through.
 struct BusinessDimensions {
 
     let production: [any Dimension]
@@ -66,5 +70,19 @@ struct BusinessDimensions {
         self.distribution = distribution
         self.marketing = marketing
         self.finance = finance
+    }
+
+    static func create(
+        product: Product,
+        inventoryStates: [InventoryState]
+    ) -> BusinessDimensions {
+        BusinessDimensions(
+            production: [
+                InventoryControl(
+                    productInventories: product.productInventories,
+                    inventoryStates: inventoryStates
+                )
+            ]
+        )
     }
 }

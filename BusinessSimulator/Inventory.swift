@@ -65,8 +65,6 @@ struct Inventory: Identifiable, Equatable {
 final class InventoryState: Identifiable {
     let inventory: Inventory
 
-    /// Key = inventory age (days)
-    /// Value = quantity at that age
     var inventoryByAge: InventoryByAge
 
     init(
@@ -78,9 +76,12 @@ final class InventoryState: Identifiable {
     }
 }
 
+///Purchase Date is very important for inventory as it
+///degrades and expires over time. For this reason we will
+///store inventory as an object with a dictionary of the amount owned
+///by purchase date.
 struct InventoryByAge {
 
-    // Stored Data
     var currentDay: Int
     var inventoryByPurchaseDay: [Int: Double] = [:]
 
@@ -112,8 +113,8 @@ struct InventoryByAge {
     /// Total cost of the inventory consumed.
     mutating func consumeInventory(
         productsSold: Double,
-        recipeUnits: Double,
-        purchaseUnits: Double,
+        recipeUnit: Double,
+        purchaseUnit: Double,
         purchaseUnitPrice: Double
     ) -> Double {
 
@@ -122,7 +123,7 @@ struct InventoryByAge {
         //----------------------------------------------------------
 
         let purchaseUnitsNeeded =
-            (productsSold * recipeUnits) / purchaseUnits
+            (productsSold * recipeUnit) / purchaseUnit
 
         var purchaseUnitsRemaining = purchaseUnitsNeeded
         var totalCost = 0.0
