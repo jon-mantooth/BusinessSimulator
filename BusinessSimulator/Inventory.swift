@@ -112,8 +112,8 @@ struct InventoryByAge {
     /// Total cost of the inventory consumed.
     mutating func consumeInventory(
         productsSold: Double,
-        recipeUnits: Double,
-        purchaseUnits: Double,
+        recipeUnit: Double,
+        purchaseUnit: Double,
         purchaseUnitPrice: Double
     ) -> Double {
 
@@ -122,7 +122,7 @@ struct InventoryByAge {
         //----------------------------------------------------------
 
         let purchaseUnitsNeeded =
-            (productsSold * recipeUnits) / purchaseUnits
+            (productsSold * recipeUnit) / purchaseUnit
 
         var purchaseUnitsRemaining = purchaseUnitsNeeded
         var totalCost = 0.0

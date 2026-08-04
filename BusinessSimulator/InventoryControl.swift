@@ -140,8 +140,8 @@ final class InventoryControl: Dimension {
         for inventory in inventories {
             totalCosts += inventory.inventoryState.inventoryByAge.consumeInventory(
                 productsSold: Double(sales),
-                recipeUnits: inventory.recipeUnitAmount,
-                purchaseUnits: inventory.purchaseUnitAmount,
+                recipeUnit: inventory.recipeUnitAmount,
+                purchaseUnit: inventory.purchaseUnitAmount,
                 purchaseUnitPrice: inventory.purchaseUnitPrice
             )
         }
