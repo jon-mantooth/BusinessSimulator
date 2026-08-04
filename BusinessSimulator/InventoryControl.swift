@@ -5,8 +5,15 @@
 //  Created by jon mantooth on 7/29/26.
 //
 
+/// InventoryControl is a dimension. It affects sales based on 
+/// freshness, capacity constraints and costs. This class represents
+/// the way in which invnetory acts as a dimension not the physical inventory itself.
 final class InventoryControl: Dimension {
 
+    
+    ///The InventoryControl class needs attributes of the inventory itself
+    ///as well as the relationship between the inventory and product (ProductInventory).
+    ///This struct aggregates the data from both objects into its own object.
     struct InventoryItem {
 
         let inventoryState: InventoryState
@@ -44,14 +51,7 @@ final class InventoryControl: Dimension {
         )
     }
 
-    /// Combines ProductInventory and InventoryState objects into a single
-    /// InventoryItem for each ingredient.
-    ///
-    /// ProductInventory contains the static information about an ingredient
-    /// (recipe amount, inventory definition, etc.).
-    ///
-    /// InventoryState contains the current game state for that ingredient
-    /// (current inventory, purchase history, etc.).
+    /// Build the InventoryItem object
     private static func aggregateInventoryFields(
         productInventories: [ProductInventory],
         inventoryStates: [InventoryState]
@@ -76,12 +76,18 @@ final class InventoryControl: Dimension {
         }
     }
 
-    //check if we can refactor
+    ///Based on demand and variance we calculate total sales. However it is possible
+    ///that the sales driven by demand are greater than the amoint we can produce
+    ///This function determines the amount we can possibly produce and compares to unsure
+    ///we can meet the demand
     func applySalesLimits(
         predictedSales: Int,
         summary: DaySummary
     ) -> Int {
 
+        //maps the potential sales for each ingredient amount to the ingredient
+        //for every ingredient in the product. Allows us to determine which ingredient/s
+        //are the limiting factor and what that limit is
         var inventoryLimits: [
             (inventory: InventoryItem, unitsPossible: Int)
         ] = []
@@ -95,12 +101,6 @@ final class InventoryControl: Dimension {
                 inventory.inventoryState.inventoryByAge.totalInventory
                 * inventory.purchaseUnitAmount
 
-            // Determine how many products this inventory can support.
-            //
-            // Example:
-            // 1 purchase unit = 100 lemons
-            // 1 pitcher requires 5 lemons
-            // 100 / 5 = 20 pitchers possible
             let unitsPossible = Int(
                 totalRecipeUnits /
                 inventory.recipeUnitAmount
@@ -138,6 +138,9 @@ final class InventoryControl: Dimension {
     func calculateCosts(sales: Int, summary: DaySummary) -> Double {
         var totalCosts: Double = 0
         for inventory in inventories {
+
+            //We run this to calculate costs. But since in order to do that we need 
+            //to know how much inventory is consumed we will also consume the inventory here
             totalCosts += inventory.inventoryState.inventoryByAge.consumeInventory(
                 productsSold: Double(sales),
                 recipeUnit: inventory.recipeUnitAmount,
@@ -152,6 +155,7 @@ final class InventoryControl: Dimension {
         return totalCosts
     }
     
+    ///To prep for the next day all expired inventory must be removed
     func prepForNextDay(
         currentDay: Int,
         summary: DaySummary

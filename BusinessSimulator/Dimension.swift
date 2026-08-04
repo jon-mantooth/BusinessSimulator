@@ -49,6 +49,10 @@ extension Dimension {
     }
 }
 
+/// Each department will have multiple dimensions that will affect
+/// the game simulation financials through demand, production capacity, costs etc
+/// This struct defines the dimensions for each department so we know which dimensions
+/// to iterate through.
 struct BusinessDimensions {
 
     let production: [any Dimension]
@@ -68,9 +72,6 @@ struct BusinessDimensions {
         self.finance = finance
     }
 
-    /// Creates the common simulation structure used by every product.
-    /// Product-specific behavior should be supplied through product
-    /// configuration so the available gameplay systems remain parallel.
     static func create(
         product: Product,
         inventoryStates: [InventoryState]

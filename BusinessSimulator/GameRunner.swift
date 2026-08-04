@@ -18,7 +18,9 @@ struct GameRunner {
         gameState: GameState
     ) {
         self.gameState = gameState
-        self.departments = [gameState.production!]
+        self.departments = [
+            gameState.production!
+        ]
         self.summary = DaySummary(
             day: self.gameState.calendar.day,
             startingBalance: self.gameState.finance.actualBalance
@@ -46,7 +48,6 @@ struct GameRunner {
         summary.sales = actualSales
         summary.revenue = actualRevenue
         
-        //find all costs
         var totalCosts: Double = 0
         for department in departments{
             totalCosts += department.calculateCosts(
@@ -79,6 +80,8 @@ struct GameRunner {
         
     }
     
+    ///uses a standard distribution to turn a baseline revenue
+    ///into an actual predictedRevenue given expected value and std dev
     private func calculatePredictedRevenue(
         baselineRevenue: Double
     ) -> Double {

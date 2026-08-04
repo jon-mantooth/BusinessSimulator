@@ -15,7 +15,11 @@ struct PrepView: View {
     let updateDisplayedBalance: (Double) -> Void
     let canAffordPurchase: (Double) -> Bool
     
+    //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
+
+    //a real time running total of costs so the player can see how their
+    //inventory decisions will affect their total balance before making a final decision 
     private var projectedCost: Double {
         product.productInventories.reduce(0) { total, productInventory in
             let inventory = productInventory.inventory

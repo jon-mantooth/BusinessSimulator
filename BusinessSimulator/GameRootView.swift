@@ -47,6 +47,8 @@ struct GameRootView: View {
         purchaseAmounts: [InventoryType: Int],
         price: String
     ) {
+        // Adds the current days inventory purchased to our inventoryByPurchaseDay object
+        // in inventoryByAge
         for item in gameState.inventoryStates{
 
             let inventoryType = item.inventory.type
@@ -58,10 +60,16 @@ struct GameRootView: View {
         }
 
         currentScreen = .summary
+
+        //update actual balance to reflect inventory purchased
         gameState.finance.actualBalance = gameState.finance.displayedBalance
+        
+        //updates price to type double bc everything on for is string
         if let product = gameState.productState{
             product.price = Double(price) ?? 0.0
         }
+
+        //simulate the day
         let gameRunner = GameRunner(gameState: gameState)
         currentSummary = gameRunner.simulateDay()
         gameRunner.prepForNextDay()
@@ -120,8 +128,4 @@ struct GameRootView: View {
         }
     }
     
-}
-
-#Preview {
-    GameRootView()
 }
