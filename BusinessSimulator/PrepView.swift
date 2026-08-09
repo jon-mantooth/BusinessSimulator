@@ -11,7 +11,7 @@ struct PrepView: View {
     
     let product: Product
     let currentAmounts: [InventoryType: Double]
-    let handleStartDay: ([InventoryType: Int], String) -> Void
+    let handleStartDay: ([InventoryType: Int], String, Double) -> Void
     let updateDisplayedBalance: (Double) -> Void
     let canAffordPurchase: (Double) -> Bool
     
@@ -66,7 +66,11 @@ struct PrepView: View {
                 }
                 
                 Button("Start Day") {
-                    handleStartDay(purchaseAmounts, price)
+                    handleStartDay(
+                        purchaseAmounts,
+                        price,
+                        projectedCost
+                    )
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)

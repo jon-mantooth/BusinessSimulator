@@ -150,7 +150,9 @@ final class InventoryControl: Dimension {
         }
         
         if totalCosts > 0 {
-            summary.costs.append(Cost(name: "Ingredients", amount: totalCosts))
+            summary.economicCosts.append(
+                Cost(name: "Ingredients", amount: totalCosts)
+            )
         }
         return totalCosts
     }
@@ -182,7 +184,7 @@ final class InventoryControl: Dimension {
             }
         }
         if totalCost > 0 {
-            summary.costs.append(
+            summary.economicCosts.append(
                 Cost(name: "Expired Inventory", amount: totalCost)
             )
         }

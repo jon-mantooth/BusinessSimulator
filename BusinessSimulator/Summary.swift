@@ -26,20 +26,19 @@ final class DaySummary {
 
     var sales: Int = 0
     var revenue: Double = 0
-    var costs: [Cost] = []
+    var economicCosts: [Cost] = []
+    var cashFlowCosts: [Cost] = []
 
     private(set) var sections: [SummarySection] = []
 
-    var totalCosts: Double {
-        costs.reduce(0) { $0 + $1.amount }
-    }
-
-    var profit: Double {
-        revenue - totalCosts
+    var netCashFlow: Double {
+        revenue - cashFlowCosts.reduce(0) {
+            $0 + $1.amount
+        }
     }
 
     var balance: Double {
-        startingBalance + profit
+        startingBalance + netCashFlow
     }
 
     init(
