@@ -86,7 +86,11 @@ struct GameRootView: View {
     var body: some View {
         let currentAmounts = Dictionary(
             uniqueKeysWithValues: gameState.inventoryStates.map {
-                ($0.inventory.type, $0.inventoryByAge.totalInventory)
+                (
+                    $0.inventory.type,
+                    $0.inventoryByAge.totalInventory *
+                        Double($0.inventory.purchaseAmount)
+                )
             }
         )
         VStack(spacing: 0) {
