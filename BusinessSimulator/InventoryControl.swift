@@ -81,7 +81,7 @@ final class InventoryControl: Dimension {
     ///This function determines the amount we can possibly produce and compares to unsure
     ///we can meet the demand
     func applySalesLimits(
-        predictedSales: Int,
+        sales: Int,
         summary: DaySummary
     ) -> Int {
 
@@ -115,12 +115,12 @@ final class InventoryControl: Dimension {
         }
 
         // Sales cannot exceed predicted demand or any inventory limit.
-        let salesLimit = inventoryLimits.reduce(predictedSales) {
+        let salesLimit = inventoryLimits.reduce(sales) {
             min($0, $1.unitsPossible)
         }
 
         // Record every inventory item that caused the final limit.
-        if salesLimit < predictedSales {
+        if salesLimit < sales {
 
             for inventoryLimit in inventoryLimits
             where inventoryLimit.unitsPossible == salesLimit {
@@ -168,9 +168,9 @@ final class InventoryControl: Dimension {
                 lifeSpan: lifeSpan
             )
             if expiredUnits > 0{
+                
                 let purchaseUnit =
                     inventory.inventoryState.inventory.purchaseUnit ?? ""
-
                 let amountExpired =
                     purchaseUnit.isEmpty
                         ? "\(expiredUnits)"
