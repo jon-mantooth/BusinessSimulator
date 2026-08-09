@@ -173,12 +173,12 @@ final class InventoryControl: Dimension {
                     inventory.inventoryState.inventory.purchaseUnit ?? ""
                 let amountExpired =
                     purchaseUnit.isEmpty
-                        ? "\(expiredUnits)"
-                        : "\(expiredUnits) \(purchaseUnit)"
+                        ? "\(expiredUnits * inventory.purchaseUnitAmount)"
+                        : "\(expiredUnits * inventory.purchaseUnitAmount) \(purchaseUnit)"
 
                 let note = "\(inventory.name) \(amountExpired)"
                 summary.addNote(sectionName: "Expired Inventory", note: note)
-                totalCost += expiredUnits*inventory.purchaseUnitPrice
+                totalCost += expiredUnits * inventory.purchaseUnitPrice
             }
         }
         if totalCost > 0 {
