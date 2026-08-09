@@ -32,19 +32,13 @@ final class ProductState: Identifiable {
     let product: Product
 
     var price: Double
-    var productionQuantity: Int
-    var unitsSold: Int
 
     init(
         product: Product,
-        price: Double = 0,
-        productionQuantity: Int = 0,
-        unitsSold: Int = 0,
+        price: Double = 0
     ) {
         self.product = product
         self.price = price
-        self.productionQuantity = productionQuantity
-        self.unitsSold = unitsSold
     }
     
     ///calculates what revenue should be based on the difference between
