@@ -52,7 +52,7 @@ final class ProductState: Identifiable {
         let priceDifferenceRatio =
             (price - idealPrice) / idealPrice
 
-        return maxRevenue * exp(-k * pow(priceDifferenceRatio, 2))
+        return maxRevenue * exp(k * pow(priceDifferenceRatio, 2))
     }
     
     func calculatePredictedSales(
