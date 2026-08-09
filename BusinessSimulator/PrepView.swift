@@ -46,6 +46,7 @@ struct PrepView: View {
                             cost: productInventory.inventory.pricePerUnit,
                             currentAmount: currentAmounts[productInventory.inventory.type, default: 0],
                             purchaseAmount: binding(productInventory.inventory.type),
+                            purchaseUnitAmount: productInventory.inventory.purchaseAmount,
                             lifespan: productInventory.inventory.lifespan
                         )
                     }
@@ -109,22 +110,25 @@ struct PrepView: View {
     private var tableHeader: some View {
         HStack(spacing: 6) {
             Text(product.productLine.inputLabel)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: 110, alignment: .leading)
 
             Text("Unit")
-                .frame(width: 42)
+                .frame(width: 70)
 
             Text("Cost")
-                .frame(width: 52)
+                .frame(width: 70)
             
             Text("Shelf Life")
-                .frame(width: 52)
+                .frame(width: 80)
 
-            Text("Have")
-                .frame(width: 42)
+            Text("Current")
+                .frame(width: 70)
 
             Text("Buy")
-                .frame(width: 92)
+                .frame(width: 110)
+
+            Text("Total")
+                .frame(width: 70)
         }
         .font(.headline)
         .minimumScaleFactor(0.75)
@@ -147,22 +151,23 @@ struct PrepView: View {
         cost: Double,
         currentAmount: Double,
         purchaseAmount: Binding<Int>,
+        purchaseUnitAmount: Int,
         lifespan: Days
     ) -> some View {
         HStack(spacing: 6) {
             Text(name)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: 110, alignment: .leading)
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
                 .layoutPriority(1)
 
             Text(unit)
-                .frame(width: 50)
+                .frame(width: 70)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
             Text(cost, format: .currency(code: "USD"))
-                .frame(width: 52)
+                .frame(width: 70)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
@@ -171,13 +176,13 @@ struct PrepView: View {
                 ? "Stable"
                 : "\(lifespan) \(lifespan == 1 ? "Day" : "Days")"
             )
-            .frame(width: 58)
+            .frame(width: 80)
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .foregroundStyle(.secondary)
 
             Text(currentAmount, format: .number.precision(.fractionLength(2)))
-                .frame(width: 42)
+                .frame(width: 70)
 
             HStack(spacing: 4) {
                 Button {
@@ -211,7 +216,14 @@ struct PrepView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .frame(width: 92)
+            .frame(width: 110)
+
+            Text(
+                currentAmount +
+                    Double(purchaseAmount.wrappedValue * purchaseUnitAmount),
+                format: .number.precision(.fractionLength(2))
+            )
+            .frame(width: 70)
         }
     }
 }
