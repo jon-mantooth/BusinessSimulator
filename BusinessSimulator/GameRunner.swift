@@ -36,25 +36,28 @@ struct GameRunner {
         var predictedSales = gameState.productState!.calculatePredictedSales(
             predictedRevenue: predictedRevenue)
         
+        var predictedBatches =
+            predictedSales / gameState.productState!.product.unitsPerBatch
+        
         for department in departments{
-            predictedSales = department.applySalesLimits(
-                sales: predictedSales,
+            predictedBatches = department.applySalesLimits(
+                sales: predictedBatches,
                 summary: summary
             )
         }
-        
-        let actualSales = predictedSales
-        let actualRevenue = Double(actualSales) * gameState.productState!.price
-        summary.sales = actualSales
-        summary.revenue = actualRevenue
         
         var totalCosts: Double = 0
         for department in departments{
             totalCosts += department.calculateCosts(
-                sales: actualSales,
+                sales: predictedBatches,
                 summary: summary
             )
         }
+        
+        let actualSales = predictedBatches * gameState.productState!.product.unitsPerBatch
+        let actualRevenue = Double(actualSales) * gameState.productState!.price
+        summary.sales = actualSales
+        summary.revenue = actualRevenue
         
         return summary
     }

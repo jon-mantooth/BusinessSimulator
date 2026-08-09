@@ -157,7 +157,8 @@ struct ProductCatalog {
                 instructions: pieInstructions,
                 baseIdealPrice: 16.00,
                 idealUnitsSold: 38,
-                priceSensitivity: 6.0
+                priceSensitivity: 6.0,
+                unitsPerBatch: 1
             ),
             Product(
                 id: .lemonade,
@@ -174,7 +175,8 @@ struct ProductCatalog {
                 instructions: lemonadeInstructions,
                 baseIdealPrice: 2.50,
                 idealUnitsSold: 240,
-                priceSensitivity: 6.0
+                priceSensitivity: 6.0,
+                unitsPerBatch: 8
             ),
             Product(
                 id: .hotDogs,
@@ -191,7 +193,8 @@ struct ProductCatalog {
                 instructions: hotDogInstructions,
                 baseIdealPrice: 4.00,
                 idealUnitsSold: 150,
-                priceSensitivity: 6.0
+                priceSensitivity: 6.0,
+                unitsPerBatch: 1
             )
         ]
     }

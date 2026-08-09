@@ -18,6 +18,7 @@ struct Product: Identifiable {
     let baseIdealPrice: Double
     let idealUnitsSold: Int
     let priceSensitivity: Double
+    let unitsPerBatch: Int
 }
 
 enum ProductID: String {
