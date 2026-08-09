@@ -50,13 +50,13 @@ struct SummaryView: View {
                     // MARK: - Costs
 
                     summarySection(title: "Costs") {
-                        if summary.costs.isEmpty {
+                        if summary.cashFlowCosts.isEmpty {
                             Text("No costs recorded")
                                 .foregroundStyle(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         } else {
                             ForEach(
-                                Array(summary.costs.enumerated()),
+                                Array(summary.cashFlowCosts.enumerated()),
                                 id: \.offset
                             ) { index, cost in
 
@@ -65,7 +65,7 @@ struct SummaryView: View {
                                     value: currency(cost.amount)
                                 )
 
-                                if index < summary.costs.count - 1 {
+                                if index < summary.cashFlowCosts.count - 1 {
                                     Divider()
                                 }
                             }
@@ -74,18 +74,22 @@ struct SummaryView: View {
 
                             summaryRow(
                                 label: "Total Costs",
-                                value: currency(summary.totalCosts),
+                                value: currency(
+                                    summary.cashFlowCosts.reduce(0) {
+                                        $0 + $1.amount
+                                    }
+                                ),
                                 isEmphasized: true
                             )
                         }
                     }
 
-                    // MARK: - Profit
+                    // MARK: - Cash Flow
 
                     summarySection(title: "Results") {
                         summaryRow(
-                            label: "Profit",
-                            value: currency(summary.profit),
+                            label: "Net Cash Flow",
+                            value: currency(summary.netCashFlow),
                             isEmphasized: true
                         )
                     }
