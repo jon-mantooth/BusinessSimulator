@@ -157,11 +157,35 @@ struct ProductCatalog {
                 description: "A comforting dessert enjoyed most during cooler months.",
                 productLine: food,
                 productInventories: [
-                    ProductInventory(inventory: butter, amount: 0.5, unit: "lbs"),
-                    ProductInventory(inventory: flour, amount: 2.5, unit: "c"),
-                    ProductInventory(inventory: apple, amount: 5),
-                    ProductInventory(inventory: cinnamon, amount: 1, unit: "tbsp"),
-                    ProductInventory(inventory: sugar, amount: 0.75, unit: "c"),
+                    ProductInventory(
+                        inventory: butter,
+                        amount: 0.5,
+                        unit: "lbs",
+                        freshnessCoefficient: 0.3
+                    ),
+                    ProductInventory(
+                        inventory: flour,
+                        amount: 2.5,
+                        unit: "c",
+                        freshnessCoefficient: 0
+                    ),
+                    ProductInventory(
+                        inventory: apple,
+                        amount: 5,
+                        freshnessCoefficient: 0.7
+                    ),
+                    ProductInventory(
+                        inventory: cinnamon,
+                        amount: 1,
+                        unit: "tbsp",
+                        freshnessCoefficient: 0
+                    ),
+                    ProductInventory(
+                        inventory: sugar,
+                        amount: 0.75,
+                        unit: "c",
+                        freshnessCoefficient: 0
+                    ),
                 ],
                 instructions: pieInstructions,
                 baseIdealPrice: 16.00,
@@ -176,11 +200,35 @@ struct ProductCatalog {
                 description: "A refreshing blended fruit drink perfect for a hot summer day.",
                 productLine: food,
                 productInventories: [
-                    ProductInventory(inventory: strawberry, amount: 4, unit: "oz"),
-                    ProductInventory(inventory: milk, amount: 8, unit: "fl oz"),
-                    ProductInventory(inventory: ice, amount: 1, unit: "c"),
-                    ProductInventory(inventory: sugar, amount: 0.25, unit: "c"),
-                    ProductInventory(inventory: cup, amount: 1),
+                    ProductInventory(
+                        inventory: strawberry,
+                        amount: 4,
+                        unit: "oz",
+                        freshnessCoefficient: 0.6
+                    ),
+                    ProductInventory(
+                        inventory: milk,
+                        amount: 8,
+                        unit: "fl oz",
+                        freshnessCoefficient: 0.4
+                    ),
+                    ProductInventory(
+                        inventory: ice,
+                        amount: 1,
+                        unit: "c",
+                        freshnessCoefficient: 0
+                    ),
+                    ProductInventory(
+                        inventory: sugar,
+                        amount: 0.25,
+                        unit: "c",
+                        freshnessCoefficient: 0
+                    ),
+                    ProductInventory(
+                        inventory: cup,
+                        amount: 1,
+                        freshnessCoefficient: 0
+                    ),
                 ],
                 instructions: smoothieInstructions,
                 baseIdealPrice: 4.25,
@@ -195,10 +243,27 @@ struct ProductCatalog {
                 description: "A classic favorite at outdoor gatherings and sporting events.",
                 productLine: food,
                 productInventories: [
-                    ProductInventory(inventory: hotDog, amount: 1),
-                    ProductInventory(inventory: bun, amount: 1),
-                    ProductInventory(inventory: onion, amount: 0.1),
-                    ProductInventory(inventory: condiments, amount: 1, unit: "tbsp"),
+                    ProductInventory(
+                        inventory: hotDog,
+                        amount: 1,
+                        freshnessCoefficient: 0.5
+                    ),
+                    ProductInventory(
+                        inventory: bun,
+                        amount: 1,
+                        freshnessCoefficient: 0.35
+                    ),
+                    ProductInventory(
+                        inventory: onion,
+                        amount: 0.1,
+                        freshnessCoefficient: 0.15
+                    ),
+                    ProductInventory(
+                        inventory: condiments,
+                        amount: 1,
+                        unit: "tbsp",
+                        freshnessCoefficient: 0
+                    ),
                 ],
                 instructions: hotDogInstructions,
                 baseIdealPrice: 4.00,

@@ -37,6 +37,14 @@ struct InventoryExpirationCase: Sendable {
     let expectedExpiredUnits: Double
 }
 
+struct InventoryFreshnessCase: Sendable {
+    let name: String
+    let currentDay: Int
+    let lifespan: Days
+    let inventoryByPurchaseDay: [Int: Double]
+    let expectedFreshness: Double
+}
+
 private let inventoryQueryCases = [
     InventoryQueryCase(
         name: "empty inventory",
@@ -232,6 +240,58 @@ private let inventoryExpirationCases = [
     )
 ]
 
+private let inventoryFreshnessCases = [
+    InventoryFreshnessCase(
+        name: "new inventory is fully fresh",
+        currentDay: 3,
+        lifespan: 4,
+        inventoryByPurchaseDay: [3: 1],
+        expectedFreshness: 1
+    ),
+    InventoryFreshnessCase(
+        name: "freshness declines quadratically",
+        currentDay: 3,
+        lifespan: 4,
+        inventoryByPurchaseDay: [1: 1],
+        expectedFreshness: 0.75
+    ),
+    InventoryFreshnessCase(
+        name: "oldest available inventory determines freshness",
+        currentDay: 3,
+        lifespan: 4,
+        inventoryByPurchaseDay: [1: 1, 3: 2],
+        expectedFreshness: 0.75
+    ),
+    InventoryFreshnessCase(
+        name: "empty inventory is fully fresh",
+        currentDay: 3,
+        lifespan: 4,
+        inventoryByPurchaseDay: [:],
+        expectedFreshness: 1
+    ),
+    InventoryFreshnessCase(
+        name: "long-lasting inventory does not lose freshness",
+        currentDay: 100,
+        lifespan: 180,
+        inventoryByPurchaseDay: [1: 1],
+        expectedFreshness: 1
+    ),
+    InventoryFreshnessCase(
+        name: "inventory beyond its lifespan has no freshness",
+        currentDay: 6,
+        lifespan: 4,
+        inventoryByPurchaseDay: [1: 1],
+        expectedFreshness: 0
+    ),
+    InventoryFreshnessCase(
+        name: "invalid lifespan has no freshness",
+        currentDay: 3,
+        lifespan: 0,
+        inventoryByPurchaseDay: [3: 1],
+        expectedFreshness: 0
+    )
+]
+
 struct InventoryByAgeTests {
 
     @Test(arguments: inventoryQueryCases)
@@ -264,6 +324,23 @@ struct InventoryByAgeTests {
             inventory.newInventory ==
                 testCase.expectedNewInventory
         )
+    }
+
+    @Test(arguments: inventoryFreshnessCases)
+    func calculateFreshnessReturnsExpectedFreshness(
+        testCase: InventoryFreshnessCase
+    ) {
+        let inventory = InventoryByAge(
+            currentDay: testCase.currentDay,
+            inventoryByPurchaseDay:
+                testCase.inventoryByPurchaseDay
+        )
+
+        let freshness = inventory.calculateFreshness(
+            lifespan: testCase.lifespan
+        )
+
+        #expect(freshness == testCase.expectedFreshness)
     }
 
     @Test(arguments: inventoryConsumptionCases)

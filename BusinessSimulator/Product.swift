@@ -44,8 +44,10 @@ final class ProductState: Identifiable {
     ///calculates what revenue should be based on the difference between
     ///players price and ideal price given demand using the Gaussian function
     /// R(p)=R_max*e^{-k((p-p_i)/p_i)^2}
-    func calculateBaselineRevenue() -> Double {
-        let idealPrice = product.baseIdealPrice
+    func calculateBaselineRevenue(
+        demand: Double
+    ) -> Double {
+        let idealPrice = product.baseIdealPrice * demand
         let maxRevenue = idealPrice * Double(product.idealUnitsSold)
         let k = -(product.priceSensitivity)
         
