@@ -90,11 +90,14 @@ final class InventoryControl: Dimension {
         var demand = 1.0
 
         for inventory in inventories {
+            //calculates freshness of ingredient based on age of next used item
+            //and lifespan of ingredient
             let freshness = inventory.inventoryState.inventoryByAge
                 .calculateFreshness(
                     lifespan: inventory.lifespan
                 )
 
+            //converts freshness into impact on demand
             let freshnessDemand = pow(
                 minimumFreshnessDemandMultiplier,
                 inventory.freshnessCoefficient * (1.0 - freshness)
