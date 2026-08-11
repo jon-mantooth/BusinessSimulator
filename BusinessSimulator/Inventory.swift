@@ -9,7 +9,8 @@ import Foundation
 
 enum InventoryType {
     case sugar
-    case lemon
+    case strawberry
+    case milk
     case cup
     case ice
     case hotDog
