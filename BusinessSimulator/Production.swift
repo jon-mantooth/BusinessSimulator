@@ -15,6 +15,16 @@ final class Production: Department {
         self.dimensions = dimensions
     }
 
+    func calculateDemand() -> Double {
+        var demand = 1.0
+
+        for dimension in dimensions {
+            demand *= dimension.calculateDemand()
+        }
+
+        return demand
+    }
+
     func applySalesLimits(
         sales: Int,
         summary: DaySummary

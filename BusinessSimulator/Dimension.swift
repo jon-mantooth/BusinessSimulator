@@ -7,6 +7,8 @@
 
 protocol Dimension {
 
+    func calculateDemand() -> Double
+
     func applySalesLimits(
         sales: Int,
         summary: DaySummary
@@ -24,6 +26,10 @@ protocol Dimension {
 }
 
 extension Dimension {
+
+    func calculateDemand() -> Double {
+        return 1.0
+    }
 
     func applySalesLimits(
         sales: Int,

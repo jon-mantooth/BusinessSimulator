@@ -5,6 +5,8 @@
 //  Created by jon mantooth on 7/29/26.
 //
 
+import Foundation
+
 /// InventoryControl is a dimension. It affects sales based on 
 /// freshness, capacity constraints and costs. This class represents
 /// the way in which invnetory acts as a dimension not the physical inventory itself.
@@ -23,11 +25,13 @@ final class InventoryControl: Dimension {
         let purchaseUnitAmount: Double
         let recipeUnitAmount: Double
         let lifespan: Int
+        let freshnessCoefficient: Double
 
         init(
             inventory: Inventory,
             inventoryState: InventoryState,
-            recipeUnitAmount: Double
+            recipeUnitAmount: Double,
+            freshnessCoefficient: Double
         ) {
             self.inventoryState = inventoryState
 
@@ -36,6 +40,7 @@ final class InventoryControl: Dimension {
             self.purchaseUnitAmount = Double(inventory.purchaseAmount)
             self.recipeUnitAmount = recipeUnitAmount
             self.lifespan = inventory.lifespan
+            self.freshnessCoefficient = freshnessCoefficient
         }
     }
     
@@ -71,9 +76,34 @@ final class InventoryControl: Dimension {
             return InventoryItem(
                 inventory: productInventory.inventory,
                 inventoryState: inventoryState,
-                recipeUnitAmount: productInventory.recipeAmount
+                recipeUnitAmount: productInventory.recipeAmount,
+                freshnessCoefficient:
+                    productInventory.freshnessCoefficient
             )
         }
+    }
+
+    func calculateDemand() -> Double {
+        //This is the percent change we want freshness to have on ideal price.
+        //i.e. the minimum ideal price based on freshness is .93 of the original ideal price
+        let minimumFreshnessDemandMultiplier = 0.93 
+        var demand = 1.0
+
+        for inventory in inventories {
+            let freshness = inventory.inventoryState.inventoryByAge
+                .calculateFreshness(
+                    lifespan: inventory.lifespan
+                )
+
+            let freshnessDemand = pow(
+                minimumFreshnessDemandMultiplier,
+                inventory.freshnessCoefficient * (1.0 - freshness)
+            )
+
+            demand *= freshnessDemand
+        }
+
+        return demand
     }
 
     ///Based on demand and variance we calculate total sales. However it is possible

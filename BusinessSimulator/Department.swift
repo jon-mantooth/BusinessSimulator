@@ -7,6 +7,8 @@
 
 protocol Department {
 
+    func calculateDemand() -> Double
+
     func applySalesLimits(
         sales: Int,
         summary: DaySummary
@@ -24,6 +26,10 @@ protocol Department {
 }
 
 extension Department {
+
+    func calculateDemand() -> Double {
+        return 1.0
+    }
 
     func applySalesLimits(
         sales: Int,

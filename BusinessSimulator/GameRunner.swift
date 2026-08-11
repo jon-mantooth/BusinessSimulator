@@ -28,12 +28,20 @@ struct GameRunner {
     }
     
     func simulateDay() -> DaySummary {
+        var demand = 1.0
+
+        for department in departments {
+            demand *= department.calculateDemand()
+        }
+
         let baselineRevenue =
-        gameState.productState!.calculateBaselineRevenue()
+        gameState.productState!.calculateBaselineRevenue(
+            demand: demand
+        )
         
         let predictedRevenue = calculatePredictedRevenue(baselineRevenue: baselineRevenue)
         
-        var predictedSales = gameState.productState!.calculatePredictedSales(
+        let predictedSales = gameState.productState!.calculatePredictedSales(
             predictedRevenue: predictedRevenue)
 
         var predictedBatches =

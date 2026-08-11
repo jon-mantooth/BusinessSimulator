@@ -95,6 +95,31 @@ struct InventoryByAge {
         inventoryByPurchaseDay[currentDay] ?? 0
     }
 
+    func calculateFreshness(
+        lifespan: Days
+    ) -> Double {
+        guard lifespan > 0 else {
+            return 0.0
+        }
+
+        guard lifespan < 180 else {
+            return 1.0
+        }
+
+        guard let nextPurchaseDay = inventoryByPurchaseDay
+            .filter({ $0.value > 0 })
+            .keys
+            .min() else {
+            return 1.0
+        }
+
+        let age = currentDay - nextPurchaseDay
+        let relativeAge = Double(age) / Double(lifespan)
+        let freshness = 1.0 - pow(relativeAge, 2)
+
+        return max(freshness, 0.0)
+    }
+
     // Mutations
 
     /// Consumes inventory using FIFO.
