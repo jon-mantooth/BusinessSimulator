@@ -23,7 +23,7 @@ struct Product: Identifiable {
 
 enum ProductID: String {
     case pies
-    case lemonade
+    case smoothies
     case hotDogs
 }
 

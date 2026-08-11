@@ -13,11 +13,10 @@ struct ProductCatalog {
     let food = FoodProductLine()
     
     init(){
-        let lemonadeInstructions = [
-            "Combine sugar and water until dissolved.",
-            "Add lemon juice and mix thoroughly.",
-            "Chill the lemonade with ice.",
-            "Divide evenly into 8 cups and serve."
+        let smoothieInstructions = [
+            "Combine strawberries, milk, ice, and sugar in a blender.",
+            "Blend until smooth.",
+            "Pour into cup and serve."
         ]
 
         let hotDogInstructions = [
@@ -47,11 +46,21 @@ struct ProductCatalog {
             lifespan: 730
         )
         
-        let lemon = Inventory(
-            type: .lemon,
-            name: "Lemons",
-            pricePerUnit: 75.00,
-            amount: 100,
+        let strawberry = Inventory(
+            type: .strawberry,
+            name: "Strawberries",
+            pricePerUnit: 12.00,
+            amount: 64,
+            unit: "oz",
+            lifespan: 5
+        )
+
+        let milk = Inventory(
+            type: .milk,
+            name: "Milk",
+            pricePerUnit: 4.00,
+            amount: 128,
+            unit: "fl oz",
             lifespan: 7
         )
         
@@ -161,22 +170,23 @@ struct ProductCatalog {
                 unitsPerBatch: 1
             ),
             Product(
-                id: .lemonade,
-                name: "Lemonade",
-                icon: "🍋",
-                description: "A refreshing drink that thrives in warm weather.",
+                id: .smoothies,
+                name: "Smoothies",
+                icon: "🥤",
+                description: "A refreshing blended fruit drink perfect for a hot summer day.",
                 productLine: food,
                 productInventories: [
-                    ProductInventory(inventory: lemon, amount: 5),
-                    ProductInventory(inventory: ice, amount: 8, unit: "c"),
-                    ProductInventory(inventory: sugar, amount: 1, unit: "c"),
-                    ProductInventory(inventory: cup, amount: 8),
+                    ProductInventory(inventory: strawberry, amount: 4, unit: "oz"),
+                    ProductInventory(inventory: milk, amount: 8, unit: "fl oz"),
+                    ProductInventory(inventory: ice, amount: 1, unit: "c"),
+                    ProductInventory(inventory: sugar, amount: 0.25, unit: "c"),
+                    ProductInventory(inventory: cup, amount: 1),
                 ],
-                instructions: lemonadeInstructions,
-                baseIdealPrice: 2.50,
-                idealUnitsSold: 240,
+                instructions: smoothieInstructions,
+                baseIdealPrice: 4.25,
+                idealUnitsSold: 141,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 8
+                unitsPerBatch: 1
             ),
             Product(
                 id: .hotDogs,
