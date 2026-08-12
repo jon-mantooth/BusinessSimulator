@@ -40,6 +40,7 @@ struct ProductCatalog {
         let sugar = Inventory(
             type: .sugar,
             name: "Sugar",
+            smallIcon: .system("cube.fill"),
             pricePerUnit: 4.50,
             amount: 9,
             unit: "c.",
@@ -49,6 +50,7 @@ struct ProductCatalog {
         let strawberry = Inventory(
             type: .strawberry,
             name: "Strawberries",
+            smallIcon: .emoji("🍓"),
             pricePerUnit: 12.00,
             amount: 64,
             unit: "oz",
@@ -58,6 +60,7 @@ struct ProductCatalog {
         let milk = Inventory(
             type: .milk,
             name: "Milk",
+            smallIcon: .emoji("🥛"),
             pricePerUnit: 4.00,
             amount: 128,
             unit: "fl oz",
@@ -67,6 +70,7 @@ struct ProductCatalog {
         let cup = Inventory(
             type: .cup,
             name: "Cups",
+            smallIcon: .emoji("🥤"),
             pricePerUnit: 5.00,
             amount: 50,
             lifespan: 3650
@@ -75,6 +79,7 @@ struct ProductCatalog {
         let ice = Inventory(
             type: .ice,
             name: "Ice",
+            smallIcon: .emoji("🧊"),
             pricePerUnit: 8.00,
             amount: 40,
             unit: "c",
@@ -84,6 +89,7 @@ struct ProductCatalog {
         let hotDog = Inventory(
             type: .hotDog,
             name: "Hot Dog",
+            smallIcon: .emoji("🌭"),
             pricePerUnit: 37.50,
             amount: 50,
             lifespan: 10
@@ -92,6 +98,7 @@ struct ProductCatalog {
         let bun = Inventory(
             type: .bun,
             name: "Bun",
+            smallIcon: .emoji("🥖"),
             pricePerUnit: 17.50,
             amount: 48,
             lifespan: 5
@@ -100,6 +107,7 @@ struct ProductCatalog {
         let condiments = Inventory(
             type: .condiments,
             name: "Condiments",
+            smallIcon: .emoji("🧴"),
             pricePerUnit: 6.25,
             amount: 48,
             unit: "tbsp",
@@ -109,6 +117,7 @@ struct ProductCatalog {
         let onion = Inventory(
             type: .onion,
             name: "Onion",
+            smallIcon: .emoji("🧅"),
             pricePerUnit: 8.00,
             amount: 10,
             lifespan: 14
@@ -117,6 +126,7 @@ struct ProductCatalog {
         let flour = Inventory(
             type: .flour,
             name: "Flour",
+            smallIcon: .emoji("🌾"),
             pricePerUnit: 7.50,
             amount: 25,
             unit: "c",
@@ -126,6 +136,7 @@ struct ProductCatalog {
         let butter = Inventory(
             type: .butter,
             name: "Butter",
+            smallIcon: .emoji("🧈"),
             pricePerUnit: 8.00,
             amount: 4,
             unit: "lb",
@@ -135,6 +146,7 @@ struct ProductCatalog {
         let apple = Inventory(
             type: .apple,
             name: "Apples",
+            smallIcon: .emoji("🍎"),
             pricePerUnit: 60.00,
             amount: 100,
             lifespan: 7
@@ -143,6 +155,7 @@ struct ProductCatalog {
         let cinnamon = Inventory(
             type: .cinnamon,
             name: "Cinnamon",
+            smallIcon: .emoji("🪵"),
             pricePerUnit: 3.00,
             amount: 30,
             unit: "tbsp",
@@ -153,7 +166,7 @@ struct ProductCatalog {
             Product(
                 id: .pies,
                 name: "Pies",
-                icon: "🥧",
+                smallIcon: .emoji("🥧"),
                 description: "A comforting dessert enjoyed most during cooler months.",
                 productLine: food,
                 productInventories: [
@@ -196,7 +209,7 @@ struct ProductCatalog {
             Product(
                 id: .smoothies,
                 name: "Smoothies",
-                icon: "🥤",
+                smallIcon: .emoji("🥤"),
                 description: "A refreshing blended fruit drink perfect for a hot summer day.",
                 productLine: food,
                 productInventories: [
@@ -239,7 +252,7 @@ struct ProductCatalog {
             Product(
                 id: .hotDogs,
                 name: "Hot Dogs",
-                icon: "🌭",
+                smallIcon: .emoji("🌭"),
                 description: "A classic favorite at outdoor gatherings and sporting events.",
                 productLine: food,
                 productInventories: [
