@@ -9,23 +9,23 @@ struct BuyView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    let inventoryState: InventoryState
     let productInventory: ProductInventory
-    let availableBudget: Double
+    let currentAmount: Double
+    let canAffordPurchase: (Int) -> Bool
     let confirmPurchase: (Int) -> Void
 
     @State private var purchaseQuantity: Int
 
     init(
-        inventoryState: InventoryState,
         productInventory: ProductInventory,
-        availableBudget: Double,
+        currentAmount: Double,
         initialPurchaseQuantity: Int = 0,
+        canAffordPurchase: @escaping (Int) -> Bool,
         confirmPurchase: @escaping (Int) -> Void
     ) {
-        self.inventoryState = inventoryState
         self.productInventory = productInventory
-        self.availableBudget = availableBudget
+        self.currentAmount = currentAmount
+        self.canAffordPurchase = canAffordPurchase
         self.confirmPurchase = confirmPurchase
         self._purchaseQuantity = State(
             initialValue: initialPurchaseQuantity
@@ -34,11 +34,6 @@ struct BuyView: View {
 
     private var inventory: Inventory {
         productInventory.inventory
-    }
-
-    private var currentAmount: Double {
-        inventoryState.inventoryByAge.totalInventory
-            * Double(inventory.purchaseAmount)
     }
 
     private var purchaseAmount: Double {
@@ -62,23 +57,27 @@ struct BuyView: View {
     }
 
     private var canIncreasePurchase: Bool {
-        purchaseCost + inventory.pricePerUnit <= availableBudget
+        canAffordPurchase(purchaseQuantity + 1)
     }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 8) {
+            VStack(spacing: 5) {
                 titleHeader
-                ingredientImage
+                GameIconView(
+                    icon: inventory.smallIcon,
+                    size: 42
+                )
+                .accessibilityLabel(inventory.name)
                 currentInventorySection
                 purchaseInformationSection
                 purchaseQuantitySection
                 newTotalSection
                 confirmButton
             }
-            .frame(maxWidth: 700)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .frame(maxWidth: 360)
+            .padding(.horizontal, 24)
+            .padding(.top, 6)
         }
         .background(
             LinearGradient(
@@ -100,35 +99,36 @@ struct BuyView: View {
             Spacer()
 
             Text(inventory.name)
-                .font(.title)
+                .font(.title2)
                 .fontWeight(.bold)
                 .multilineTextAlignment(.center)
 
             Spacer()
 
             Color.clear
-                .frame(width: 48, height: 48)
+                .frame(width: 40, height: 40)
         }
-    }
-
-    private var ingredientImage: some View {
-        GameIconView(
-            icon: inventory.smallIcon,
-            size: 64
-        )
-            .accessibilityLabel(inventory.name)
     }
 
     private var currentInventorySection: some View {
         informationSection(title: "CURRENT INVENTORY") {
-            VStack(alignment: .leading, spacing: 2) {
-                amountText(currentAmount)
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    amountText(currentAmount)
 
-                Text("Makes \(currentProductsPossible) products")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    Text("Makes \(currentProductsPossible) products")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                GameIconView(
+                    icon: inventory.smallIcon,
+                    size: 40
+                )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
     }
 
@@ -172,7 +172,7 @@ struct BuyView: View {
 
     private var purchaseQuantitySection: some View {
         informationSection(title: "HOW MANY UNITS?") {
-            VStack(spacing: 8) {
+            VStack(spacing: 5) {
                 HStack(spacing: 0) {
                     quantityButton(
                         systemName: "minus",
@@ -182,7 +182,7 @@ struct BuyView: View {
                     }
 
                     Text("\(purchaseQuantity)")
-                        .font(.title2)
+                        .font(.title3)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)
 
@@ -201,7 +201,7 @@ struct BuyView: View {
                         .stroke(.orange.opacity(0.45), lineWidth: 1)
                 }
 
-                HStack(alignment: .top, spacing: 24) {
+                HStack(alignment: .top, spacing: 16) {
                     VStack(spacing: 2) {
                         Text("You're buying")
                             .font(.caption)
@@ -220,7 +220,7 @@ struct BuyView: View {
                             purchaseCost,
                             format: .currency(code: "USD")
                         )
-                        .font(.title2)
+                        .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(.green)
                     }
@@ -235,13 +235,13 @@ struct BuyView: View {
         informationSection(title: "NEW TOTAL") {
             VStack(alignment: .leading, spacing: 2) {
                 Text("New Total After Purchase")
-                    .font(.subheadline)
+                    .font(.caption)
                     .fontWeight(.semibold)
 
                 amountText(newTotal)
 
                 Text("Makes \(newProductsPossible) products")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -253,18 +253,11 @@ struct BuyView: View {
             confirmPurchase(purchaseQuantity)
             dismiss()
         } label: {
-            HStack(spacing: 10) {
-                GameIconView(
-                    icon: inventory.smallIcon,
-                    size: 30
-                )
-
-                Text("Confirm Purchase")
-            }
-                .font(.title2)
+            Label("Add to Cart", systemImage: "cart.badge.plus")
+                .font(.title3)
                 .fontWeight(.bold)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
         }
         .buttonStyle(.borderedProminent)
         .tint(.green)
@@ -289,17 +282,17 @@ struct BuyView: View {
     }
 
     private func amountText(_ amount: Double) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
             Text(
                 amount,
                 format: .number.precision(.fractionLength(0...2))
             )
-            .font(.system(size: 30, weight: .bold))
+            .font(.system(size: 24, weight: .bold))
             .foregroundStyle(.green)
 
             if let unit = inventory.purchaseUnit {
                 Text(unit)
-                    .font(.headline)
+                    .font(.subheadline)
                     .fontWeight(.bold)
             }
         }
@@ -309,19 +302,19 @@ struct BuyView: View {
         title: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.subheadline)
+                .font(.caption)
                 .fontWeight(.bold)
 
             content()
         }
-        .padding(10)
+        .padding(7)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.55))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay {
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 14)
                 .stroke(.orange.opacity(0.2), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
@@ -332,7 +325,7 @@ struct BuyView: View {
         value: String,
         systemName: String
     ) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 4) {
             Text(title)
                 .font(.caption)
                 .fontWeight(.semibold)
@@ -340,13 +333,13 @@ struct BuyView: View {
             HStack {
                 Image(systemName: systemName)
                 Text(value)
-                    .font(.subheadline)
+                    .font(.caption)
                     .fontWeight(.bold)
                     .minimumScaleFactor(0.75)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 62)
-        .padding(6)
+        .frame(maxWidth: .infinity, minHeight: 46)
+        .padding(4)
         .background(.white.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay {
@@ -364,7 +357,7 @@ struct BuyView: View {
             Image(systemName: systemName)
                 .font(.title2)
                 .fontWeight(.bold)
-                .frame(width: 64, height: 44)
+                .frame(width: 58, height: 36)
         }
         .buttonStyle(.plain)
         .foregroundStyle(disabled ? .gray : .green)
@@ -376,9 +369,9 @@ struct BuyView: View {
             dismiss()
         } label: {
             Image(systemName: systemName)
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.bold)
-                .frame(width: 48, height: 48)
+                .frame(width: 40, height: 40)
                 .background(.white.opacity(0.65))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
         }
