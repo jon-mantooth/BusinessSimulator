@@ -48,8 +48,10 @@ struct ProductSelectionView: View {
             selectedProduct = product
         } label: {
             HStack(spacing: 16) {
-                Text(product.icon)
-                    .font(.largeTitle)
+                GameIconView(
+                    icon: product.smallIcon,
+                    size: 44
+                )
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(product.name)
