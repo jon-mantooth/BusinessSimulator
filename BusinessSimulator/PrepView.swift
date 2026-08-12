@@ -91,7 +91,7 @@ struct PrepView: View {
             .clipShape(RoundedRectangle(cornerRadius: 28))
             .overlay {
                 RoundedRectangle(cornerRadius: 28)
-                    .stroke(.orange.opacity(0.55), lineWidth: 2)
+                    .stroke(product.accent.opacity(0.65), lineWidth: 2)
             }
             .shadow(color: .black.opacity(0.18), radius: 10, y: 5)
             .padding(.horizontal, 20)
@@ -116,6 +116,7 @@ struct PrepView: View {
                     inventoryType,
                     default: 0
                 ],
+                accent: product.accent,
                 initialPurchaseQuantity: initialQuantity,
                 canAffordPurchase: { proposedQuantity in
                     let proposedIngredientCost =
@@ -148,6 +149,7 @@ struct PrepView: View {
                 Text(product.name)
                     .font(.title)
                     .fontWeight(.bold)
+                    .foregroundStyle(product.accent)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, 50)
@@ -230,7 +232,7 @@ struct PrepView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(.orange.opacity(0.4), lineWidth: 1)
+                    .stroke(product.accent.opacity(0.45), lineWidth: 1)
             }
             .onChange(of: priceDigits) {
                 let digitsOnly = priceDigits.filter { $0.isNumber }
@@ -300,7 +302,7 @@ struct PrepView: View {
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay {
                 RoundedRectangle(cornerRadius: 18)
-                    .stroke(.white.opacity(0.8), lineWidth: 1)
+                    .stroke(product.accent.opacity(0.22), lineWidth: 1)
             }
             .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
         }

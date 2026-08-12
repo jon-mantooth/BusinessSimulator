@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct ProductCatalog {
     
@@ -167,6 +168,11 @@ struct ProductCatalog {
                 id: .pies,
                 name: "Pies",
                 smallIcon: .emoji("🥧"),
+                accent: Color(
+                    red: 0.72,
+                    green: 0.32,
+                    blue: 0.12
+                ),
                 description: "A comforting dessert enjoyed most during cooler months.",
                 productLine: food,
                 productInventories: [
@@ -210,6 +216,11 @@ struct ProductCatalog {
                 id: .smoothies,
                 name: "Smoothies",
                 smallIcon: .emoji("🥤"),
+                accent: Color(
+                    red: 0.86,
+                    green: 0.24,
+                    blue: 0.34
+                ),
                 description: "A refreshing blended fruit drink perfect for a hot summer day.",
                 productLine: food,
                 productInventories: [
@@ -253,6 +264,11 @@ struct ProductCatalog {
                 id: .hotDogs,
                 name: "Hot Dogs",
                 smallIcon: .emoji("🌭"),
+                accent: Color(
+                    red: 0.34,
+                    green: 0.62,
+                    blue: 0.25
+                ),
                 description: "A classic favorite at outdoor gatherings and sporting events.",
                 productLine: food,
                 productInventories: [

@@ -11,6 +11,7 @@ struct BuyView: View {
 
     let productInventory: ProductInventory
     let currentAmount: Double
+    let accent: Color
     let canAffordPurchase: (Int) -> Bool
     let confirmPurchase: (Int) -> Void
 
@@ -19,12 +20,14 @@ struct BuyView: View {
     init(
         productInventory: ProductInventory,
         currentAmount: Double,
+        accent: Color,
         initialPurchaseQuantity: Int = 0,
         canAffordPurchase: @escaping (Int) -> Bool,
         confirmPurchase: @escaping (Int) -> Void
     ) {
         self.productInventory = productInventory
         self.currentAmount = currentAmount
+        self.accent = accent
         self.canAffordPurchase = canAffordPurchase
         self.confirmPurchase = confirmPurchase
         self._purchaseQuantity = State(
@@ -101,6 +104,7 @@ struct BuyView: View {
             Text(inventory.name)
                 .font(.title2)
                 .fontWeight(.bold)
+                .foregroundStyle(accent)
                 .multilineTextAlignment(.center)
 
             Spacer()
@@ -198,7 +202,7 @@ struct BuyView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay {
                     RoundedRectangle(cornerRadius: 14)
-                        .stroke(.orange.opacity(0.45), lineWidth: 1)
+                        .stroke(accent.opacity(0.45), lineWidth: 1)
                 }
 
                 HStack(alignment: .top, spacing: 16) {
@@ -315,7 +319,7 @@ struct BuyView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay {
             RoundedRectangle(cornerRadius: 14)
-                .stroke(.orange.opacity(0.2), lineWidth: 1)
+                .stroke(accent.opacity(0.22), lineWidth: 1)
         }
         .shadow(color: .black.opacity(0.08), radius: 5, y: 3)
     }
@@ -344,7 +348,7 @@ struct BuyView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay {
             RoundedRectangle(cornerRadius: 14)
-                .stroke(.orange.opacity(0.35), lineWidth: 1)
+                .stroke(accent.opacity(0.4), lineWidth: 1)
         }
     }
 
