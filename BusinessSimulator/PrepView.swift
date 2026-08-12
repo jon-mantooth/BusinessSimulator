@@ -17,6 +17,7 @@ struct PrepView: View {
     
     //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
+    @State private var selectedProductInventory: ProductInventory?
 
     //a real time running total of costs so the player can see how their
     //inventory decisions will affect their total balance before making a final decision 
@@ -98,6 +99,41 @@ struct PrepView: View {
         }
         .onChange(of: purchaseAmounts) {
             updateDisplayedBalance(projectedCost)
+        }
+        .sheet(item: $selectedProductInventory) { productInventory in
+            let inventory = productInventory.inventory
+            let inventoryType = inventory.type
+            let initialQuantity = purchaseAmounts[
+                inventoryType,
+                default: 0
+            ]
+            let currentIngredientCost =
+                Double(initialQuantity) * inventory.pricePerUnit
+
+            BuyView(
+                productInventory: productInventory,
+                currentAmount: currentAmounts[
+                    inventoryType,
+                    default: 0
+                ],
+                initialPurchaseQuantity: initialQuantity,
+                canAffordPurchase: { proposedQuantity in
+                    let proposedIngredientCost =
+                        Double(proposedQuantity)
+                        * inventory.pricePerUnit
+                    let proposedTotalCost =
+                        projectedCost
+                        - currentIngredientCost
+                        + proposedIngredientCost
+
+                    return canAffordPurchase(proposedTotalCost)
+                }
+            ) { confirmedQuantity in
+                purchaseAmounts[inventoryType] = confirmedQuantity
+            }
+            .presentationDetents([.fraction(0.75)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
         }
     }
     
@@ -220,7 +256,7 @@ struct PrepView: View {
             + Double(purchaseAmount * inventory.purchaseAmount)
 
         return Button {
-            // BuyView presentation will be connected next.
+            selectedProductInventory = productInventory
         } label: {
             HStack(spacing: 8) {
                 HStack(spacing: 10) {
