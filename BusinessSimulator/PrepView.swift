@@ -17,6 +17,7 @@ struct PrepView: View {
     
     //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
+    @State private var selectedProductInventory: ProductInventory?
 
     //a real time running total of costs so the player can see how their
     //inventory decisions will affect their total balance before making a final decision 
@@ -29,68 +30,129 @@ struct PrepView: View {
         }
     }
     @State private var showingInstructions = false
-    @State private var price = ""
+    @State private var priceDigits = ""
+
+    private var price: Double {
+        Double(Int(priceDigits) ?? 0) / 100
+    }
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 10) {
                 header
-                
+
                 VStack(spacing: 10) {
-                    tableHeader
-                    
+                    ingredientColumnHeader
+
                     ForEach(product.productInventories) { productInventory in
                         inventoryRow(
-                            name: productInventory.inventory.name,
-                            unit: productInventory.inventory.purchaseAmountLabel,
-                            cost: productInventory.inventory.pricePerUnit,
+                            productInventory: productInventory,
                             currentAmount: currentAmounts[productInventory.inventory.type, default: 0],
-                            purchaseAmount: binding(productInventory.inventory.type),
-                            purchaseUnitAmount: productInventory.inventory.purchaseAmount,
-                            lifespan: productInventory.inventory.lifespan
+                            purchaseAmount: purchaseAmounts[
+                                productInventory.inventory.type,
+                                default: 0
+                            ]
                         )
                     }
                 }
-                
-                HStack {
-                    Text("Price")
-                        .fontWeight(.medium)
-                    
-                    Spacer()
-                    
-                    TextField("0.00", text: $price)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                        .textFieldStyle(.roundedBorder)
-                }
-                
-                Button("Start Day") {
+
+                priceSection
+
+                Button {
                     handleStartDay(
                         purchaseAmounts,
-                        price,
+                        String(price),
                         projectedCost
                     )
+                } label: {
+                    Label("Start Day", systemImage: "play.fill")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
                 }
                 .buttonStyle(.borderedProminent)
-                .padding(.top, 8)
-                .disabled(Double(price) == nil)
+                .tint(.green)
+                .controlSize(.large)
+                .disabled(price <= 0)
             }
             .frame(maxWidth: 700)
-            .padding()
+            .padding(12)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 1.0, green: 0.97, blue: 0.86),
+                        Color(red: 1.0, green: 0.91, blue: 0.68)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28)
+                    .stroke(product.accent.opacity(0.65), lineWidth: 2)
+            }
+            .shadow(color: .black.opacity(0.18), radius: 10, y: 5)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 4)
         }
         .onChange(of: purchaseAmounts) {
             updateDisplayedBalance(projectedCost)
+        }
+        .sheet(item: $selectedProductInventory) { productInventory in
+            let inventory = productInventory.inventory
+            let inventoryType = inventory.type
+            let initialQuantity = purchaseAmounts[
+                inventoryType,
+                default: 0
+            ]
+            let currentIngredientCost =
+                Double(initialQuantity) * inventory.pricePerUnit
+
+            BuyView(
+                productInventory: productInventory,
+                currentAmount: currentAmounts[
+                    inventoryType,
+                    default: 0
+                ],
+                accent: product.accent,
+                initialPurchaseQuantity: initialQuantity,
+                canAffordPurchase: { proposedQuantity in
+                    let proposedIngredientCost =
+                        Double(proposedQuantity)
+                        * inventory.pricePerUnit
+                    let proposedTotalCost =
+                        projectedCost
+                        - currentIngredientCost
+                        + proposedIngredientCost
+
+                    return canAffordPurchase(proposedTotalCost)
+                }
+            ) { confirmedQuantity in
+                purchaseAmounts[inventoryType] = confirmedQuantity
+            }
+            .presentationDetents([.fraction(0.75)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
         }
     }
     
     private var header: some View {
         ZStack {
-            Text(product.name)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 50)
+            HStack(spacing: 10) {
+                GameIconView(
+                    icon: product.smallIcon,
+                    size: 36
+                )
+
+                Text(product.name)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundStyle(product.accent)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 50)
 
             HStack {
                 Spacer()
@@ -108,126 +170,166 @@ struct PrepView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.bottom, 8)
+        .padding(.bottom, 2)
     }
-    
-    private var tableHeader: some View {
-        HStack(spacing: 6) {
+
+    private var ingredientColumnHeader: some View {
+        HStack(spacing: 8) {
             Text(product.productLine.inputLabel)
-                .frame(width: 110, alignment: .leading)
-
-            Text("Unit")
-                .frame(width: 70)
-
-            Text("Cost")
-                .frame(width: 70)
-            
-            Text("Shelf Life")
-                .frame(width: 80)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
 
             Text("Current")
                 .frame(width: 70)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
 
-            Text("Buy")
-                .frame(width: 110)
+            Text("Total (After Buy)")
+                .frame(width: 88)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
 
-            Text("Total")
-                .frame(width: 70)
+            Color.clear
+                .frame(width: 20)
         }
-        .font(.headline)
-        .minimumScaleFactor(0.75)
+        .font(.caption)
+        .fontWeight(.bold)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12)
     }
-    
-    private func binding(_ inventoryType: InventoryType) -> Binding<Int> {
-        Binding(
-            get: {
-                purchaseAmounts[inventoryType, default: 0]
-            },
-            set: { newValue in
-                purchaseAmounts[inventoryType] = newValue
+
+    private var priceSection: some View {
+        HStack {
+            Text("Price per product")
+                .font(.headline)
+
+            Spacer()
+
+            ZStack(alignment: .trailing) {
+                Text(
+                    price,
+                    format: .currency(code: "USD")
+                )
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 10)
+
+                TextField("", text: $priceDigits)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.clear)
+                    .tint(.clear)
+                    .accessibilityLabel("Price per product")
+                    .accessibilityValue(
+                        price.formatted(.currency(code: "USD"))
+                    )
+                    .padding(.horizontal, 10)
             }
-        )
+            .frame(width: 120, height: 42)
+            .background(.white.opacity(0.65))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(product.accent.opacity(0.45), lineWidth: 1)
+            }
+            .onChange(of: priceDigits) {
+                let digitsOnly = priceDigits.filter { $0.isNumber }
+
+                if priceDigits != digitsOnly {
+                    priceDigits = digitsOnly
+                }
+            }
+        }
+        .padding(10)
+        .background(.white.opacity(0.55))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
     }
-    
+
     private func inventoryRow(
-        name: String,
-        unit: String,
-        cost: Double,
+        productInventory: ProductInventory,
         currentAmount: Double,
-        purchaseAmount: Binding<Int>,
-        purchaseUnitAmount: Int,
-        lifespan: Days
+        purchaseAmount: Int
     ) -> some View {
-        HStack(spacing: 6) {
-            Text(name)
-                .frame(width: 110, alignment: .leading)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .layoutPriority(1)
+        let inventory = productInventory.inventory
+        let totalAmount = currentAmount
+            + Double(purchaseAmount * inventory.purchaseAmount)
 
-            Text(unit)
-                .frame(width: 70)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        return Button {
+            selectedProductInventory = productInventory
+        } label: {
+            HStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    GameIconView(
+                        icon: inventory.smallIcon,
+                        size: 32
+                    )
+                        .frame(width: 42, height: 42)
 
-            Text(cost, format: .currency(code: "USD"))
-                .frame(width: 70)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-
-            Text(
-                lifespan > 100
-                ? "Stable"
-                : "\(lifespan) \(lifespan == 1 ? "Day" : "Days")"
-            )
-            .frame(width: 80)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .foregroundStyle(.secondary)
-
-            Text(currentAmount, format: .number.precision(.fractionLength(2)))
-                .frame(width: 70)
-
-            HStack(spacing: 4) {
-                Button {
-                    if purchaseAmount.wrappedValue > 0 {
-                        purchaseAmount.wrappedValue -= 1
-                    }
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.system(size: 14))
-                        .frame(width: 28, height: 24)
-                        .background(Color.gray.opacity(0.15))
-                        .clipShape(Capsule())
+                    Text(inventory.name)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
-                
-                Text("\(purchaseAmount.wrappedValue)")
-                    .frame(minWidth: 20)
-                
-                Button {
-                    let newProjectedCost = projectedCost + cost
+                .frame(maxWidth: .infinity)
 
-                    if canAffordPurchase(newProjectedCost) {
-                        purchaseAmount.wrappedValue += 1
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14))
-                        .frame(width: 28, height: 24)
-                        .background(Color.gray.opacity(0.15))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                inventoryAmount(
+                    currentAmount,
+                    unit: inventory.purchaseUnit
+                )
+                .frame(width: 70)
+
+                inventoryAmount(
+                    totalAmount,
+                    unit: inventory.purchaseUnit,
+                    highlighted: true
+                )
+                .frame(width: 88)
+
+                Image(systemName: "chevron.right")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.green)
+                    .frame(width: 20)
             }
-            .frame(width: 110)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(.white.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(product.accent.opacity(0.22), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
+        }
+        .buttonStyle(.plain)
+    }
 
+    private func inventoryAmount(
+        _ amount: Double,
+        unit: String?,
+        highlighted: Bool = false
+    ) -> some View {
+        VStack(spacing: 1) {
             Text(
-                currentAmount +
-                    Double(purchaseAmount.wrappedValue * purchaseUnitAmount),
-                format: .number.precision(.fractionLength(2))
+                amount,
+                format: .number.precision(.fractionLength(0...2))
             )
-            .frame(width: 70)
+            .font(.title3)
+            .fontWeight(.bold)
+            .foregroundStyle(
+                highlighted ? Color.green : Color.primary
+            )
+
+            Text(unit ?? "units")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
         }
     }
+
 }
