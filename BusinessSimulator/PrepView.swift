@@ -29,7 +29,11 @@ struct PrepView: View {
         }
     }
     @State private var showingInstructions = false
-    @State private var price = ""
+    @State private var priceDigits = ""
+
+    private var price: Double {
+        Double(Int(priceDigits) ?? 0) / 100
+    }
     
     var body: some View {
         ScrollView {
