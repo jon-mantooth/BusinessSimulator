@@ -10,7 +10,7 @@ import Foundation
 struct Product: Identifiable {
     let id: ProductID
     let name: String
-    let icon: String
+    let smallIcon: GameIcon
     let description: String
     let productLine: any ProductLine
     let productInventories: [ProductInventory]
