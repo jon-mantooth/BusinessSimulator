@@ -57,6 +57,7 @@ struct DemandTests {
         let butter = Inventory(
             type: .butter,
             name: "Butter",
+            smallIcon: .emoji("🧈"),
             pricePerUnit: 8,
             amount: 4,
             lifespan: 4
@@ -65,6 +66,7 @@ struct DemandTests {
         let apple = Inventory(
             type: .apple,
             name: "Apples",
+            smallIcon: .emoji("🍎"),
             pricePerUnit: 60,
             amount: 100,
             lifespan: 4
