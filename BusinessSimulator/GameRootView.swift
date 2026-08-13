@@ -18,6 +18,7 @@ struct GameRootView: View {
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
     @State private var currentSummary: DaySummary?
+    @State private var previewedProduct: Product?
 
     let productCatalog = ProductCatalog()
     
@@ -27,6 +28,7 @@ struct GameRootView: View {
     
     private func onContinue(product: Product){
         gameState.initializeBusiness(product: product)
+        previewedProduct = nil
         currentScreen = .prep
     }
     
@@ -92,6 +94,70 @@ struct GameRootView: View {
         gameState.finance.displayedBalance = gameState.finance.actualBalance
     }
 
+    private var gameBackground: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Image("neighborhood_background")
+                    .resizable()
+                    .scaledToFill()
+
+                Image("default_house")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: geometry.size.width * 0.92)
+                    .position(
+                        x: geometry.size.width * 0.71,
+                        y: geometry.size.height * 0.535
+                    )
+
+                if let standImageName {
+                    Image(standImageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(
+                            width: geometry.size.width * 0.48,
+                            height: geometry.size.height * 0.40,
+                            alignment: .bottom
+                        )
+                        .position(
+                            x: geometry.size.width * 1.13,
+                            y: geometry.size.height * 0.64
+                        )
+                }
+
+                // Seasonal and holiday layers will be added here as transparent
+                // overlays when those parts of game state are introduced.
+            }
+            .frame(
+                width: geometry.size.width,
+                height: geometry.size.height
+            )
+            .clipped()
+        }
+        .ignoresSafeArea()
+    }
+
+    private var displayedProduct: Product? {
+        if currentScreen == .productSelection {
+            return previewedProduct
+        }
+
+        return gameState.productState?.product
+    }
+
+    private var standImageName: String? {
+        switch displayedProduct?.id {
+        case .pies:
+            return "stand_pies"
+        case .smoothies:
+            return "stand_smoothies"
+        case .hotDogs:
+            return "stand_hotdogs"
+        case nil:
+            return nil
+        }
+    }
+
     var body: some View {
         let currentAmounts = Dictionary(
             uniqueKeysWithValues: gameState.inventoryStates.map {
@@ -102,42 +168,49 @@ struct GameRootView: View {
                 )
             }
         )
-        VStack(spacing: 0) {
-            HeaderView(gameState: gameState)
-            
-            switch currentScreen {
-            case .home:
-                HomeView(
-                    onBeginJourney: onBeginJourney
-                )
-                
-            case .productSelection:
-                ProductSelectionView(
-                    products: productCatalog.products,
-                    onContinue: onContinue
-                )
-                
-            case .prep:
-                if let productState = gameState.productState {
-                    PrepView(product: productState.product,
-                             currentAmounts: currentAmounts,
-                             handleStartDay: handleStartDay,
-                             updateDisplayedBalance: updateDisplayedBalance,
-                             canAffordPurchase: canAffordPurchase
+        ZStack {
+            gameBackground
+
+            VStack(spacing: 0) {
+                HeaderView(gameState: gameState)
+
+                switch currentScreen {
+                case .home:
+                    HomeView(
+                        onBeginJourney: onBeginJourney
+                    )
+
+                case .productSelection:
+                    ProductSelectionView(
+                        products: productCatalog.products,
+                        onSelectionChanged: { product in
+                            previewedProduct = product
+                        },
+                        onContinue: onContinue
+                    )
+
+                case .prep:
+                    if let productState = gameState.productState {
+                        PrepView(product: productState.product,
+                                 currentAmounts: currentAmounts,
+                                 handleStartDay: handleStartDay,
+                                 updateDisplayedBalance: updateDisplayedBalance,
+                                 canAffordPurchase: canAffordPurchase
+                        )
+                    }
+
+                case .summary:
+                    SummaryView(
+                        summary: currentSummary!,
+                        onNextDay: onNextDay
                     )
                 }
-                
-            case .summary:
-                SummaryView(
-                    summary: currentSummary!,
-                    onNextDay: onNextDay
+
+                FooterView(
+                    onNavigate: onNavigate,
+                    resetDisplayedBalance: resetDisplayedBalance
                 )
             }
-            
-            FooterView(
-                onNavigate: onNavigate,
-                resetDisplayedBalance: resetDisplayedBalance
-            )
         }
     }
     
