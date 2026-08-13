@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ProductSelectionView: View {
     let products: [Product]
+    let onSelectionChanged: (Product) -> Void
     let onContinue: (Product) -> Void
 
     @State private var selectedProduct: Product?
@@ -46,6 +47,7 @@ struct ProductSelectionView: View {
     private func productCard(for product: Product) -> some View {
         Button {
             selectedProduct = product
+            onSelectionChanged(product)
         } label: {
             HStack(spacing: 16) {
                 GameIconView(

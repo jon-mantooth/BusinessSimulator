@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "stand_smoothies.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
