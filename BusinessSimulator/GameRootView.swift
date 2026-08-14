@@ -19,6 +19,7 @@ struct GameRootView: View {
     @State private var gameState = GameState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
+    @State private var showingCalendar = false
 
     let productCatalog = ProductCatalog()
     
@@ -173,7 +174,12 @@ struct GameRootView: View {
 
             VStack(spacing: 0) {
                 if currentScreen != .home && currentScreen != .productSelection {
-                    HeaderView(gameState: gameState)
+                    HeaderView(
+                        gameState: gameState,
+                        onCalendarTapped: {
+                            showingCalendar = true
+                        }
+                    )
                 }
 
                 switch currentScreen {
@@ -215,6 +221,12 @@ struct GameRootView: View {
                     )
                 }
             }
+        }
+        .sheet(isPresented: $showingCalendar) {
+            CalendarView(currentDate: gameState.calendar.currentDate)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(28)
         }
     }
     

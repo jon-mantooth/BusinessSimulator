@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HeaderView: View {
     let gameState: GameState
+    let onCalendarTapped: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let orange = Color(red: 0.88, green: 0.43, blue: 0.08)
@@ -18,15 +19,19 @@ struct HeaderView: View {
     var body: some View {
         HStack(spacing: 7) {
             headerButton(
-                title: "Sep 1",
+                title: gameState.calendar.currentDate.formatted(
+                    .dateTime.month(.abbreviated).day()
+                ),
                 systemImage: "calendar",
-                color: orange
+                color: orange,
+                action: onCalendarTapped
             )
 
             headerButton(
                 title: "72°",
                 systemImage: "sun.max.fill",
-                color: .yellow
+                color: .yellow,
+                action: {}
             )
 
             aiButton
@@ -91,11 +96,10 @@ struct HeaderView: View {
     private func headerButton(
         title: String,
         systemImage: String,
-        color: Color
+        color: Color,
+        action: @escaping () -> Void
     ) -> some View {
-        Button {
-            // Calendar and weather views will be connected with their features.
-        } label: {
+        Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: systemImage)
                     .font(.system(size: 21, weight: .semibold))
