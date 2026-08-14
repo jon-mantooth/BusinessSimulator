@@ -12,7 +12,7 @@ import Observation
 @Observable
 final class GameState {
     var finance: Finance
-    var calendar: Calendar
+    var calendar: GameCalendar
 
     var productState: ProductState?
     var inventoryStates: [InventoryState]
@@ -28,7 +28,7 @@ final class GameState {
             displayedBalance: balance
         )
 
-        self.calendar = Calendar(day: day)
+        self.calendar = GameCalendar(day: day)
         self.productState = nil
         self.inventoryStates = []
         self.production = nil
