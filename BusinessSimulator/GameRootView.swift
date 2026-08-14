@@ -172,7 +172,7 @@ struct GameRootView: View {
             gameBackground
 
             VStack(spacing: 0) {
-                if currentScreen != .home {
+                if currentScreen != .home && currentScreen != .productSelection {
                     HeaderView(gameState: gameState)
                 }
 
@@ -208,7 +208,7 @@ struct GameRootView: View {
                     )
                 }
 
-                if currentScreen != .home {
+                if currentScreen != .home && currentScreen != .productSelection {
                     FooterView(
                         onNavigate: onNavigate,
                         resetDisplayedBalance: resetDisplayedBalance
