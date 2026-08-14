@@ -17,6 +17,7 @@ final class GameState {
     var productState: ProductState?
     var inventoryStates: [InventoryState]
     var production: Production?
+    var departments: [any Department] = []
     var simulationSummary : SimulationSummary = SimulationSummary()
 
     init(
@@ -60,6 +61,7 @@ final class GameState {
 
         self.productState = productState
         self.production = production
+        self.departments.append(production)
         self.inventoryStates = inventoryStates
     }
 }
