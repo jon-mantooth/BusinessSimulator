@@ -6,8 +6,20 @@
 //
 
 import Foundation
+import Observation
 
-struct GameCalendar {
+enum GameWeekday: Int {
+    case sunday = 1
+    case monday
+    case tuesday
+    case wednesday
+    case thursday
+    case friday
+    case saturday
+}
+
+@Observable
+final class GameCalendar {
     static let defaultStartDate: Date = {
         let calendar = Foundation.Calendar(identifier: .gregorian)
         return calendar.date(
@@ -26,6 +38,30 @@ struct GameCalendar {
 
     var currentDate: Date {
         date(forBusinessDay: day)
+    }
+
+    var currentWeekday: GameWeekday {
+        let weekdayNumber = foundationCalendar.component(
+            .weekday,
+            from: currentDate
+        )
+
+        guard let weekday = GameWeekday(rawValue: weekdayNumber) else {
+            preconditionFailure("Unable to determine the current weekday.")
+        }
+
+        return weekday
+    }
+
+    var currentWeekStartDate: Date {
+        let daysSinceMonday =
+            (currentWeekday.rawValue - GameWeekday.monday.rawValue + 7) % 7
+
+        return foundationCalendar.date(
+            byAdding: .day,
+            value: -daysSinceMonday,
+            to: currentDate
+        )!
     }
 
     init(
