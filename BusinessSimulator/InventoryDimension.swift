@@ -1,5 +1,5 @@
 //
-//  InventoryControl.swift
+//  InventoryDimension.swift
 //  BusinessSimulator
 //
 //  Created by jon mantooth on 7/29/26.
@@ -7,13 +7,13 @@
 
 import Foundation
 
-/// InventoryControl is a dimension. It affects sales based on 
+/// InventoryDimension affects sales based on
 /// freshness, capacity constraints and costs. This class represents
 /// the way in which invnetory acts as a dimension not the physical inventory itself.
-final class InventoryControl: Dimension {
+final class InventoryDimension: Dimension {
 
     
-    ///The InventoryControl class needs attributes of the inventory itself
+    ///The InventoryDimension class needs attributes of the inventory itself
     ///as well as the relationship between the inventory and product (ProductInventory).
     ///This struct aggregates the data from both objects into its own object.
     struct InventoryItem {

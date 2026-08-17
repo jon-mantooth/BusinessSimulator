@@ -84,7 +84,7 @@ struct BusinessDimensions {
     ) -> BusinessDimensions {
         BusinessDimensions(
             production: [
-                InventoryControl(
+                InventoryDimension(
                     productInventories: product.productInventories,
                     inventoryStates: inventoryStates
                 )
