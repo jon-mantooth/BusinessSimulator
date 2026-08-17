@@ -80,6 +80,10 @@ struct GameRunner {
         
         //increment day
         gameState.calendar.day += 1
+
+        if gameState.calendar.currentWeekday == .monday {
+            prepForNextWeek()
+        }
         
         for department in departments {
             department.prepForNextDay(
@@ -89,6 +93,12 @@ struct GameRunner {
         }
         
         
+    }
+
+    private func prepForNextWeek() {
+        gameState.weather.generateWeeklyForecast(
+            starting: gameState.calendar.currentDate
+        )
     }
     
     ///uses a standard distribution to turn a baseline revenue
