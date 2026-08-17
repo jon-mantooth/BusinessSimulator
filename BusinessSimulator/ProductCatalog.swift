@@ -210,7 +210,8 @@ struct ProductCatalog {
                 baseIdealPrice: 16.00,
                 idealUnitsSold: 38,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1
+                unitsPerBatch: 1,
+                temperatureInterpolationFormula: .coldWeather
             ),
             Product(
                 id: .smoothies,
@@ -258,7 +259,8 @@ struct ProductCatalog {
                 baseIdealPrice: 4.25,
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1
+                unitsPerBatch: 1,
+                temperatureInterpolationFormula: .warmWeather
             ),
             Product(
                 id: .hotDogs,
@@ -298,7 +300,8 @@ struct ProductCatalog {
                 baseIdealPrice: 4.00,
                 idealUnitsSold: 150,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1
+                unitsPerBatch: 1,
+                temperatureInterpolationFormula: .temperateWeather
             )
         ]
     }

@@ -20,6 +20,7 @@ struct Product: Identifiable {
     let idealUnitsSold: Int
     let priceSensitivity: Double
     let unitsPerBatch: Int
+    let temperatureInterpolationFormula: TemperatureInterpolationFormula
 }
 
 enum ProductID: String {
