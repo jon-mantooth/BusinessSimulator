@@ -83,6 +83,8 @@ final class InventoryDimension: Dimension {
         }
     }
 
+    // TODO: After merging the weather branch, calculate freshness demand with
+    // DemandBalance using inventory's demand weight and freshness effect score.
     func calculateDemand() -> Double {
         //This is the percent change we want freshness to have on ideal price.
         //i.e. the minimum ideal price based on freshness is .93 of the original ideal price

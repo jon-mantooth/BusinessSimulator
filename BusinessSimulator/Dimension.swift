@@ -78,6 +78,8 @@ struct BusinessDimensions {
         self.finance = finance
     }
 
+    // TODO: After merging the weather branch, pass GameState into this factory
+    // and create InventoryDimension from gameState product and inventory data.
     static func create(
         product: Product,
         inventoryStates: [InventoryState]
