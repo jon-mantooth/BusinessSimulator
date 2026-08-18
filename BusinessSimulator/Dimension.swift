@@ -89,18 +89,16 @@ struct BusinessDimensions {
         self.environment = environment
     }
 
-    // TODO: After merging the weather branch, pass GameState into this factory
-    // and create InventoryDimension from gameState product and inventory data.
     static func create(
-        gameState: GameState,
-        product: Product,
-        inventoryStates: [InventoryState]
+        gameState: GameState
     ) -> BusinessDimensions {
-        BusinessDimensions(
+        let product = gameState.productState!.product
+
+        return BusinessDimensions(
             production: [
                 InventoryDimension(
                     productInventories: product.productInventories,
-                    inventoryStates: inventoryStates
+                    inventoryStates: gameState.inventoryStates
                 )
             ],
             environment: [
