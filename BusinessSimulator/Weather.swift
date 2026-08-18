@@ -306,10 +306,27 @@ final class WeatherDimension: Dimension {
             }
         }
 
-        return DemandBalance.multiplier(
+        return SimulationBalance.demand.multiplier(
             weight: demandWeight,
             effectScore: effectScore
         )
+    }
+
+    ///Weather is a temporary market size modifier and is not part of
+    ///the permanent market size progression.
+    func calculateMarketSize() -> Double {
+        let weather = weatherState.weather(for: calendar.currentDate)
+
+        switch weather.condition {
+        case .sunny:
+            return 1.10
+        case .cloudy:
+            return 1.00
+        case .rain:
+            return 0.85
+        case .snow:
+            return 0.85
+        }
     }
 }
 
