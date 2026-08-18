@@ -112,22 +112,22 @@ struct BusinessDimensions {
     }
 }
 
-///To calculate the demand affect of any dimension we need to first determine
-///the total demand affect and the portion of each dimension on that affect.
+///To calculate the growth affect of any dimension we need to first determine
+///the total growth affect and the portion of each dimension on that affect.
 ///The weights of individual dimensions will be determined inside those dimensions
-///but the total demand affect is determined here and used by each dimension
-enum DemandBalance {
+///but the total growth affect is determined here and used by each dimension.
+struct GrowthBalance {
 
-    static let startingMultiplier = 0.80
-    static let maximumMultiplier = 1.50
+    let startingMultiplier: Double
+    let maximumMultiplier: Double
 
-    static var totalGrowthFactor: Double {
+    var totalGrowthFactor: Double {
         maximumMultiplier / startingMultiplier
     }
 
-    //calculate demand affect using the totalGrowthFactor, weight of specific dimension
+    //calculate growth affect using the totalGrowthFactor, weight of specific dimension
     //and how much of dimension is used in specific situation.
-    static func multiplier(
+    func multiplier(
         weight: Double,
         effectScore: Double
     ) -> Double {
@@ -137,4 +137,17 @@ enum DemandBalance {
             weight * effectScore
         )
     }
+}
+
+enum SimulationBalance {
+
+    static let demand = GrowthBalance(
+        startingMultiplier: 0.80,
+        maximumMultiplier: 1.50
+    )
+
+    static let marketSize = GrowthBalance(
+        startingMultiplier: 1.00,
+        maximumMultiplier: 2.00
+    )
 }
