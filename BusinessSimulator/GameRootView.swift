@@ -20,6 +20,7 @@ struct GameRootView: View {
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
+    @State private var showingWeather = false
 
     let productCatalog = ProductCatalog()
     
@@ -178,6 +179,9 @@ struct GameRootView: View {
                         gameState: gameState,
                         onCalendarTapped: {
                             showingCalendar = true
+                        },
+                        onWeatherTapped: {
+                            showingWeather = true
                         }
                     )
                 }
@@ -227,6 +231,14 @@ struct GameRootView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(28)
+        }
+        .sheet(isPresented: $showingWeather) {
+            WeatherForecastView(
+                forecast: gameState.weather.weeklyForecast
+            )
+            .presentationDetents([.fraction(0.55)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
         }
     }
     

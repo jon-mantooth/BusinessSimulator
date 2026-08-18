@@ -5,9 +5,13 @@
 //  Created by jon mantooth on 7/28/26.
 //
 
+import Foundation
+
 protocol Dimension {
 
     func calculateDemand() -> Double
+
+    func calculateMarketSize() -> Double
 
     func applySalesLimits(
         sales: Int,
@@ -28,6 +32,10 @@ protocol Dimension {
 extension Dimension {
 
     func calculateDemand() -> Double {
+        return 1.0
+    }
+
+    func calculateMarketSize() -> Double {
         return 1.0
     }
 
@@ -65,22 +73,26 @@ struct BusinessDimensions {
     let distribution: [any Dimension]
     let marketing: [any Dimension]
     let finance: [any Dimension]
+    let environment: [any Dimension]
 
     init(
         production: [any Dimension] = [],
         distribution: [any Dimension] = [],
         marketing: [any Dimension] = [],
-        finance: [any Dimension] = []
+        finance: [any Dimension] = [],
+        environment: [any Dimension] = []
     ) {
         self.production = production
         self.distribution = distribution
         self.marketing = marketing
         self.finance = finance
+        self.environment = environment
     }
 
     // TODO: After merging the weather branch, pass GameState into this factory
     // and create InventoryDimension from gameState product and inventory data.
     static func create(
+        gameState: GameState,
         product: Product,
         inventoryStates: [InventoryState]
     ) -> BusinessDimensions {
@@ -90,7 +102,54 @@ struct BusinessDimensions {
                     productInventories: product.productInventories,
                     inventoryStates: inventoryStates
                 )
+            ],
+            environment: [
+                WeatherDimension(
+                    weatherState: gameState.weather,
+                    product: gameState.productState!.product,
+                    calendar: gameState.calendar
+                )
             ]
         )
     }
+}
+
+///To calculate the growth affect of any dimension we need to first determine
+///the total growth affect and the portion of each dimension on that affect.
+///The weights of individual dimensions will be determined inside those dimensions
+///but the total growth affect is determined here and used by each dimension.
+struct GrowthBalance {
+
+    let startingMultiplier: Double
+    let maximumMultiplier: Double
+
+    var totalGrowthFactor: Double {
+        maximumMultiplier / startingMultiplier
+    }
+
+    //calculate growth affect using the totalGrowthFactor, weight of specific dimension
+    //and how much of dimension is used in specific situation.
+    func multiplier(
+        weight: Double,
+        effectScore: Double
+    ) -> Double {
+        // multiplier = totalGrowthFactor ^ (weight * effectScore)
+        pow(
+            totalGrowthFactor,
+            weight * effectScore
+        )
+    }
+}
+
+enum SimulationBalance {
+
+    static let demand = GrowthBalance(
+        startingMultiplier: 0.80,
+        maximumMultiplier: 1.50
+    )
+
+    static let marketSize = GrowthBalance(
+        startingMultiplier: 1.00,
+        maximumMultiplier: 2.00
+    )
 }
