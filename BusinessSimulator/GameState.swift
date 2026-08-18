@@ -13,10 +13,12 @@ import Observation
 final class GameState {
     var finance: Finance
     var calendar: GameCalendar
+    var weather: WeatherState
 
     var productState: ProductState?
     var inventoryStates: [InventoryState]
     var production: Production?
+    var environment: EnvironmentDepartment?
     var simulationSummary : SimulationSummary = SimulationSummary()
 
     init(
@@ -29,9 +31,11 @@ final class GameState {
         )
 
         self.calendar = GameCalendar(day: day)
+        self.weather = WeatherState()
         self.productState = nil
         self.inventoryStates = []
         self.production = nil
+        self.environment = nil
     }
     
     func initializeBusiness(
@@ -48,8 +52,12 @@ final class GameState {
                 currentDay: self.calendar.day
             )
         }
+
+        self.productState = productState
+        self.inventoryStates = inventoryStates
         
         let dimensions = BusinessDimensions.create(
+            gameState: self,
             product: product,
             inventoryStates: inventoryStates
         )
@@ -58,8 +66,15 @@ final class GameState {
             dimensions: dimensions.production
         )
 
-        self.productState = productState
+        let environment = EnvironmentDepartment(
+            dimensions: dimensions.environment
+        )
+
         self.production = production
-        self.inventoryStates = inventoryStates
+        self.environment = environment
+
+        self.weather.generateWeeklyForecast(
+            starting: self.calendar.currentWeekStartDate
+        )
     }
 }

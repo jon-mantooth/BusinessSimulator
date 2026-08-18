@@ -10,14 +10,17 @@ import SwiftUI
 struct HeaderView: View {
     let gameState: GameState
     let onCalendarTapped: () -> Void
+    let onWeatherTapped: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let orange = Color(red: 0.88, green: 0.43, blue: 0.08)
     private let green = Color(red: 0.04, green: 0.52, blue: 0.16)
     private let blue = Color(red: 0.08, green: 0.48, blue: 0.82)
+    private let cloudColor = Color(red: 0.30, green: 0.38, blue: 0.46)
 
     var body: some View {
         HStack(spacing: 7) {
+            //date
             headerButton(
                 title: gameState.calendar.currentDate.formatted(
                     .dateTime.month(.abbreviated).day()
@@ -27,12 +30,7 @@ struct HeaderView: View {
                 action: onCalendarTapped
             )
 
-            headerButton(
-                title: "72°",
-                systemImage: "sun.max.fill",
-                color: .yellow,
-                action: {}
-            )
+            weatherButton
 
             aiButton
 
@@ -49,6 +47,27 @@ struct HeaderView: View {
         .shadow(color: .black.opacity(0.16), radius: 5, y: 2)
         .padding(.horizontal, 12)
         .padding(.top, 4)
+    }
+
+    private var weatherButton: some View {
+        let weather = gameState.weather.weather(
+            for: gameState.calendar.currentDate
+        )
+        let displayedWeather = gameState.weather.displayedWeather(
+            for: gameState.calendar.currentDate
+        )
+
+        let appearance = weatherAppearance(
+            for: weather.condition
+        )
+
+        return headerButton(
+            title: "\(displayedWeather)°",
+            systemImage: appearance.systemImage,
+            color: appearance.color,
+            showsIconBackground: true,
+            action: onWeatherTapped
+        )
     }
 
     private var aiButton: some View {
@@ -93,17 +112,43 @@ struct HeaderView: View {
         )
     }
 
+    private func weatherAppearance(
+        for condition: WeatherCondition
+    ) -> (systemImage: String, color: Color) {
+        switch condition {
+        case .sunny:
+            return ("sun.max.fill", .yellow)
+        case .cloudy:
+            return ("cloud.fill", cloudColor)
+        case .rain:
+            return ("cloud.rain.fill", .blue)
+        case .snow:
+            return ("cloud.snow.fill", .cyan)
+        }
+    }
+
     private func headerButton(
         title: String,
         systemImage: String,
         color: Color,
+        showsIconBackground: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 21, weight: .semibold))
-                    .foregroundStyle(color)
+                ZStack {
+                    if showsIconBackground {
+                        Circle()
+                            .fill(Color.white.opacity(0.72))
+                            .frame(width: 30, height: 30)
+                    }
+
+                    Image(systemName: systemImage)
+                        .font(.system(size: 21, weight: .semibold))
+                        .foregroundStyle(color)
+                        .shadow(color: .white.opacity(0.7), radius: 1)
+                        .shadow(color: .black.opacity(0.2), radius: 1, y: 1)
+                }
 
                 Text(title)
                     .font(.system(size: 14, weight: .bold))
