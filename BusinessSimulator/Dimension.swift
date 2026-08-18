@@ -119,10 +119,10 @@ struct BusinessDimensions {
 struct GrowthBalance {
 
     let startingMultiplier: Double
-    let maximumMultiplier: Double
+    let targetMultiplier: Double
 
     var totalGrowthFactor: Double {
-        maximumMultiplier / startingMultiplier
+        targetMultiplier / startingMultiplier
     }
 
     //calculate growth affect using the totalGrowthFactor, weight of specific dimension
@@ -143,11 +143,16 @@ enum SimulationBalance {
 
     static let demand = GrowthBalance(
         startingMultiplier: 0.80,
-        maximumMultiplier: 1.50
+        targetMultiplier: 1.50
     )
 
     static let marketSize = GrowthBalance(
         startingMultiplier: 1.00,
-        maximumMultiplier: 2.00
+        targetMultiplier: 2.00
+    )
+
+    static let freshness = GrowthBalance(
+        startingMultiplier: 1.00,
+        targetMultiplier: 0.93
     )
 }
