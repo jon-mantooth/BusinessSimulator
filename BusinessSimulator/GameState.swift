@@ -57,9 +57,7 @@ final class GameState {
         self.inventoryStates = inventoryStates
         
         let dimensions = BusinessDimensions.create(
-            gameState: self,
-            product: product,
-            inventoryStates: inventoryStates
+            gameState: self
         )
 
         let production = Production(

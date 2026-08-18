@@ -101,12 +101,12 @@ struct DemandTests {
             testCase.applePurchaseDay: 1
         ]
 
-        let inventoryControl = InventoryControl(
+        let inventoryDimension = InventoryDimension(
             productInventories: productInventories,
             inventoryStates: [butterState, appleState]
         )
 
-        let demand = inventoryControl.calculateDemand()
+        let demand = inventoryDimension.calculateDemand()
 
         #expect(
             abs(demand - testCase.expectedDemand) < 0.000_001
