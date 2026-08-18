@@ -11,6 +11,8 @@ protocol Dimension {
 
     func calculateDemand() -> Double
 
+    func calculateMarketSize() -> Double
+
     func applySalesLimits(
         sales: Int,
         summary: DaySummary
@@ -30,6 +32,10 @@ protocol Dimension {
 extension Dimension {
 
     func calculateDemand() -> Double {
+        return 1.0
+    }
+
+    func calculateMarketSize() -> Double {
         return 1.0
     }
 
