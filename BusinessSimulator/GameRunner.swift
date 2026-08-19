@@ -35,10 +35,12 @@ struct GameRunner {
             demand *= department.calculateDemand()
         }
 
-        let baselineRevenue =
-        gameState.productState!.calculateBaselineRevenue(
+        gameState.productState!.updateIdealPrice(
             demand: demand
         )
+
+        let baselineRevenue =
+            gameState.productState!.calculateBaselineRevenue()
         
         let predictedRevenue = calculatePredictedRevenue(baselineRevenue: baselineRevenue)
         
