@@ -4,6 +4,20 @@ import Testing
 
 struct MarketSizeTests {}
 
+// MARK: - Total Market Size Allocation
+
+// TODO: Enable once every permanent market size dimension has been implemented.
+// Weather is excluded because its market size effect is transient.
+// @Test
+// func marketSizeDimensionWeightsAddUpToOne() {
+//     let totalMarketSizeWeight =
+//         AdvertisingDimension.marketSizeWeight
+//         + DistributionDimension.marketSizeWeight
+//         + ReputationDimension.marketSizeWeight
+//
+//     #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
+// }
+
 // MARK: - Weather Market Size
 
 struct WeatherMarketSizeCase: Sendable {

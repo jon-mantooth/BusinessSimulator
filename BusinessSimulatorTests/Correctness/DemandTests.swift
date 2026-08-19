@@ -4,6 +4,21 @@ import Testing
 
 struct DemandTests {}
 
+// MARK: - Total Demand Allocation
+
+// TODO: Enable once every demand dimension has been implemented.
+// @Test
+// func demandDimensionWeightsAddUpToOne() {
+//     let totalDemandWeight =
+//         WeatherDimension.demandWeight
+//         + EquipmentDimension.demandWeight
+//         + LaborDimension.demandWeight
+//         + AdvertisingDimension.demandWeight
+//         + ReputationDimension.demandWeight
+//
+//     #expect(abs(totalDemandWeight - 1.0) < 0.000_001)
+// }
+
 // MARK: - Inventory Demand
 
 struct InventoryDemandCase: Sendable {
