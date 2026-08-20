@@ -48,8 +48,9 @@ final class BusinessReputationState {
     func calculateDailyReputation(
         price: Double,
         idealPrice: Double,
-        availabilityEffectScore: Double,
-        freshnessEffectScore: Double
+        demandFulfillmentRate: Double,
+        productInventories: [ProductInventory],
+        inventoryStates: [InventoryState]
     ) -> Double {
         let factorWeights = [
             Self.priceWeight,
@@ -70,6 +71,13 @@ final class BusinessReputationState {
             price: price,
             idealPrice: idealPrice
         )
+        let availabilityEffectScore = calculateAvailabilityEffectScore(
+            demandFulfillmentRate: demandFulfillmentRate
+        )
+        let freshnessEffectScore = calculateFreshnessEffectScore(
+            productInventories: productInventories,
+            inventoryStates: inventoryStates
+        )
 
         assert(
             Self.isNormalized(priceEffectScore)
@@ -83,6 +91,54 @@ final class BusinessReputationState {
             + availabilityEffectScore * Self.availabilityWeight
             + freshnessEffectScore * Self.freshnessWeight
         )
+    }
+
+    private func calculateAvailabilityEffectScore(
+        demandFulfillmentRate: Double
+    ) -> Double {
+        demandFulfillmentRate
+    }
+
+    // TODO: For now, recalculate freshness here rather than storing derived
+    // freshness state. Revisit whether this can safely reuse freshness already
+    // calculated by InventoryDimension without creating stale state.
+    private func calculateFreshnessEffectScore(
+        productInventories: [ProductInventory],
+        inventoryStates: [InventoryState]
+    ) -> Double {
+        var largestWeightedFreshnessPenalty = 0.0
+
+        for productInventory in productInventories {
+            guard productInventory.freshnessCoefficient > 0 else {
+                continue
+            }
+
+            guard let inventoryState = inventoryStates.first(
+                where: {
+                    $0.inventory.id == productInventory.inventory.id
+                }
+            ) else {
+                assertionFailure(
+                    "No inventory state exists for \(productInventory.inventory.name)."
+                )
+                continue
+            }
+
+            let freshness = inventoryState.inventoryByAge
+                .calculateFreshness(
+                    lifespan: inventoryState.inventory.lifespan
+                )
+            let weightedFreshnessPenalty =
+                (1.0 - freshness)
+                * productInventory.freshnessCoefficient
+
+            largestWeightedFreshnessPenalty = max(
+                largestWeightedFreshnessPenalty,
+                weightedFreshnessPenalty
+            )
+        }
+
+        return 1.0 - largestWeightedFreshnessPenalty
     }
 
     /// Gives full credit at or below the ideal price, then applies an
