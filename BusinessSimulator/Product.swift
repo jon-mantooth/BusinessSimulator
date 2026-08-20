@@ -34,7 +34,7 @@ final class ProductState: Identifiable {
     let product: Product
 
     var price: Double
-    private(set) var idealPrice: Double
+    private(set) var currentIdealPrice: Double
 
     init(
         product: Product,
@@ -42,25 +42,25 @@ final class ProductState: Identifiable {
     ) {
         self.product = product
         self.price = price
-        self.idealPrice = product.baseIdealPrice
+        self.currentIdealPrice = product.baseIdealPrice
     }
 
-    func updateIdealPrice(
+    func updateCurrentIdealPrice(
         demand: Double
     ) {
-        idealPrice = product.baseIdealPrice * demand
-        assert(idealPrice > 0, "Ideal price must be positive.")
+        currentIdealPrice = product.baseIdealPrice * demand
+        assert(currentIdealPrice > 0, "Ideal price must be positive.")
     }
     
     ///calculates what revenue should be based on the difference between
     ///players price and ideal price given demand using the Gaussian function
     /// R(p)=R_max*e^{-k((p-p_i)/p_i)^2}
     func calculateBaselineRevenue() -> Double {
-        let maxRevenue = idealPrice * Double(product.idealUnitsSold)
+        let maxRevenue = currentIdealPrice * Double(product.idealUnitsSold)
         let k = -(product.priceSensitivity)
         
         let priceDifferenceRatio =
-            (price - idealPrice) / idealPrice
+            (price - currentIdealPrice) / currentIdealPrice
 
         return maxRevenue * exp(k * pow(priceDifferenceRatio, 2))
     }

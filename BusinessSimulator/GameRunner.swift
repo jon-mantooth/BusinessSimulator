@@ -35,7 +35,7 @@ struct GameRunner {
             demand *= department.calculateDemand()
         }
 
-        gameState.productState!.updateIdealPrice(
+        gameState.productState!.updateCurrentIdealPrice(
             demand: demand
         )
 
