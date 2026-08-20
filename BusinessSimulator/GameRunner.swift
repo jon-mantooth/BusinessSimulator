@@ -47,25 +47,33 @@ struct GameRunner {
         let predictedSales = gameState.productState!.calculatePredictedSales(
             predictedRevenue: predictedRevenue)
 
-        var predictedBatches =
+        let demandedBatches =
             predictedSales / gameState.productState!.product.unitsPerBatch
+
+        var actualBatches = demandedBatches
         
         for department in departments{
-            predictedBatches = department.applySalesLimits(
-                sales: predictedBatches,
-                summary: summary
-            )
-        }
-        
-        var totalCosts: Double = 0
-        for department in departments{
-            totalCosts += department.calculateCosts(
-                sales: predictedBatches,
+            actualBatches = department.applySalesLimits(
+                sales: actualBatches,
                 summary: summary
             )
         }
 
-        let actualSales = predictedBatches * gameState.productState!.product.unitsPerBatch
+        // TODO: Store the sellout time and daily demand in DaySummary, then
+        // use the stored daily demand to update total demand.
+        let demandFulfillmentRate = demandedBatches > 0
+            ? Double(actualBatches) / Double(demandedBatches)
+            : 1.0
+        
+        var totalCosts: Double = 0
+        for department in departments{
+            totalCosts += department.calculateCosts(
+                sales: actualBatches,
+                summary: summary
+            )
+        }
+
+        let actualSales = actualBatches * gameState.productState!.product.unitsPerBatch
         let actualRevenue = Double(actualSales) * gameState.productState!.price
         summary.sales = actualSales
         summary.revenue = actualRevenue
