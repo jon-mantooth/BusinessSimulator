@@ -23,6 +23,16 @@ final class EnvironmentDepartment: Department {
         return demand
     }
 
+    func calculateMarketSize() -> Double {
+        var marketSize = 1.0
+
+        for dimension in dimensions {
+            marketSize *= dimension.calculateMarketSize()
+        }
+
+        return marketSize
+    }
+
     func applySalesLimits(
         sales: Int,
         summary: DaySummary
