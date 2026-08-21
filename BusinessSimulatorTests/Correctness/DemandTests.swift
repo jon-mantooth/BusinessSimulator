@@ -133,6 +133,68 @@ extension DemandTests {
     }
 }
 
+// MARK: - Business Reputation Demand
+
+struct ReputationDemandCase: Sendable {
+    let name: String
+    let overallReputation: Double
+    let expectedEffectScore: Double
+}
+
+private let reputationDemandCases = [
+    ReputationDemandCase(
+        name: "minimum reputation has maximum negative effect",
+        overallReputation: 0.0,
+        expectedEffectScore: -1.0
+    ),
+    ReputationDemandCase(
+        name: "reputation halfway below neutral has half negative effect",
+        overallReputation: 37.5,
+        expectedEffectScore: -0.5
+    ),
+    ReputationDemandCase(
+        name: "neutral reputation does not affect demand",
+        overallReputation: 75.0,
+        expectedEffectScore: 0.0
+    ),
+    ReputationDemandCase(
+        name: "reputation halfway above neutral has half positive effect",
+        overallReputation: 87.5,
+        expectedEffectScore: 0.5
+    ),
+    ReputationDemandCase(
+        name: "maximum reputation has maximum positive effect",
+        overallReputation: 100.0,
+        expectedEffectScore: 1.0
+    )
+]
+
+extension DemandTests {
+
+    @Test(arguments: reputationDemandCases)
+    func reputationReturnsExpectedDemand(
+        testCase: ReputationDemandCase
+    ) {
+        let reputation = BusinessReputationState(
+            overallReputation: testCase.overallReputation
+        )
+        let reputationDimension = BusinessReputationDimension(
+            reputation: reputation
+        )
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: BusinessReputationDimension.demandWeight,
+            effectScore: testCase.expectedEffectScore
+        )
+
+        let demand = reputationDimension.calculateDemand()
+
+        #expect(
+            abs(demand - expectedDemand) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+}
+
 // MARK: - Weather Demand
 
 struct WeatherDemandCase: Sendable {
