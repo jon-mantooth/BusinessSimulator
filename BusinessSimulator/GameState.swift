@@ -8,7 +8,6 @@
 import Foundation
 import Observation
 
-
 @Observable
 final class GameState {
     var finance: Finance
@@ -17,7 +16,10 @@ final class GameState {
 
     var productState: ProductState?
     var inventoryStates: [InventoryState]
+    var reputation: BusinessReputationState?
+    var businessHours: BusinessHours?
     var production: Production?
+    var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var simulationSummary : SimulationSummary = SimulationSummary()
 
@@ -34,7 +36,10 @@ final class GameState {
         self.weather = WeatherState()
         self.productState = nil
         self.inventoryStates = []
+        self.reputation = nil
+        self.businessHours = nil
         self.production = nil
+        self.marketing = nil
         self.environment = nil
     }
     
@@ -55,6 +60,11 @@ final class GameState {
 
         self.productState = productState
         self.inventoryStates = inventoryStates
+        self.reputation = BusinessReputationState()
+        self.businessHours = BusinessHours(
+            openingTime: BusinessTime(hour: 9, minute: 0),
+            closingTime: BusinessTime(hour: 17, minute: 0)
+        )
         
         let dimensions = BusinessDimensions.create(
             gameState: self
@@ -64,11 +74,16 @@ final class GameState {
             dimensions: dimensions.production
         )
 
+        let marketing = MarketingDepartment(
+            dimensions: dimensions.marketing
+        )
+
         let environment = EnvironmentDepartment(
             dimensions: dimensions.environment
         )
 
         self.production = production
+        self.marketing = marketing
         self.environment = environment
 
         self.weather.generateWeeklyForecast(

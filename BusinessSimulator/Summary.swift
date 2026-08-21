@@ -24,10 +24,12 @@ final class DaySummary {
     let day: Int
     let startingBalance: Double
 
+    var demandedSales: Int = 0
     var sales: Int = 0
     var revenue: Double = 0
     var economicCosts: [Cost] = []
     var cashFlowCosts: [Cost] = []
+    var dailyReputation: Double?
 
     private(set) var sections: [SummarySection] = []
 

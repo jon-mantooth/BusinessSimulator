@@ -18,6 +18,68 @@ struct MarketSizeTests {}
 //     #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
 // }
 
+// MARK: - Business Reputation Market Size
+
+struct ReputationMarketSizeCase: Sendable {
+    let name: String
+    let overallReputation: Double
+    let expectedEffectScore: Double
+}
+
+private let reputationMarketSizeCases = [
+    ReputationMarketSizeCase(
+        name: "minimum reputation has maximum negative effect",
+        overallReputation: 0.0,
+        expectedEffectScore: -1.0
+    ),
+    ReputationMarketSizeCase(
+        name: "reputation halfway below neutral has half negative effect",
+        overallReputation: 37.5,
+        expectedEffectScore: -0.5
+    ),
+    ReputationMarketSizeCase(
+        name: "neutral reputation does not affect market size",
+        overallReputation: 75.0,
+        expectedEffectScore: 0.0
+    ),
+    ReputationMarketSizeCase(
+        name: "reputation halfway above neutral has half positive effect",
+        overallReputation: 87.5,
+        expectedEffectScore: 0.5
+    ),
+    ReputationMarketSizeCase(
+        name: "maximum reputation has maximum positive effect",
+        overallReputation: 100.0,
+        expectedEffectScore: 1.0
+    )
+]
+
+extension MarketSizeTests {
+
+    @Test(arguments: reputationMarketSizeCases)
+    func reputationReturnsExpectedMarketSize(
+        testCase: ReputationMarketSizeCase
+    ) {
+        let reputation = BusinessReputationState(
+            overallReputation: testCase.overallReputation
+        )
+        let reputationDimension = BusinessReputationDimension(
+            reputation: reputation
+        )
+        let expectedMarketSize = SimulationBalance.marketSize.multiplier(
+            weight: BusinessReputationDimension.marketSizeWeight,
+            effectScore: testCase.expectedEffectScore
+        )
+
+        let marketSize = reputationDimension.calculateMarketSize()
+
+        #expect(
+            abs(marketSize - expectedMarketSize) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+}
+
 // MARK: - Weather Market Size
 
 struct WeatherMarketSizeCase: Sendable {

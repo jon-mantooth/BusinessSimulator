@@ -85,6 +85,8 @@ struct GameRootView: View {
         }
 
         currentSummary = summary
+        // TODO: Reconsider whether preparation for the next day should happen after the summary view is shown.
+        // We may split this process into completeDay() and prepForNextDay().
         gameRunner.prepForNextDay()
     }
     

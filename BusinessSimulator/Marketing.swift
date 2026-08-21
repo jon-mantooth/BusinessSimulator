@@ -1,10 +1,9 @@
 //
-//  Environment.swift
+//  Marketing.swift
 //  BusinessSimulator
 //
 
-final class EnvironmentDepartment: Department {
-
+final class MarketingDepartment: Department {
     private let dimensions: [any Dimension]
 
     init(

@@ -101,6 +101,11 @@ struct BusinessDimensions {
                     inventoryStates: gameState.inventoryStates
                 )
             ],
+            marketing: [
+                BusinessReputationDimension(
+                    reputation: gameState.reputation!
+                )
+            ],
             environment: [
                 WeatherDimension(
                     weatherState: gameState.weather,
