@@ -66,11 +66,32 @@ struct GameRunner {
             )
         }
 
-        // TODO: Store the sellout time and daily demand in DaySummary, then
-        // use the stored daily demand to update total demand.
+        // TODO: Use the stored daily demand to update total demand. When
+        // non-inventory sales limits exist, distinguish them from sellouts.
         let demandFulfillmentRate = demandedBatches > 0
             ? Double(actualBatches) / Double(demandedBatches)
             : 1.0
+
+        if demandFulfillmentRate < 1.0 {
+            let selloutTime = calculateSelloutTime(
+                demandFulfillmentRate: demandFulfillmentRate
+            )
+            summary.addNote(
+                sectionName: "Sales",
+                note: "Sold out at \(selloutTime.formatted)."
+            )
+        }
+
+        let dailyReputation =
+            gameState.reputation!.calculateDailyReputation(
+                price: gameState.productState!.price,
+                idealPrice: gameState.productState!.currentIdealPrice,
+                demandFulfillmentRate: demandFulfillmentRate,
+                productInventories:
+                    gameState.productState!.product.productInventories,
+                inventoryStates: gameState.inventoryStates
+            )
+        summary.dailyReputation = dailyReputation
         
         var totalCosts: Double = 0
         for department in departments{
@@ -89,6 +110,10 @@ struct GameRunner {
     }
 
     func prepForNextDay() {
+        gameState.reputation!.updateOverallReputation(
+            dailyReputation: summary.dailyReputation!
+        )
+
         // Update Balance
         gameState.finance.actualBalance = summary.balance
         gameState.finance.displayedBalance = summary.balance
