@@ -17,7 +17,10 @@ final class GameState {
 
     var productState: ProductState?
     var inventoryStates: [InventoryState]
+    var reputation: BusinessReputationState?
+    var businessHours: BusinessHours?
     var production: Production?
+    var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var simulationSummary : SimulationSummary = SimulationSummary()
 
@@ -34,7 +37,10 @@ final class GameState {
         self.weather = WeatherState()
         self.productState = nil
         self.inventoryStates = []
+        self.reputation = nil
+        self.businessHours = nil
         self.production = nil
+        self.marketing = nil
         self.environment = nil
     }
     
@@ -64,11 +70,16 @@ final class GameState {
             dimensions: dimensions.production
         )
 
+        let marketing = MarketingDepartment(
+            dimensions: dimensions.marketing
+        )
+
         let environment = EnvironmentDepartment(
             dimensions: dimensions.environment
         )
 
         self.production = production
+        self.marketing = marketing
         self.environment = environment
 
         self.weather.generateWeeklyForecast(
