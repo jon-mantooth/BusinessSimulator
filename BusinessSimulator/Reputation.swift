@@ -93,7 +93,7 @@ final class BusinessReputationState {
         )
     }
 
-    private func calculateAvailabilityEffectScore(
+    func calculateAvailabilityEffectScore(
         demandFulfillmentRate: Double
     ) -> Double {
         demandFulfillmentRate
@@ -102,7 +102,7 @@ final class BusinessReputationState {
     // TODO: For now, recalculate freshness here rather than storing derived
     // freshness state. Revisit whether this can safely reuse freshness already
     // calculated by InventoryDimension without creating stale state.
-    private func calculateFreshnessEffectScore(
+    func calculateFreshnessEffectScore(
         productInventories: [ProductInventory],
         inventoryStates: [InventoryState]
     ) -> Double {
@@ -144,7 +144,7 @@ final class BusinessReputationState {
     /// Gives full credit at or below the ideal price, then applies an
     /// increasingly strong penalty until the score reaches zero at 50% above
     /// the ideal price.
-    private func calculatePriceEffectScore(
+    func calculatePriceEffectScore(
         price: Double,
         idealPrice: Double
     ) -> Double {
