@@ -61,7 +61,9 @@ struct GameRootView: View {
             let purchasedAmount =
                 purchaseAmounts[inventoryType, default: 0]
 
-            item.inventoryByAge.inventoryByPurchaseDay[gameState.calendar.day] = Double(purchasedAmount)
+            item.inventoryByAge.inventoryByPurchaseDay[
+                gameState.calendar.simulationDay
+            ] = Double(purchasedAmount)
         }
 
         currentScreen = .summary

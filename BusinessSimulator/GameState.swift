@@ -31,8 +31,7 @@ final class GameState {
             actualBalance: balance,
             displayedBalance: balance
         )
-
-        self.calendar = GameCalendar(day: day)
+        self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.productState = nil
         self.inventoryStates = []
