@@ -31,9 +31,11 @@ struct GameRunner {
     
     func simulateDay() -> DaySummary {
         var demand = 1.0
+        var marketSize = 1.0
 
         for department in departments {
             demand *= department.calculateDemand()
+            marketSize *= department.calculateMarketSize()
         }
 
         gameState.productState!.updateCurrentIdealPrice(
@@ -42,8 +44,11 @@ struct GameRunner {
 
         let baselineRevenue =
             gameState.productState!.calculateBaselineRevenue()
-        
-        let predictedRevenue = calculatePredictedRevenue(baselineRevenue: baselineRevenue)
+
+        let marketAdjustedRevenue = baselineRevenue * marketSize
+        let predictedRevenue = calculatePredictedRevenue(
+            baselineRevenue: marketAdjustedRevenue
+        )
         
         let predictedSales = gameState.productState!.calculatePredictedSales(
             predictedRevenue: predictedRevenue)
