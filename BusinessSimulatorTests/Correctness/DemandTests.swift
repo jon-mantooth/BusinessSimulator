@@ -2,6 +2,25 @@ import Foundation
 import Testing
 @testable import BusinessSimulator
 
+struct DemandTests {}
+
+// MARK: - Total Demand Allocation
+
+// TODO: Enable once every demand dimension has been implemented.
+// @Test
+// func demandDimensionWeightsAddUpToOne() {
+//     let totalDemandWeight =
+//         WeatherDimension.demandWeight
+//         + EquipmentDimension.demandWeight
+//         + LaborDimension.demandWeight
+//         + AdvertisingDimension.demandWeight
+//         + ReputationDimension.demandWeight
+//
+//     #expect(abs(totalDemandWeight - 1.0) < 0.000_001)
+// }
+
+// MARK: - Inventory Demand
+
 struct InventoryDemandCase: Sendable {
     let name: String
     let currentDay: Int
@@ -48,7 +67,7 @@ private let inventoryDemandCases = [
     )
 ]
 
-struct DemandTests {
+extension DemandTests {
 
     @Test(arguments: inventoryDemandCases)
     func inventoryDemandCombinesFreshnessCoefficients(
@@ -101,15 +120,310 @@ struct DemandTests {
             testCase.applePurchaseDay: 1
         ]
 
-        let inventoryControl = InventoryControl(
+        let inventoryDimension = InventoryDimension(
             productInventories: productInventories,
             inventoryStates: [butterState, appleState]
         )
 
-        let demand = inventoryControl.calculateDemand()
+        let demand = inventoryDimension.calculateDemand()
 
         #expect(
             abs(demand - testCase.expectedDemand) < 0.000_001
         )
+    }
+}
+
+// MARK: - Business Reputation Demand
+
+struct ReputationDemandCase: Sendable {
+    let name: String
+    let overallReputation: Double
+    let expectedEffectScore: Double
+}
+
+private let reputationDemandCases = [
+    ReputationDemandCase(
+        name: "minimum reputation has maximum negative effect",
+        overallReputation: 0.0,
+        expectedEffectScore: -1.0
+    ),
+    ReputationDemandCase(
+        name: "reputation halfway below neutral has half negative effect",
+        overallReputation: 37.5,
+        expectedEffectScore: -0.5
+    ),
+    ReputationDemandCase(
+        name: "neutral reputation does not affect demand",
+        overallReputation: 75.0,
+        expectedEffectScore: 0.0
+    ),
+    ReputationDemandCase(
+        name: "reputation halfway above neutral has half positive effect",
+        overallReputation: 87.5,
+        expectedEffectScore: 0.5
+    ),
+    ReputationDemandCase(
+        name: "maximum reputation has maximum positive effect",
+        overallReputation: 100.0,
+        expectedEffectScore: 1.0
+    )
+]
+
+extension DemandTests {
+
+    @Test(arguments: reputationDemandCases)
+    func reputationReturnsExpectedDemand(
+        testCase: ReputationDemandCase
+    ) {
+        let reputation = BusinessReputationState(
+            overallReputation: testCase.overallReputation
+        )
+        let reputationDimension = BusinessReputationDimension(
+            reputation: reputation
+        )
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: BusinessReputationDimension.demandWeight,
+            effectScore: testCase.expectedEffectScore
+        )
+
+        let demand = reputationDimension.calculateDemand()
+
+        #expect(
+            abs(demand - expectedDemand) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+}
+
+// MARK: - Weather Demand
+
+struct WeatherDemandCase: Sendable {
+    let name: String
+    let productID: String
+    let highTemperature: Int
+    let expectedEffectScore: Double
+}
+
+private let weatherDemandCases = [
+    WeatherDemandCase(
+        name: "smoothies at neutral temperature",
+        productID: "smoothies",
+        highTemperature: 68,
+        expectedEffectScore: 0.0
+    ),
+    WeatherDemandCase(
+        name: "smoothies above neutral temperature",
+        productID: "smoothies",
+        highTemperature: 79,
+        expectedEffectScore: 0.5
+    ),
+    WeatherDemandCase(
+        name: "smoothies below neutral temperature",
+        productID: "smoothies",
+        highTemperature: 57,
+        expectedEffectScore: -0.5
+    ),
+    WeatherDemandCase(
+        name: "smoothies at maximum favorable temperature",
+        productID: "smoothies",
+        highTemperature: 90,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "smoothies above maximum favorable temperature",
+        productID: "smoothies",
+        highTemperature: 106,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "smoothies at extreme unfavorable temperature",
+        productID: "smoothies",
+        highTemperature: 25,
+        expectedEffectScore: -43.0 / 22.0
+    ),
+    WeatherDemandCase(
+        name: "pies at neutral temperature",
+        productID: "pies",
+        highTemperature: 65,
+        expectedEffectScore: 0.0
+    ),
+    WeatherDemandCase(
+        name: "pies below neutral temperature",
+        productID: "pies",
+        highTemperature: 55,
+        expectedEffectScore: 0.5
+    ),
+    WeatherDemandCase(
+        name: "pies above neutral temperature",
+        productID: "pies",
+        highTemperature: 75,
+        expectedEffectScore: -0.5
+    ),
+    WeatherDemandCase(
+        name: "pies at maximum favorable temperature",
+        productID: "pies",
+        highTemperature: 45,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "pies beyond maximum favorable temperature",
+        productID: "pies",
+        highTemperature: 25,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "pies at extreme unfavorable temperature",
+        productID: "pies",
+        highTemperature: 106,
+        expectedEffectScore: -2.05
+    ),
+    WeatherDemandCase(
+        name: "hot dogs at lower neutral temperature",
+        productID: "hotDogs",
+        highTemperature: 50,
+        expectedEffectScore: 0.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs on rising interpolation",
+        productID: "hotDogs",
+        highTemperature: 60,
+        expectedEffectScore: 0.5
+    ),
+    WeatherDemandCase(
+        name: "hot dogs at lower ideal boundary",
+        productID: "hotDogs",
+        highTemperature: 70,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs inside ideal range",
+        productID: "hotDogs",
+        highTemperature: 75,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs at upper ideal boundary",
+        productID: "hotDogs",
+        highTemperature: 80,
+        expectedEffectScore: 1.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs on falling interpolation",
+        productID: "hotDogs",
+        highTemperature: 87,
+        expectedEffectScore: 8.0 / 15.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs at upper neutral temperature",
+        productID: "hotDogs",
+        highTemperature: 95,
+        expectedEffectScore: 0.0
+    ),
+    WeatherDemandCase(
+        name: "hot dogs below lower neutral temperature",
+        productID: "hotDogs",
+        highTemperature: 25,
+        expectedEffectScore: -1.5
+    ),
+    WeatherDemandCase(
+        name: "hot dogs above upper neutral temperature",
+        productID: "hotDogs",
+        highTemperature: 106,
+        expectedEffectScore: -11.0 / 15.0
+    )
+]
+
+extension DemandTests {
+
+    @Test(arguments: weatherDemandCases)
+    func weatherDemandUsesProductTemperatureCurve(
+        testCase: WeatherDemandCase
+    ) {
+        let demand = weatherDemand(
+            productID: testCase.productID,
+            highTemperature: testCase.highTemperature
+        )
+        let expectedDemand = pow(
+            SimulationBalance.demand.totalGrowthFactor,
+            WeatherDimension.demandWeight
+                * testCase.expectedEffectScore
+        )
+
+        #expect(
+            abs(demand - expectedDemand) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+
+    @Test
+    func weatherConditionDoesNotAffectDemand() {
+        let conditions: [WeatherCondition] = [
+            .sunny,
+            .cloudy,
+            .rain,
+            .snow
+        ]
+
+        let demands = conditions.map {
+            weatherDemand(
+                productID: "smoothies",
+                highTemperature: 79,
+                condition: $0
+            )
+        }
+
+        #expect(
+            demands.allSatisfy {
+                abs($0 - demands[0]) < 0.000_001
+            }
+        )
+    }
+
+    @Test
+    func weatherLowTemperatureDoesNotAffectDemand() {
+        let demandWithLowLow = weatherDemand(
+            productID: "smoothies",
+            highTemperature: 79,
+            lowTemperature: 30
+        )
+        let demandWithHighLow = weatherDemand(
+            productID: "smoothies",
+            highTemperature: 79,
+            lowTemperature: 70
+        )
+
+        #expect(
+            abs(demandWithLowLow - demandWithHighLow) < 0.000_001
+        )
+    }
+
+    private func weatherDemand(
+        productID: String,
+        highTemperature: Int,
+        lowTemperature: Int = 50,
+        condition: WeatherCondition = .cloudy
+    ) -> Double {
+        let productID = ProductID(rawValue: productID)!
+        let product = ProductCatalog().products.first {
+            $0.id == productID
+        }!
+        let calendar = GameCalendar()
+        let weatherState = WeatherState(
+            weeklyForecast: [
+                DailyWeather(
+                    date: calendar.currentDate,
+                    highTemperature: highTemperature,
+                    lowTemperature: lowTemperature,
+                    condition: condition
+                )
+            ]
+        )
+        let weatherDimension = WeatherDimension(
+            weatherState: weatherState,
+            product: product,
+            calendar: calendar
+        )
+
+        return weatherDimension.calculateDemand()
     }
 }

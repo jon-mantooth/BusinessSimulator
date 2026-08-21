@@ -18,7 +18,11 @@ struct GameRunner {
         gameState: GameState
     ) {
         self.gameState = gameState
-        self.departments = gameState.departments
+        self.departments = [
+            gameState.production!,
+            gameState.marketing!,
+            gameState.environment!
+        ]
         self.summary = DaySummary(
             day: self.gameState.calendar.day,
             startingBalance: self.gameState.finance.actualBalance
@@ -27,40 +31,79 @@ struct GameRunner {
     
     func simulateDay() -> DaySummary {
         var demand = 1.0
+        var marketSize = 1.0
 
         for department in departments {
             demand *= department.calculateDemand()
+            marketSize *= department.calculateMarketSize()
         }
 
-        let baselineRevenue =
-        gameState.productState!.calculateBaselineRevenue(
+        gameState.productState!.updateCurrentIdealPrice(
             demand: demand
         )
-        
-        let predictedRevenue = calculatePredictedRevenue(baselineRevenue: baselineRevenue)
+
+        let baselineRevenue =
+            gameState.productState!.calculateBaselineRevenue()
+
+        let marketAdjustedRevenue = baselineRevenue * marketSize
+        let predictedRevenue = calculatePredictedRevenue(
+            baselineRevenue: marketAdjustedRevenue
+        )
         
         let predictedSales = gameState.productState!.calculatePredictedSales(
             predictedRevenue: predictedRevenue)
+        summary.demandedSales = predictedSales
 
-        var predictedBatches =
+        let demandedBatches =
             predictedSales / gameState.productState!.product.unitsPerBatch
+
+        var actualBatches = demandedBatches
         
         for department in departments{
-            predictedBatches = department.applySalesLimits(
-                sales: predictedBatches,
+            actualBatches = department.applySalesLimits(
+                sales: actualBatches,
                 summary: summary
             )
         }
+
+        // TODO: Use the stored daily demand to update total demand. When
+        // non-inventory sales limits exist, distinguish them from sellouts.
+        let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
+            demandedBatches: demandedBatches,
+            actualBatches: actualBatches
+        )
+
+        if demandFulfillmentRate < 1.0 {
+            let selloutTime = gameState.businessHours!
+                .calculateSelloutTime(
+                    demandFulfillmentRate: demandFulfillmentRate
+                )
+            summary.addNote(
+                sectionName: "Sales",
+                note: "Sold out at \(selloutTime.formatted)."
+            )
+        }
+
+        let dailyReputation =
+            gameState.reputation!.calculateDailyReputation(
+                price: gameState.productState!.price,
+                idealPrice: gameState.productState!.currentIdealPrice,
+                demandFulfillmentRate: demandFulfillmentRate,
+                productInventories:
+                    gameState.productState!.product.productInventories,
+                inventoryStates: gameState.inventoryStates
+            )
+        summary.dailyReputation = dailyReputation
         
         var totalCosts: Double = 0
         for department in departments{
             totalCosts += department.calculateCosts(
-                sales: predictedBatches,
+                sales: actualBatches,
                 summary: summary
             )
         }
 
-        let actualSales = predictedBatches * gameState.productState!.product.unitsPerBatch
+        let actualSales = actualBatches * gameState.productState!.product.unitsPerBatch
         let actualRevenue = Double(actualSales) * gameState.productState!.price
         summary.sales = actualSales
         summary.revenue = actualRevenue
@@ -69,6 +112,10 @@ struct GameRunner {
     }
 
     func prepForNextDay() {
+        gameState.reputation!.updateOverallReputation(
+            dailyReputation: summary.dailyReputation!
+        )
+
         // Update Balance
         gameState.finance.actualBalance = summary.balance
         gameState.finance.displayedBalance = summary.balance
@@ -78,6 +125,10 @@ struct GameRunner {
         
         //increment day
         gameState.calendar.day += 1
+
+        if gameState.calendar.currentWeekday == .monday {
+            prepForNextWeek()
+        }
         
         for department in departments {
             department.prepForNextDay(
@@ -88,9 +139,24 @@ struct GameRunner {
         
         
     }
-    
-    ///uses a standard distribution to turn a baseline revenue
-    ///into an actual predictedRevenue given expected value and std dev
+
+    private func prepForNextWeek() {
+        gameState.weather.generateWeeklyForecast(
+            starting: gameState.calendar.currentDate
+        )
+    }
+
+    static func calculateDemandFulfillmentRate(
+        demandedBatches: Int,
+        actualBatches: Int
+    ) -> Double {
+        demandedBatches > 0
+            ? Double(actualBatches) / Double(demandedBatches)
+            : 1.0
+    }
+
+    /// Applies natural daily variance to baseline revenue using a normal
+    /// (Gaussian) distribution with the baseline as its expected value.
     private func calculatePredictedRevenue(
         baselineRevenue: Double
     ) -> Double {

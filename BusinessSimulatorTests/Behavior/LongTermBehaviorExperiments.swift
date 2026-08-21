@@ -1,3 +1,8 @@
+/*
+ TODO: This behavior experiment framework is an intentionally disabled outline.
+ Rebuild it against the current simulation architecture when behavior testing
+ resumes, including demand, market size, variance, and reproducible randomness.
+
 @testable import BusinessSimulator
 
 enum ExperimentDepartmentID {
@@ -86,3 +91,4 @@ func runLongTermBehaviorExperiment(
 
     return results
 }
+*/

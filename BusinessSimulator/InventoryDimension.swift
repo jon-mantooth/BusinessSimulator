@@ -1,5 +1,5 @@
 //
-//  InventoryControl.swift
+//  InventoryDimension.swift
 //  BusinessSimulator
 //
 //  Created by jon mantooth on 7/29/26.
@@ -7,13 +7,13 @@
 
 import Foundation
 
-/// InventoryControl is a dimension. It affects sales based on 
+/// InventoryDimension affects sales based on
 /// freshness, capacity constraints and costs. This class represents
 /// the way in which invnetory acts as a dimension not the physical inventory itself.
-final class InventoryControl: Dimension {
+final class InventoryDimension: Dimension {
 
     
-    ///The InventoryControl class needs attributes of the inventory itself
+    ///The InventoryDimension class needs attributes of the inventory itself
     ///as well as the relationship between the inventory and product (ProductInventory).
     ///This struct aggregates the data from both objects into its own object.
     struct InventoryItem {
@@ -84,9 +84,6 @@ final class InventoryControl: Dimension {
     }
 
     func calculateDemand() -> Double {
-        //This is the percent change we want freshness to have on ideal price.
-        //i.e. the minimum ideal price based on freshness is .93 of the original ideal price
-        let minimumFreshnessDemandMultiplier = 0.93 
         var demand = 1.0
 
         for inventory in inventories {
@@ -98,9 +95,9 @@ final class InventoryControl: Dimension {
                 )
 
             //converts freshness into impact on demand
-            let freshnessDemand = pow(
-                minimumFreshnessDemandMultiplier,
-                inventory.freshnessCoefficient * (1.0 - freshness)
+            let freshnessDemand = SimulationBalance.freshness.multiplier(
+                weight: inventory.freshnessCoefficient,
+                effectScore: 1.0 - freshness
             )
 
             demand *= freshnessDemand
