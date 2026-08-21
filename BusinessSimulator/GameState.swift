@@ -8,6 +8,31 @@
 import Foundation
 import Observation
 
+struct BusinessTime {
+    let hour: Int
+    let minute: Int
+
+    var totalMinutes: Int {
+        hour * 60 + minute
+    }
+
+    var formatted: String {
+        let displayHour = hour % 12 == 0 ? 12 : hour % 12
+        let period = hour < 12 ? "AM" : "PM"
+
+        return String(
+            format: "%d:%02d %@",
+            displayHour,
+            minute,
+            period
+        )
+    }
+}
+
+struct BusinessHours {
+    let openingTime: BusinessTime
+    let closingTime: BusinessTime
+}
 
 @Observable
 final class GameState {
@@ -61,6 +86,11 @@ final class GameState {
 
         self.productState = productState
         self.inventoryStates = inventoryStates
+        self.reputation = BusinessReputationState()
+        self.businessHours = BusinessHours(
+            openingTime: BusinessTime(hour: 9, minute: 0),
+            closingTime: BusinessTime(hour: 17, minute: 0)
+        )
         
         let dimensions = BusinessDimensions.create(
             gameState: self
