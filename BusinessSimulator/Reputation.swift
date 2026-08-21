@@ -179,3 +179,70 @@ final class BusinessReputationState {
         0.0...1.0 ~= score
     }
 }
+
+/// Converts the business's current reputation into demand and market-size
+/// multipliers. Reputation is neutral at 75 and reaches its full positive
+/// effect at 100.
+final class BusinessReputationDimension: Dimension {
+    static let demandWeight = 0.35
+    static let marketSizeWeight = 0.15
+
+    private let reputation: BusinessReputationState
+
+    init(
+        reputation: BusinessReputationState
+    ) {
+        self.reputation = reputation
+    }
+
+    func calculateDemand() -> Double {
+        SimulationBalance.demand.multiplier(
+            weight: Self.demandWeight,
+            effectScore: reputationEffectScore
+        )
+    }
+
+    func calculateMarketSize() -> Double {
+        SimulationBalance.marketSize.multiplier(
+            weight: Self.marketSizeWeight,
+            effectScore: reputationEffectScore
+        )
+    }
+
+    private var reputationEffectScore: Double {
+        let reputationScore = reputation.overallReputation
+        let neutralReputation =
+            BusinessReputationState.neutralReputation
+
+        if reputationScore >= neutralReputation {
+            let positiveReputationRange =
+                BusinessReputationState.maximumReputation
+                - neutralReputation
+
+            let effectScore =
+                (reputationScore - neutralReputation)
+                / positiveReputationRange
+
+            assert(
+                0.0...1.0 ~= effectScore,
+                "Positive reputation effect score must be between 0 and 1."
+            )
+
+            return effectScore
+        }
+
+        let negativeReputationRange =
+            neutralReputation
+            - BusinessReputationState.minimumReputation
+        let effectScore =
+            (reputationScore - neutralReputation)
+            / negativeReputationRange
+
+        assert(
+            -1.0...0.0 ~= effectScore,
+            "Negative reputation effect score must be between -1 and 0."
+        )
+
+        return effectScore
+    }
+}
