@@ -68,9 +68,10 @@ struct GameRunner {
 
         // TODO: Use the stored daily demand to update total demand. When
         // non-inventory sales limits exist, distinguish them from sellouts.
-        let demandFulfillmentRate = demandedBatches > 0
-            ? Double(actualBatches) / Double(demandedBatches)
-            : 1.0
+        let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
+            demandedBatches: demandedBatches,
+            actualBatches: actualBatches
+        )
 
         if demandFulfillmentRate < 1.0 {
             let selloutTime = gameState.businessHours!
