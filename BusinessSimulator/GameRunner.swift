@@ -73,9 +73,10 @@ struct GameRunner {
             : 1.0
 
         if demandFulfillmentRate < 1.0 {
-            let selloutTime = calculateSelloutTime(
-                demandFulfillmentRate: demandFulfillmentRate
-            )
+            let selloutTime = gameState.businessHours!
+                .calculateSelloutTime(
+                    demandFulfillmentRate: demandFulfillmentRate
+                )
             summary.addNote(
                 sectionName: "Sales",
                 note: "Sold out at \(selloutTime.formatted)."
@@ -144,31 +145,15 @@ struct GameRunner {
         )
     }
 
-    private func calculateSelloutTime(
-        demandFulfillmentRate: Double
-    ) -> BusinessTime {
-        let businessHours = gameState.businessHours!
-
-        // Assume demand is distributed evenly throughout the business day.
-        let operatingMinutes =
-            businessHours.closingTime.totalMinutes
-            - businessHours.openingTime.totalMinutes
-        let minutesUntilSellout = Int(
-            (
-                Double(operatingMinutes)
-                * demandFulfillmentRate
-            ).rounded()
-        )
-        let selloutMinutes =
-            businessHours.openingTime.totalMinutes
-            + minutesUntilSellout
-
-        return BusinessTime(
-            hour: selloutMinutes / 60,
-            minute: selloutMinutes % 60
-        )
+    static func calculateDemandFulfillmentRate(
+        demandedBatches: Int,
+        actualBatches: Int
+    ) -> Double {
+        demandedBatches > 0
+            ? Double(actualBatches) / Double(demandedBatches)
+            : 1.0
     }
-    
+
     /// Applies natural daily variance to baseline revenue using a normal
     /// (Gaussian) distribution with the baseline as its expected value.
     private func calculatePredictedRevenue(
