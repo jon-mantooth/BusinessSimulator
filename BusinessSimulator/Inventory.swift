@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum InventoryType {
+enum InventoryType: String, Codable {
     case sugar
     case strawberry
     case milk
