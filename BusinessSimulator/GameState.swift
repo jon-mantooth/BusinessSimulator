@@ -8,6 +8,11 @@
 import Foundation
 import Observation
 
+enum GameStateRestoreError: Error {
+    case productNotFound(ProductID)
+    case invalidInventoryData
+}
+
 @Observable
 final class GameState {
     var finance: Finance
