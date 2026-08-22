@@ -207,11 +207,13 @@ struct GameRootView: View {
 
                 case .prep:
                     if let productState = gameState.productState {
-                        PrepView(product: productState.product,
-                                 currentAmounts: currentAmounts,
-                                 handleStartDay: handleStartDay,
-                                 updateDisplayedBalance: updateDisplayedBalance,
-                                 canAffordPurchase: canAffordPurchase
+                        PrepView(
+                            product: productState.product,
+                            initialPrice: productState.price,
+                            currentAmounts: currentAmounts,
+                            handleStartDay: handleStartDay,
+                            updateDisplayedBalance: updateDisplayedBalance,
+                            canAffordPurchase: canAffordPurchase
                         )
                     }
 
