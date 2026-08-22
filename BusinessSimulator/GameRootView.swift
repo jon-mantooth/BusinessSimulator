@@ -84,6 +84,8 @@ struct GameRootView: View {
         price: String,
         inventoryPurchaseCost: Double
     ) {
+        let stateBeforeDay = GameSave(gameState: gameState)
+
         // Adds the current days inventory purchased to our inventoryByPurchaseDay object
         // in inventoryByAge
         for item in gameState.inventoryStates{
@@ -98,8 +100,6 @@ struct GameRootView: View {
             ] = Double(purchasedAmount)
         }
 
-        currentScreen = .summary
-        
         //updates price to type double bc everything on for is string
         if let product = gameState.productState{
             product.price = Double(price) ?? 0.0
@@ -118,10 +118,27 @@ struct GameRootView: View {
             )
         }
 
-        currentSummary = summary
-        // TODO: Reconsider whether preparation for the next day should happen after the summary view is shown.
-        // We may split this process into completeDay() and prepForNextDay().
         gameRunner.prepForNextDay()
+
+        do {
+            let gameSave = GameSave(gameState: gameState)
+            try saveRepository.save(gameSave)
+
+            currentSummary = summary
+            hasSavedGame = true
+            currentScreen = .summary
+        } catch {
+            do {
+                try gameState.restoreBusiness(from: stateBeforeDay)
+            } catch {
+                preconditionFailure(
+                    "Unable to restore the valid pre-simulation game state."
+                )
+            }
+
+            currentSummary = nil
+            showingSaveError = true
+        }
     }
     
     private func onNavigate(screen: Screen){
