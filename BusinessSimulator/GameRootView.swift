@@ -37,7 +37,27 @@ struct GameRootView: View {
     }
     
     private func onBeginJourney(){
-        currentScreen = .productSelection
+        if hasSavedGame {
+            showingNewJourneyConfirmation = true
+        } else {
+            currentScreen = .productSelection
+        }
+    }
+
+    private func onContinueSavedGame() {
+        do {
+            guard let gameSave = try saveRepository.load() else {
+                hasSavedGame = false
+                return
+            }
+
+            try gameState.restoreBusiness(from: gameSave)
+            previewedProduct = nil
+            currentSummary = nil
+            currentScreen = .prep
+        } catch {
+            showingLoadError = true
+        }
     }
     
     private func onContinue(product: Product){
@@ -205,7 +225,9 @@ struct GameRootView: View {
                 switch currentScreen {
                 case .home:
                     HomeView(
-                        onBeginJourney: onBeginJourney
+                        hasSavedGame: hasSavedGame,
+                        onBeginJourney: onBeginJourney,
+                        onContinue: onContinueSavedGame
                     )
 
                 case .productSelection:
@@ -257,6 +279,43 @@ struct GameRootView: View {
             .presentationDetents([.fraction(0.55)])
             .presentationDragIndicator(.hidden)
             .presentationCornerRadius(28)
+        }
+        .onAppear {
+            hasSavedGame = saveRepository.hasSave()
+        }
+        .alert(
+            "Begin a New Journey?",
+            isPresented: $showingNewJourneyConfirmation
+        ) {
+            Button("Cancel", role: .cancel) {}
+
+            Button("Begin New Journey", role: .destructive) {
+                currentScreen = .productSelection
+            }
+        } message: {
+            Text(
+                "Starting a new journey will replace your current saved game."
+            )
+        }
+        .alert(
+            "Unable to Continue",
+            isPresented: $showingLoadError
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(
+                "Your saved game could not be loaded. Your save file has not been changed."
+            )
+        }
+        .alert(
+            "Unable to Save Day",
+            isPresented: $showingSaveError
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(
+                "The day was not completed because your game could not be saved. Please try again."
+            )
         }
     }
     

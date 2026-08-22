@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct HomeView: View {
+    let hasSavedGame: Bool
     let onBeginJourney: () -> Void
+    let onContinue: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let gold = Color(red: 0.82, green: 0.54, blue: 0.20)
@@ -20,26 +22,61 @@ struct HomeView: View {
 
                 decorativeDivider
 
+                if hasSavedGame {
+                    Button {
+                        onContinue()
+                    } label: {
+                        Text("Continue")
+                            .font(.system(.title3, design: .serif))
+                            .fontWeight(.bold)
+                            .foregroundStyle(darkBrown)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .background(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.82, blue: 0.42),
+                                Color(red: 0.95, green: 0.61, blue: 0.14)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(gold, lineWidth: 2)
+                    }
+                    .shadow(color: .black.opacity(0.25), radius: 5, y: 3)
+                    .frame(maxWidth: 330)
+                    .padding(.top, 6)
+                }
+
                 Button {
                     onBeginJourney()
                 } label: {
-                    Text("Begin Your Journey")
+                    Text("Begin New Journey")
                         .font(.system(.title3, design: .serif))
                         .fontWeight(.bold)
                     .foregroundStyle(darkBrown)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                 }
-                .background(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 1.0, green: 0.82, blue: 0.42),
-                            Color(red: 0.95, green: 0.61, blue: 0.14)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .background {
+                    if hasSavedGame {
+                        Color.white.opacity(0.72)
+                    } else {
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.82, blue: 0.42),
+                                Color(red: 0.95, green: 0.61, blue: 0.14)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+                }
                 .clipShape(Capsule())
                 .overlay {
                     Capsule()
