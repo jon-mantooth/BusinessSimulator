@@ -15,14 +15,26 @@ enum Screen {
 }
 
 struct GameRootView: View {
+    private let saveRepository: any GameSaveRepository
+
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
     @State private var showingWeather = false
+    @State private var hasSavedGame = false
+    @State private var showingNewJourneyConfirmation = false
+    @State private var showingLoadError = false
+    @State private var showingSaveError = false
 
     let productCatalog = ProductCatalog()
+
+    init(
+        saveRepository: any GameSaveRepository
+    ) {
+        self.saveRepository = saveRepository
+    }
     
     private func onBeginJourney(){
         currentScreen = .productSelection
