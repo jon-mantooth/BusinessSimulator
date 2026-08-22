@@ -24,7 +24,7 @@ struct GameRunner {
             gameState.environment!
         ]
         self.summary = DaySummary(
-            day: self.gameState.calendar.day,
+            day: self.gameState.calendar.simulationDay,
             startingBalance: self.gameState.finance.actualBalance
         )
     }
@@ -124,7 +124,7 @@ struct GameRunner {
         gameState.simulationSummary.daySummaries.append(summary)
         
         //increment day
-        gameState.calendar.day += 1
+        gameState.calendar.simulationDay += 1
 
         if gameState.calendar.currentWeekday == .monday {
             prepForNextWeek()
@@ -132,7 +132,7 @@ struct GameRunner {
         
         for department in departments {
             department.prepForNextDay(
-                currentDay: gameState.calendar.day,
+                currentDay: gameState.calendar.simulationDay,
                 summary: summary
             )
         }

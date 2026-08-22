@@ -23,7 +23,7 @@ struct Product: Identifiable {
     let temperatureInterpolationFormula: TemperatureInterpolationFormula
 }
 
-enum ProductID: String {
+enum ProductID: String, Codable {
     case pies
     case smoothies
     case hotDogs

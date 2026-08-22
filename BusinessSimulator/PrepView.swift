@@ -10,6 +10,7 @@ import SwiftUI
 struct PrepView: View {
     
     let product: Product
+    let initialPrice: Double
     let currentAmounts: [InventoryType: Double]
     let handleStartDay: ([InventoryType: Int], String, Double) -> Void
     let updateDisplayedBalance: (Double) -> Void
@@ -30,7 +31,30 @@ struct PrepView: View {
         }
     }
     @State private var showingInstructions = false
-    @State private var priceDigits = ""
+    @State private var priceDigits: String
+
+    init(
+        product: Product,
+        initialPrice: Double,
+        currentAmounts: [InventoryType: Double],
+        handleStartDay: @escaping ([InventoryType: Int], String, Double) -> Void,
+        updateDisplayedBalance: @escaping (Double) -> Void,
+        canAffordPurchase: @escaping (Double) -> Bool
+    ) {
+        self.product = product
+        self.initialPrice = initialPrice
+        self.currentAmounts = currentAmounts
+        self.handleStartDay = handleStartDay
+        self.updateDisplayedBalance = updateDisplayedBalance
+        self.canAffordPurchase = canAffordPurchase
+
+        let initialPriceInCents = Int((initialPrice * 100).rounded())
+        self._priceDigits = State(
+            initialValue: initialPriceInCents > 0
+                ? String(initialPriceInCents)
+                : ""
+        )
+    }
 
     private var price: Double {
         Double(Int(priceDigits) ?? 0) / 100

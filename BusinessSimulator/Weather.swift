@@ -7,7 +7,7 @@ import Foundation
 import GameplayKit
 import Observation
 
-enum WeatherCondition {
+enum WeatherCondition: String, Codable {
     case sunny
     case cloudy
     case rain

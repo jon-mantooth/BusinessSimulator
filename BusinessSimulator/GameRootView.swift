@@ -15,17 +15,49 @@ enum Screen {
 }
 
 struct GameRootView: View {
+    private let saveRepository: any GameSaveRepository
+
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
     @State private var showingWeather = false
+    @State private var hasSavedGame = false
+    @State private var showingNewJourneyConfirmation = false
+    @State private var showingLoadError = false
+    @State private var showingSaveError = false
 
     let productCatalog = ProductCatalog()
+
+    init(
+        saveRepository: any GameSaveRepository
+    ) {
+        self.saveRepository = saveRepository
+    }
     
     private func onBeginJourney(){
-        currentScreen = .productSelection
+        if hasSavedGame {
+            showingNewJourneyConfirmation = true
+        } else {
+            currentScreen = .productSelection
+        }
+    }
+
+    private func onContinueSavedGame() {
+        do {
+            guard let gameSave = try saveRepository.load() else {
+                hasSavedGame = false
+                return
+            }
+
+            try gameState.restoreBusiness(from: gameSave)
+            previewedProduct = nil
+            currentSummary = nil
+            currentScreen = .prep
+        } catch {
+            showingLoadError = true
+        }
     }
     
     private func onContinue(product: Product){
@@ -52,6 +84,8 @@ struct GameRootView: View {
         price: String,
         inventoryPurchaseCost: Double
     ) {
+        let stateBeforeDay = GameSave(gameState: gameState)
+
         // Adds the current days inventory purchased to our inventoryByPurchaseDay object
         // in inventoryByAge
         for item in gameState.inventoryStates{
@@ -61,11 +95,11 @@ struct GameRootView: View {
             let purchasedAmount =
                 purchaseAmounts[inventoryType, default: 0]
 
-            item.inventoryByAge.inventoryByPurchaseDay[gameState.calendar.day] = Double(purchasedAmount)
+            item.inventoryByAge.inventoryByPurchaseDay[
+                gameState.calendar.simulationDay
+            ] = Double(purchasedAmount)
         }
 
-        currentScreen = .summary
-        
         //updates price to type double bc everything on for is string
         if let product = gameState.productState{
             product.price = Double(price) ?? 0.0
@@ -84,10 +118,27 @@ struct GameRootView: View {
             )
         }
 
-        currentSummary = summary
-        // TODO: Reconsider whether preparation for the next day should happen after the summary view is shown.
-        // We may split this process into completeDay() and prepForNextDay().
         gameRunner.prepForNextDay()
+
+        do {
+            let gameSave = GameSave(gameState: gameState)
+            try saveRepository.save(gameSave)
+
+            currentSummary = summary
+            hasSavedGame = true
+            currentScreen = .summary
+        } catch {
+            do {
+                try gameState.restoreBusiness(from: stateBeforeDay)
+            } catch {
+                preconditionFailure(
+                    "Unable to restore the valid pre-simulation game state."
+                )
+            }
+
+            currentSummary = nil
+            showingSaveError = true
+        }
     }
     
     private func onNavigate(screen: Screen){
@@ -191,7 +242,9 @@ struct GameRootView: View {
                 switch currentScreen {
                 case .home:
                     HomeView(
-                        onBeginJourney: onBeginJourney
+                        hasSavedGame: hasSavedGame,
+                        onBeginJourney: onBeginJourney,
+                        onContinue: onContinueSavedGame
                     )
 
                 case .productSelection:
@@ -205,11 +258,13 @@ struct GameRootView: View {
 
                 case .prep:
                     if let productState = gameState.productState {
-                        PrepView(product: productState.product,
-                                 currentAmounts: currentAmounts,
-                                 handleStartDay: handleStartDay,
-                                 updateDisplayedBalance: updateDisplayedBalance,
-                                 canAffordPurchase: canAffordPurchase
+                        PrepView(
+                            product: productState.product,
+                            initialPrice: productState.price,
+                            currentAmounts: currentAmounts,
+                            handleStartDay: handleStartDay,
+                            updateDisplayedBalance: updateDisplayedBalance,
+                            canAffordPurchase: canAffordPurchase
                         )
                     }
 
@@ -241,6 +296,43 @@ struct GameRootView: View {
             .presentationDetents([.fraction(0.55)])
             .presentationDragIndicator(.hidden)
             .presentationCornerRadius(28)
+        }
+        .onAppear {
+            hasSavedGame = saveRepository.hasSave()
+        }
+        .alert(
+            "Begin a New Journey?",
+            isPresented: $showingNewJourneyConfirmation
+        ) {
+            Button("Cancel", role: .cancel) {}
+
+            Button("Begin New Journey", role: .destructive) {
+                currentScreen = .productSelection
+            }
+        } message: {
+            Text(
+                "Starting a new journey will replace your current saved game."
+            )
+        }
+        .alert(
+            "Unable to Continue",
+            isPresented: $showingLoadError
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(
+                "Your saved game could not be loaded. Your save file has not been changed."
+            )
+        }
+        .alert(
+            "Unable to Save Day",
+            isPresented: $showingSaveError
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(
+                "The day was not completed because your game could not be saved. Please try again."
+            )
         }
     }
     

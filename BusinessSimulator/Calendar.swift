@@ -31,13 +31,14 @@ final class GameCalendar {
         )!
     }()
 
-    var day: Int
-    let startDate: Date
+    var simulationDay: Int
+    private(set) var locationStartDate: Date
+    private(set) var locationStartSimulationDay: Int
 
     private let foundationCalendar: Foundation.Calendar
 
     var currentDate: Date {
-        date(forBusinessDay: day)
+        date(forSimulationDay: simulationDay)
     }
 
     var currentWeekday: GameWeekday {
@@ -65,25 +66,36 @@ final class GameCalendar {
     }
 
     init(
-        day: Int = 1,
-        startDate: Date = GameCalendar.defaultStartDate
+        simulationDay: Int = 1,
+        locationStartDate: Date = GameCalendar.defaultStartDate,
+        locationStartSimulationDay: Int = 1
     ) {
-        precondition(day >= 1, "Business day must be at least 1.")
+        precondition(simulationDay >= 1, "Simulation day must be at least 1.")
+        precondition(
+            locationStartSimulationDay >= 1
+                && locationStartSimulationDay <= simulationDay,
+            "Location start day must fall within the simulation timeline."
+        )
 
         let calendar = Foundation.Calendar(identifier: .gregorian)
         self.foundationCalendar = calendar
-        self.day = day
-        self.startDate = Self.firstWeekday(
-            onOrAfter: calendar.startOfDay(for: startDate),
+        self.simulationDay = simulationDay
+        self.locationStartSimulationDay = locationStartSimulationDay
+        self.locationStartDate = Self.firstWeekday(
+            onOrAfter: calendar.startOfDay(for: locationStartDate),
             using: calendar
         )
     }
 
-    func date(forBusinessDay businessDay: Int) -> Date {
-        precondition(businessDay >= 1, "Business day must be at least 1.")
+    func date(forSimulationDay simulationDay: Int) -> Date {
+        precondition(
+            simulationDay >= locationStartSimulationDay,
+            "Simulation day cannot precede the current location."
+        )
 
-        var date = startDate
-        var businessDaysRemaining = businessDay - 1
+        var date = locationStartDate
+        var businessDaysRemaining =
+            simulationDay - locationStartSimulationDay
 
         while businessDaysRemaining > 0 {
             date = foundationCalendar.date(
@@ -98,6 +110,16 @@ final class GameCalendar {
         }
 
         return date
+    }
+
+    func beginLocation(
+        on startDate: Date
+    ) {
+        locationStartSimulationDay = simulationDay
+        locationStartDate = Self.firstWeekday(
+            onOrAfter: foundationCalendar.startOfDay(for: startDate),
+            using: foundationCalendar
+        )
     }
 
     private static func firstWeekday(
