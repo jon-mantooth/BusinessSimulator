@@ -7,6 +7,12 @@
 
 import Foundation
 
+enum PaymentSchedule: String, Codable {
+    case oneTime
+    case daily
+    case weekly
+}
+
 protocol Dimension {
 
     func calculateDemand() -> Double
