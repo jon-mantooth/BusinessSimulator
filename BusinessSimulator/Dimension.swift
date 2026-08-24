@@ -153,8 +153,8 @@ struct GrowthBalance {
 enum SimulationBalance {
 
     static let demand = GrowthBalance(
-        startingMultiplier: 0.80,
-        targetMultiplier: 1.50
+        startingMultiplier: 1.00,
+        targetMultiplier: 1.875
     )
 
     static let marketSize = GrowthBalance(
