@@ -165,7 +165,7 @@ final class InventoryDimension: Dimension {
         return salesLimit
     }
     
-    func calculateCosts(sales: Int, summary: DaySummary) -> Double {
+    func calculateDailyCosts(sales: Int, summary: DaySummary) -> Double {
         var totalCosts: Double = 0
         for inventory in inventories {
 

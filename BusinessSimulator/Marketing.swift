@@ -48,15 +48,29 @@ final class MarketingDepartment: Department {
         return sales
     }
 
-    func calculateCosts(
+    func calculateDailyCosts(
         sales: Int,
         summary: DaySummary
     ) -> Double {
         var totalCosts = 0.0
 
         for dimension in dimensions {
-            totalCosts += dimension.calculateCosts(
+            totalCosts += dimension.calculateDailyCosts(
                 sales: sales,
+                summary: summary
+            )
+        }
+
+        return totalCosts
+    }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
+        var totalCosts = 0.0
+
+        for dimension in dimensions {
+            totalCosts += dimension.calculateWeeklyCosts(
                 summary: summary
             )
         }

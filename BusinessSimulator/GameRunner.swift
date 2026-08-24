@@ -97,10 +97,18 @@ struct GameRunner {
         
         var totalCosts: Double = 0
         for department in departments{
-            totalCosts += department.calculateCosts(
+            totalCosts += department.calculateDailyCosts(
                 sales: actualBatches,
                 summary: summary
             )
+        }
+
+        if gameState.calendar.currentWeekday == .friday {
+            for department in departments {
+                totalCosts += department.calculateWeeklyCosts(
+                    summary: summary
+                )
+            }
         }
 
         let actualSales = actualBatches * gameState.productState!.product.unitsPerBatch
