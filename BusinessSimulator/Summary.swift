@@ -29,7 +29,7 @@ final class DaySummary {
     var revenue: Double = 0
     var economicCosts: [Cost] = []
     var cashFlowCosts: [Cost] = []
-    var dailyReputation: Double?
+    var dailyReputationResult: DailyReputationResult?
 
     private(set) var sections: [SummarySection] = []
 

@@ -163,6 +163,8 @@ final class GameState {
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,
             overallFactorScores: gameSave.reputation.overallFactorScores,
+            recentOverallReputations:
+                gameSave.reputation.recentOverallReputations,
             hasRatings: gameSave.reputation.hasRatings
         )
 

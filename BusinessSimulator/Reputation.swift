@@ -17,6 +17,13 @@ struct DailyReputationResult: Codable {
     let overallScore: Double
 }
 
+enum ReputationTrend {
+    case unavailable
+    case declining
+    case stable
+    case improving
+}
+
 /// Stores the business's current reputation and updates it from each day's
 /// pricing, availability, and freshness results.
 @Observable
@@ -31,9 +38,12 @@ final class BusinessReputationState {
 
     private static let positiveAdjustmentRate = 0.20
     private static let negativeAdjustmentRate = 0.10
+    private static let recentReputationCapacity = 5
+    private static let stableTrendThreshold = 0.5
 
     private(set) var overallReputation: Double
     private(set) var overallFactorScores: ReputationFactorScores
+    private(set) var recentOverallReputations: [Double]
     private(set) var hasRatings: Bool
 
     /// Converts the internal 0...100 reputation into a 1...5 star rating.
@@ -41,9 +51,41 @@ final class BusinessReputationState {
         1.0 + (overallReputation / 100.0 * 4.0)
     }
 
+    var trend: ReputationTrend {
+        guard recentOverallReputations.count == Self.recentReputationCapacity
+        else {
+            return .unavailable
+        }
+
+        let overallReputationChanges = zip(
+            recentOverallReputations.dropFirst(),
+            recentOverallReputations
+        ).map { (newerScore, olderScore) in
+            newerScore - olderScore
+        }
+
+        var weightedChange = 0.0
+        var totalWeight = 0.0
+
+        for (index, reputationChange) in overallReputationChanges.enumerated() {
+            let weight = 1.0 + Double(index) * 0.1
+            weightedChange += reputationChange * weight
+            totalWeight += weight
+        }
+
+        let averageWeightedChange = weightedChange / totalWeight
+
+        if abs(averageWeightedChange) < Self.stableTrendThreshold {
+            return .stable
+        }
+
+        return averageWeightedChange > 0 ? .improving : .declining
+    }
+
     init(
         overallReputation: Double = neutralReputation,
         overallFactorScores: ReputationFactorScores? = nil,
+        recentOverallReputations: [Double] = [],
         hasRatings: Bool = false
     ) {
         assert(
@@ -59,6 +101,9 @@ final class BusinessReputationState {
                 availabilityScore: overallReputation,
                 freshnessScore: overallReputation
             )
+        self.recentOverallReputations = Array(
+            recentOverallReputations.suffix(Self.recentReputationCapacity)
+        )
         self.hasRatings = hasRatings
     }
 
@@ -215,6 +260,11 @@ final class BusinessReputationState {
                     dailyReputationResult.factorScores.freshnessScore
             )
         )
+
+        recentOverallReputations.append(overallReputation)
+        if recentOverallReputations.count > Self.recentReputationCapacity {
+            recentOverallReputations.removeFirst()
+        }
 
         hasRatings = true
     }

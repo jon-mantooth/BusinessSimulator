@@ -48,6 +48,7 @@ struct InventoryStateSave: Codable {
 struct ReputationSave: Codable {
     let overallReputation: Double
     let overallFactorScores: ReputationFactorScores
+    let recentOverallReputations: [Double]
     let hasRatings: Bool
 }
 
@@ -135,6 +136,7 @@ extension GameSave {
         self.reputation = ReputationSave(
             overallReputation: reputation.overallReputation,
             overallFactorScores: reputation.overallFactorScores,
+            recentOverallReputations: reputation.recentOverallReputations,
             hasRatings: reputation.hasRatings
         )
 
