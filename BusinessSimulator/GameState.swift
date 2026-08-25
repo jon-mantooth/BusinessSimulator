@@ -11,6 +11,7 @@ import Observation
 enum GameStateRestoreError: Error {
     case productNotFound(ProductID)
     case invalidInventoryData
+    case invalidAdvertisementData
 }
 
 @Observable
@@ -25,6 +26,7 @@ final class GameState {
     var productState: ProductState?
     var inventoryStates: [InventoryState] = []
     var reputation: BusinessReputationState?
+    var advertisementState: AdvertisementState?
     var businessHours: BusinessHours?
     var production: Production?
     var marketing: MarketingDepartment?
@@ -59,6 +61,12 @@ final class GameState {
         self.businessHours = BusinessHours(
             openingTime: BusinessTime(hour: 9, minute: 0),
             closingTime: BusinessTime(hour: 17, minute: 0)
+        )
+
+        let advertisementCatalog = AdvertisementCatalog()
+        self.advertisementState = AdvertisementState(
+            tiers: advertisementCatalog.tiersByProduct[product.id]!,
+            activeAdvertisementID: advertisementCatalog.noAdvertisement.id
         )
         
         let dimensions = BusinessDimensions.create(
@@ -160,6 +168,25 @@ final class GameState {
         businessHours = BusinessHours(
             openingTime: BusinessTime(hour: 9, minute: 0),
             closingTime: BusinessTime(hour: 17, minute: 0)
+        )
+
+        let advertisementCatalog = AdvertisementCatalog()
+        let advertisementTiers =
+            advertisementCatalog.tiersByProduct[product.id]!
+        let activeAdvertisementID =
+            gameSave.advertisementState.activeAdvertisementID
+
+        guard advertisementTiers.contains(where: { tier in
+            tier.advertisements.contains { advertisement in
+                advertisement.id == activeAdvertisementID
+            }
+        }) else {
+            throw GameStateRestoreError.invalidAdvertisementData
+        }
+
+        advertisementState = AdvertisementState(
+            tiers: advertisementTiers,
+            activeAdvertisementID: activeAdvertisementID
         )
 
         simulationSummary = SimulationSummary()

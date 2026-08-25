@@ -10,6 +10,7 @@ struct GameSave: Codable {
     let productState: ProductStateSave
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
+    let advertisementState: AdvertisementStateSave
     let summaries: [DaySummarySave]
 }
 
@@ -49,6 +50,10 @@ struct ReputationSave: Codable {
     let hasRatings: Bool
 }
 
+struct AdvertisementStateSave: Codable {
+    let activeAdvertisementID: AdvertisementID
+}
+
 struct DaySummarySave: Codable {
     let day: Int
     let startingBalance: Double
@@ -80,7 +85,9 @@ extension GameSave {
             let calendar = gameState.calendar,
             let weather = gameState.weather,
             let productState = gameState.productState,
-            let reputation = gameState.reputation
+            let reputation = gameState.reputation,
+            let advertisementState = gameState.advertisementState,
+            let activeAdvertisementID = advertisementState.activeAdvertisementID
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -127,6 +134,10 @@ extension GameSave {
         self.reputation = ReputationSave(
             overallReputation: reputation.overallReputation,
             hasRatings: reputation.hasRatings
+        )
+
+        self.advertisementState = AdvertisementStateSave(
+            activeAdvertisementID: activeAdvertisementID
         )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
