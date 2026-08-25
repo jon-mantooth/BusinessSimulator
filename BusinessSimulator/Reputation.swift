@@ -219,6 +219,19 @@ final class BusinessReputationState {
         hasRatings = true
     }
 
+    private static func updatedScore(
+        currentScore: Double,
+        dailyScore: Double
+    ) -> Double {
+        let adjustmentRate = dailyScore >= currentScore
+            ? positiveAdjustmentRate
+            : negativeAdjustmentRate
+
+        return currentScore + adjustmentRate * (
+            dailyScore - currentScore
+        )
+    }
+
     private static func isNormalized(
         _ score: Double
     ) -> Bool {
