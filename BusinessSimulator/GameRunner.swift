@@ -84,7 +84,7 @@ struct GameRunner {
             )
         }
 
-        let dailyReputation =
+        let dailyReputationResult =
             gameState.reputation!.calculateDailyReputation(
                 price: gameState.productState!.price,
                 idealPrice: gameState.productState!.currentIdealPrice,
@@ -93,7 +93,7 @@ struct GameRunner {
                     gameState.productState!.product.productInventories,
                 inventoryStates: gameState.inventoryStates
             )
-        summary.dailyReputation = dailyReputation
+        summary.dailyReputationResult = dailyReputationResult
         
         var totalCosts: Double = 0
         for department in departments{
@@ -121,7 +121,7 @@ struct GameRunner {
 
     func prepForNextDay() {
         gameState.reputation!.updateOverallReputation(
-            dailyReputation: summary.dailyReputation!
+            dailyReputationResult: summary.dailyReputationResult!
         )
 
         // Update Balance

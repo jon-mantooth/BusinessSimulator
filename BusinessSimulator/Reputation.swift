@@ -6,6 +6,17 @@
 import Foundation
 import Observation
 
+struct ReputationFactorScores: Codable {
+    let priceScore: Double
+    let availabilityScore: Double
+    let freshnessScore: Double
+}
+
+struct DailyReputationResult: Codable {
+    let factorScores: ReputationFactorScores
+    let overallScore: Double
+}
+
 /// Stores the business's current reputation and updates it from each day's
 /// pricing, availability, and freshness results.
 @Observable
@@ -22,6 +33,7 @@ final class BusinessReputationState {
     private static let negativeAdjustmentRate = 0.10
 
     private(set) var overallReputation: Double
+    private(set) var overallFactorScores: ReputationFactorScores
     private(set) var hasRatings: Bool
 
     /// Converts the internal 0...100 reputation into a 1...5 star rating.
@@ -31,6 +43,7 @@ final class BusinessReputationState {
 
     init(
         overallReputation: Double = neutralReputation,
+        overallFactorScores: ReputationFactorScores? = nil,
         hasRatings: Bool = false
     ) {
         assert(
@@ -40,6 +53,12 @@ final class BusinessReputationState {
         )
 
         self.overallReputation = overallReputation
+        self.overallFactorScores = overallFactorScores
+            ?? ReputationFactorScores(
+                priceScore: overallReputation,
+                availabilityScore: overallReputation,
+                freshnessScore: overallReputation
+            )
         self.hasRatings = hasRatings
     }
 
@@ -51,7 +70,7 @@ final class BusinessReputationState {
         demandFulfillmentRate: Double,
         productInventories: [ProductInventory],
         inventoryStates: [InventoryState]
-    ) -> Double {
+    ) -> DailyReputationResult {
         let factorWeights = [
             Self.priceWeight,
             Self.availabilityWeight,
@@ -86,10 +105,22 @@ final class BusinessReputationState {
             "Reputation effect scores must be between 0 and 1."
         )
 
-        return 100.0 * (
-            priceEffectScore * Self.priceWeight
-            + availabilityEffectScore * Self.availabilityWeight
-            + freshnessEffectScore * Self.freshnessWeight
+        let priceScore = priceEffectScore * 100.0
+        let availabilityScore = availabilityEffectScore * 100.0
+        let freshnessScore = freshnessEffectScore * 100.0
+
+        let overallScore =
+            priceScore * Self.priceWeight
+            + availabilityScore * Self.availabilityWeight
+            + freshnessScore * Self.freshnessWeight
+
+        return DailyReputationResult(
+            factorScores: ReputationFactorScores(
+                priceScore: priceScore,
+                availabilityScore: availabilityScore,
+                freshnessScore: freshnessScore
+            ),
+            overallScore: overallScore
         )
     }
 
@@ -161,15 +192,30 @@ final class BusinessReputationState {
     /// Moves reputation toward the daily result. Positive days adjust 20% of
     /// the difference while negative days adjust 10% of the difference.
     func updateOverallReputation(
-        dailyReputation: Double
+        dailyReputationResult: DailyReputationResult
     ) {
-        let adjustmentRate = dailyReputation >= overallReputation
-            ? Self.positiveAdjustmentRate
-            : Self.negativeAdjustmentRate
-
-        overallReputation += adjustmentRate * (
-            dailyReputation - overallReputation
+        overallReputation = Self.updatedScore(
+            currentScore: overallReputation,
+            dailyScore: dailyReputationResult.overallScore
         )
+
+        overallFactorScores = ReputationFactorScores(
+            priceScore: Self.updatedScore(
+                currentScore: overallFactorScores.priceScore,
+                dailyScore: dailyReputationResult.factorScores.priceScore
+            ),
+            availabilityScore: Self.updatedScore(
+                currentScore: overallFactorScores.availabilityScore,
+                dailyScore:
+                    dailyReputationResult.factorScores.availabilityScore
+            ),
+            freshnessScore: Self.updatedScore(
+                currentScore: overallFactorScores.freshnessScore,
+                dailyScore:
+                    dailyReputationResult.factorScores.freshnessScore
+            )
+        )
+
         hasRatings = true
     }
 

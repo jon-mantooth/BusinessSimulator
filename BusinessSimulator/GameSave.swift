@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -47,6 +47,7 @@ struct InventoryStateSave: Codable {
 
 struct ReputationSave: Codable {
     let overallReputation: Double
+    let overallFactorScores: ReputationFactorScores
     let hasRatings: Bool
 }
 
@@ -62,7 +63,7 @@ struct DaySummarySave: Codable {
     let revenue: Double
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
-    let dailyReputation: Double?
+    let dailyReputationResult: DailyReputationResult?
     let sections: [SummarySectionSave]
 }
 
@@ -133,6 +134,7 @@ extension GameSave {
 
         self.reputation = ReputationSave(
             overallReputation: reputation.overallReputation,
+            overallFactorScores: reputation.overallFactorScores,
             hasRatings: reputation.hasRatings
         )
 
@@ -159,7 +161,7 @@ extension GameSave {
                         amount: cost.amount
                     )
                 },
-                dailyReputation: summary.dailyReputation,
+                dailyReputationResult: summary.dailyReputationResult,
                 sections: summary.sections.map { section in
                     SummarySectionSave(
                         name: section.name,

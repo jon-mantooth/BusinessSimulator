@@ -162,6 +162,7 @@ final class GameState {
 
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,
+            overallFactorScores: gameSave.reputation.overallFactorScores,
             hasRatings: gameSave.reputation.hasRatings
         )
 
@@ -205,7 +206,8 @@ final class GameState {
             summary.cashFlowCosts = savedSummary.cashFlowCosts.map {
                 Cost(name: $0.name, amount: $0.amount)
             }
-            summary.dailyReputation = savedSummary.dailyReputation
+            summary.dailyReputationResult =
+                savedSummary.dailyReputationResult
 
             for section in savedSummary.sections {
                 for note in section.notes {
