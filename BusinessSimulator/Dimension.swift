@@ -120,6 +120,10 @@ struct BusinessDimensions {
             marketing: [
                 BusinessReputationDimension(
                     reputation: gameState.reputation!
+                ),
+                AdvertisementDimension(
+                    advertisementState: gameState.advertisementState!,
+                    businessHours: gameState.businessHours!
                 )
             ],
             environment: [
