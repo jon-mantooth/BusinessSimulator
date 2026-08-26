@@ -281,7 +281,14 @@ extension BusinessReputationTests {
 
         for dailyReputation in testCase.dailyReputations {
             reputation.updateOverallReputation(
-                dailyReputation: dailyReputation
+                dailyReputationResult: DailyReputationResult(
+                    factorScores: ReputationFactorScores(
+                        priceScore: dailyReputation,
+                        availabilityScore: dailyReputation,
+                        freshnessScore: dailyReputation
+                    ),
+                    overallScore: dailyReputation
+                )
             )
         }
 
@@ -300,7 +307,14 @@ extension BusinessReputationTests {
         #expect(reputation.hasRatings == false)
 
         reputation.updateOverallReputation(
-            dailyReputation: 75.0
+            dailyReputationResult: DailyReputationResult(
+                factorScores: ReputationFactorScores(
+                    priceScore: 75.0,
+                    availabilityScore: 75.0,
+                    freshnessScore: 75.0
+                ),
+                overallScore: 75.0
+            )
         )
 
         #expect(reputation.hasRatings == true)
@@ -468,7 +482,7 @@ extension BusinessReputationTests {
         ]
 
         let reputation = BusinessReputationState()
-        let dailyReputation = reputation.calculateDailyReputation(
+        let dailyReputationResult = reputation.calculateDailyReputation(
             price: testCase.price,
             idealPrice: testCase.idealPrice,
             demandFulfillmentRate: testCase.demandFulfillmentRate,
@@ -477,7 +491,10 @@ extension BusinessReputationTests {
         )
 
         #expect(
-            abs(dailyReputation - testCase.expectedDailyReputation)
+            abs(
+                dailyReputationResult.overallScore
+                    - testCase.expectedDailyReputation
+            )
                 < 0.000_001
         )
     }
