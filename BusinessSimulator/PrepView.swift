@@ -170,7 +170,7 @@ struct PrepView: View {
                     size: 36
                 )
 
-                Text(product.name)
+                Text(product.pluralName)
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundStyle(product.accent)

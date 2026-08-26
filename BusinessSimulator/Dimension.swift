@@ -7,6 +7,12 @@
 
 import Foundation
 
+enum PaymentSchedule: String, Codable {
+    case oneTime
+    case daily
+    case weekly
+}
+
 protocol Dimension {
 
     func calculateDemand() -> Double
@@ -18,8 +24,12 @@ protocol Dimension {
         summary: DaySummary
     ) -> Int
     
-    func calculateCosts(
+    func calculateDailyCosts(
         sales: Int,
+        summary: DaySummary
+    ) -> Double
+
+    func calculateWeeklyCosts(
         summary: DaySummary
     ) -> Double
     
@@ -47,11 +57,17 @@ extension Dimension {
         return sales
     }
     
-    func calculateCosts(
+    func calculateDailyCosts(
         sales: Int,
         summary: DaySummary
     ) -> Double {
 
+        return 0
+    }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
         return 0
     }
     
@@ -104,6 +120,10 @@ struct BusinessDimensions {
             marketing: [
                 BusinessReputationDimension(
                     reputation: gameState.reputation!
+                ),
+                AdvertisementDimension(
+                    advertisementState: gameState.advertisementState!,
+                    businessHours: gameState.businessHours!
                 )
             ],
             environment: [

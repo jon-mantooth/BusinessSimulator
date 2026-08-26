@@ -42,10 +42,10 @@ final class Production: Department {
         return sales
     }
     
-    func calculateCosts(sales: Int, summary: DaySummary) -> Double {
+    func calculateDailyCosts(sales: Int, summary: DaySummary) -> Double {
         var totalCosts: Double = 0
         for dimension in dimensions {
-            totalCosts += dimension.calculateCosts(sales: sales, summary: summary)
+            totalCosts += dimension.calculateDailyCosts(sales: sales, summary: summary)
         }
         
         return totalCosts

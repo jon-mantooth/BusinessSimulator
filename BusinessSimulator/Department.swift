@@ -16,8 +16,12 @@ protocol Department {
         summary: DaySummary
     ) -> Int
     
-    func calculateCosts(
+    func calculateDailyCosts(
         sales: Int,
+        summary: DaySummary
+    ) -> Double
+
+    func calculateWeeklyCosts(
         summary: DaySummary
     ) -> Double
     
@@ -45,11 +49,18 @@ extension Department {
         return sales
     }
     
-    func calculateCosts(
+    func calculateDailyCosts(
         sales: Int,
         summary: DaySummary
     ) -> Double {
 
+        return 0
+    }
+
+    
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
         return 0
     }
     

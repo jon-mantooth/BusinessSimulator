@@ -9,7 +9,8 @@ import SwiftUI
 
 struct Product: Identifiable {
     let id: ProductID
-    let name: String
+    let singularName: String
+    let pluralName: String
     let smallIcon: GameIcon
     let accent: Color
     let description: String

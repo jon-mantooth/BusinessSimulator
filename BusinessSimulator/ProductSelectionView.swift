@@ -127,7 +127,7 @@ struct ProductSelectionView: View {
                 .frame(width: 50)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(product.name)
+                    Text(product.pluralName)
                         .font(.system(.headline, design: .serif))
                         .fontWeight(.bold)
                         .foregroundStyle(darkBrown)

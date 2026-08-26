@@ -84,7 +84,7 @@ struct GameRunner {
             )
         }
 
-        let dailyReputation =
+        let dailyReputationResult =
             gameState.reputation!.calculateDailyReputation(
                 price: gameState.productState!.price,
                 idealPrice: gameState.productState!.currentIdealPrice,
@@ -93,14 +93,22 @@ struct GameRunner {
                     gameState.productState!.product.productInventories,
                 inventoryStates: gameState.inventoryStates
             )
-        summary.dailyReputation = dailyReputation
+        summary.dailyReputationResult = dailyReputationResult
         
         var totalCosts: Double = 0
         for department in departments{
-            totalCosts += department.calculateCosts(
+            totalCosts += department.calculateDailyCosts(
                 sales: actualBatches,
                 summary: summary
             )
+        }
+
+        if gameState.calendar.currentWeekday == .friday {
+            for department in departments {
+                totalCosts += department.calculateWeeklyCosts(
+                    summary: summary
+                )
+            }
         }
 
         let actualSales = actualBatches * gameState.productState!.product.unitsPerBatch
@@ -113,7 +121,7 @@ struct GameRunner {
 
     func prepForNextDay() {
         gameState.reputation!.updateOverallReputation(
-            dailyReputation: summary.dailyReputation!
+            dailyReputationResult: summary.dailyReputationResult!
         )
 
         // Update Balance

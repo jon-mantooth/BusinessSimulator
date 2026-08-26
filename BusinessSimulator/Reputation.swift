@@ -6,6 +6,42 @@
 import Foundation
 import Observation
 
+struct BusinessReputationComment {
+    let title: String
+    let comments: [String]
+}
+
+enum ReputationFactor {
+    case price
+    case availability
+    case freshness
+    case overall
+}
+
+enum ReputationSentiment {
+    case needsImprovement
+    case good
+    case excellent
+}
+
+struct ReputationFactorScores: Codable {
+    let priceScore: Double
+    let availabilityScore: Double
+    let freshnessScore: Double
+}
+
+struct DailyReputationResult: Codable {
+    let factorScores: ReputationFactorScores
+    let overallScore: Double
+}
+
+enum ReputationTrend {
+    case unavailable
+    case declining
+    case stable
+    case improving
+}
+
 /// Stores the business's current reputation and updates it from each day's
 /// pricing, availability, and freshness results.
 @Observable
@@ -20,8 +56,12 @@ final class BusinessReputationState {
 
     private static let positiveAdjustmentRate = 0.20
     private static let negativeAdjustmentRate = 0.10
+    private static let recentReputationCapacity = 5
+    private static let stableTrendThreshold = 0.5
 
     private(set) var overallReputation: Double
+    private(set) var overallFactorScores: ReputationFactorScores
+    private(set) var recentOverallReputations: [Double]
     private(set) var hasRatings: Bool
 
     /// Converts the internal 0...100 reputation into a 1...5 star rating.
@@ -29,8 +69,63 @@ final class BusinessReputationState {
         1.0 + (overallReputation / 100.0 * 4.0)
     }
 
+    func factorStarRating(
+        for score: Double
+    ) -> Int {
+        min(5, max(1, Int((score / 20.0).rounded())))
+    }
+
+    var priceSentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.priceScore)
+    }
+
+    var availabilitySentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.availabilityScore)
+    }
+
+    var freshnessSentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.freshnessScore)
+    }
+
+    var overallSentiment: ReputationSentiment {
+        Self.sentiment(for: overallReputation)
+    }
+
+    var trend: ReputationTrend {
+        guard recentOverallReputations.count == Self.recentReputationCapacity
+        else {
+            return .unavailable
+        }
+
+        let overallReputationChanges = zip(
+            recentOverallReputations.dropFirst(),
+            recentOverallReputations
+        ).map { (newerScore, olderScore) in
+            newerScore - olderScore
+        }
+
+        var weightedChange = 0.0
+        var totalWeight = 0.0
+
+        for (index, reputationChange) in overallReputationChanges.enumerated() {
+            let weight = 1.0 + Double(index) * 0.1
+            weightedChange += reputationChange * weight
+            totalWeight += weight
+        }
+
+        let averageWeightedChange = weightedChange / totalWeight
+
+        if abs(averageWeightedChange) < Self.stableTrendThreshold {
+            return .stable
+        }
+
+        return averageWeightedChange > 0 ? .improving : .declining
+    }
+
     init(
         overallReputation: Double = neutralReputation,
+        overallFactorScores: ReputationFactorScores? = nil,
+        recentOverallReputations: [Double] = [],
         hasRatings: Bool = false
     ) {
         assert(
@@ -40,6 +135,15 @@ final class BusinessReputationState {
         )
 
         self.overallReputation = overallReputation
+        self.overallFactorScores = overallFactorScores
+            ?? ReputationFactorScores(
+                priceScore: overallReputation,
+                availabilityScore: overallReputation,
+                freshnessScore: overallReputation
+            )
+        self.recentOverallReputations = Array(
+            recentOverallReputations.suffix(Self.recentReputationCapacity)
+        )
         self.hasRatings = hasRatings
     }
 
@@ -51,7 +155,7 @@ final class BusinessReputationState {
         demandFulfillmentRate: Double,
         productInventories: [ProductInventory],
         inventoryStates: [InventoryState]
-    ) -> Double {
+    ) -> DailyReputationResult {
         let factorWeights = [
             Self.priceWeight,
             Self.availabilityWeight,
@@ -86,10 +190,22 @@ final class BusinessReputationState {
             "Reputation effect scores must be between 0 and 1."
         )
 
-        return 100.0 * (
-            priceEffectScore * Self.priceWeight
-            + availabilityEffectScore * Self.availabilityWeight
-            + freshnessEffectScore * Self.freshnessWeight
+        let priceScore = priceEffectScore * 100.0
+        let availabilityScore = availabilityEffectScore * 100.0
+        let freshnessScore = freshnessEffectScore * 100.0
+
+        let overallScore =
+            priceScore * Self.priceWeight
+            + availabilityScore * Self.availabilityWeight
+            + freshnessScore * Self.freshnessWeight
+
+        return DailyReputationResult(
+            factorScores: ReputationFactorScores(
+                priceScore: priceScore,
+                availabilityScore: availabilityScore,
+                freshnessScore: freshnessScore
+            ),
+            overallScore: overallScore
         )
     }
 
@@ -161,16 +277,63 @@ final class BusinessReputationState {
     /// Moves reputation toward the daily result. Positive days adjust 20% of
     /// the difference while negative days adjust 10% of the difference.
     func updateOverallReputation(
-        dailyReputation: Double
+        dailyReputationResult: DailyReputationResult
     ) {
-        let adjustmentRate = dailyReputation >= overallReputation
-            ? Self.positiveAdjustmentRate
-            : Self.negativeAdjustmentRate
-
-        overallReputation += adjustmentRate * (
-            dailyReputation - overallReputation
+        overallReputation = Self.updatedScore(
+            currentScore: overallReputation,
+            dailyScore: dailyReputationResult.overallScore
         )
+
+        overallFactorScores = ReputationFactorScores(
+            priceScore: Self.updatedScore(
+                currentScore: overallFactorScores.priceScore,
+                dailyScore: dailyReputationResult.factorScores.priceScore
+            ),
+            availabilityScore: Self.updatedScore(
+                currentScore: overallFactorScores.availabilityScore,
+                dailyScore:
+                    dailyReputationResult.factorScores.availabilityScore
+            ),
+            freshnessScore: Self.updatedScore(
+                currentScore: overallFactorScores.freshnessScore,
+                dailyScore:
+                    dailyReputationResult.factorScores.freshnessScore
+            )
+        )
+
+        recentOverallReputations.append(overallReputation)
+        if recentOverallReputations.count > Self.recentReputationCapacity {
+            recentOverallReputations.removeFirst()
+        }
+
         hasRatings = true
+    }
+
+    private static func updatedScore(
+        currentScore: Double,
+        dailyScore: Double
+    ) -> Double {
+        let adjustmentRate = dailyScore >= currentScore
+            ? positiveAdjustmentRate
+            : negativeAdjustmentRate
+
+        return currentScore + adjustmentRate * (
+            dailyScore - currentScore
+        )
+    }
+
+    private static func sentiment(
+        for score: Double
+    ) -> ReputationSentiment {
+        if score < 70.0 {
+            return .needsImprovement
+        }
+
+        if score < 90.0 {
+            return .good
+        }
+
+        return .excellent
     }
 
     private static func isNormalized(

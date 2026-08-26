@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct FooterView: View {
-    let onNavigate: (Screen) -> Void
-    let resetDisplayedBalance: () -> Void
+    let isMarketingSelected: Bool
+    let onGameModeTapped: () -> Void
+    let onMarketingTapped: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let gold = Color(red: 0.82, green: 0.54, blue: 0.20)
@@ -30,12 +31,15 @@ struct FooterView: View {
             footerButton(
                 title: "Game Mode",
                 systemImage: "gamecontroller.fill",
-                isSelected: true
+                isSelected: !isMarketingSelected,
+                action: onGameModeTapped
             )
 
             footerButton(
                 title: "Marketing",
-                systemImage: "megaphone.fill"
+                systemImage: "megaphone.fill",
+                isSelected: isMarketingSelected,
+                action: onMarketingTapped
             )
 
             footerButton(
@@ -68,11 +72,10 @@ struct FooterView: View {
     private func footerButton(
         title: String,
         systemImage: String,
-        isSelected: Bool = false
+        isSelected: Bool = false,
+        action: @escaping () -> Void = {}
     ) -> some View {
-        Button {
-            // Navigation will be connected as each business area is added.
-        } label: {
+        Button(action: action) {
             VStack(spacing: 3) {
                 Image(systemName: systemImage)
                     .font(.system(size: 18, weight: .semibold))

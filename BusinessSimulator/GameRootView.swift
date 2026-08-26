@@ -27,6 +27,7 @@ struct GameRootView: View {
     @State private var showingNewJourneyConfirmation = false
     @State private var showingLoadError = false
     @State private var showingSaveError = false
+    @State private var showingMarketing = false
 
     let productCatalog = ProductCatalog()
 
@@ -141,14 +142,6 @@ struct GameRootView: View {
         }
     }
     
-    private func onNavigate(screen: Screen){
-        currentScreen = screen
-    }
-    
-    private func resetDisplayedBalance(){
-        gameState.finance.displayedBalance = gameState.finance.actualBalance
-    }
-
     private var gameBackground: some View {
         GeometryReader { geometry in
             ZStack {
@@ -239,46 +232,63 @@ struct GameRootView: View {
                     )
                 }
 
-                switch currentScreen {
-                case .home:
-                    HomeView(
-                        hasSavedGame: hasSavedGame,
-                        onBeginJourney: onBeginJourney,
-                        onContinue: onContinueSavedGame
-                    )
+                ZStack {
+                    switch currentScreen {
+                    case .home:
+                        HomeView(
+                            hasSavedGame: hasSavedGame,
+                            onBeginJourney: onBeginJourney,
+                            onContinue: onContinueSavedGame
+                        )
 
-                case .productSelection:
-                    ProductSelectionView(
-                        products: productCatalog.products,
-                        onSelectionChanged: { product in
-                            previewedProduct = product
-                        },
-                        onContinue: onContinue
-                    )
+                    case .productSelection:
+                        ProductSelectionView(
+                            products: productCatalog.products,
+                            onSelectionChanged: { product in
+                                previewedProduct = product
+                            },
+                            onContinue: onContinue
+                        )
 
-                case .prep:
-                    if let productState = gameState.productState {
-                        PrepView(
-                            product: productState.product,
-                            initialPrice: productState.price,
-                            currentAmounts: currentAmounts,
-                            handleStartDay: handleStartDay,
-                            updateDisplayedBalance: updateDisplayedBalance,
-                            canAffordPurchase: canAffordPurchase
+                    case .prep:
+                        if let productState = gameState.productState {
+                            PrepView(
+                                product: productState.product,
+                                initialPrice: productState.price,
+                                currentAmounts: currentAmounts,
+                                handleStartDay: handleStartDay,
+                                updateDisplayedBalance: updateDisplayedBalance,
+                                canAffordPurchase: canAffordPurchase
+                            )
+                        }
+
+                    case .summary:
+                        SummaryView(
+                            summary: currentSummary!,
+                            onNextDay: onNextDay
                         )
                     }
 
-                case .summary:
-                    SummaryView(
-                        summary: currentSummary!,
-                        onNextDay: onNextDay
-                    )
+                    if showingMarketing,
+                        let product = gameState.productState?.product,
+                        let reputation = gameState.reputation {
+                        MarketingView(
+                            product: product,
+                            reputation: reputation,
+                            simulationDay: gameState.calendar.simulationDay
+                        )
+                    }
                 }
 
                 if currentScreen != .home && currentScreen != .productSelection {
                     FooterView(
-                        onNavigate: onNavigate,
-                        resetDisplayedBalance: resetDisplayedBalance
+                        isMarketingSelected: showingMarketing,
+                        onGameModeTapped: {
+                            showingMarketing = false
+                        },
+                        onMarketingTapped: {
+                            showingMarketing = true
+                        }
                     )
                 }
             }

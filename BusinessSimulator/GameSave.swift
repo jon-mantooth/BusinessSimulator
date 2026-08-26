@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -10,6 +10,7 @@ struct GameSave: Codable {
     let productState: ProductStateSave
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
+    let advertisementState: AdvertisementStateSave
     let summaries: [DaySummarySave]
 }
 
@@ -46,7 +47,13 @@ struct InventoryStateSave: Codable {
 
 struct ReputationSave: Codable {
     let overallReputation: Double
+    let overallFactorScores: ReputationFactorScores
+    let recentOverallReputations: [Double]
     let hasRatings: Bool
+}
+
+struct AdvertisementStateSave: Codable {
+    let activeAdvertisementID: AdvertisementID
 }
 
 struct DaySummarySave: Codable {
@@ -57,7 +64,7 @@ struct DaySummarySave: Codable {
     let revenue: Double
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
-    let dailyReputation: Double?
+    let dailyReputationResult: DailyReputationResult?
     let sections: [SummarySectionSave]
 }
 
@@ -80,7 +87,9 @@ extension GameSave {
             let calendar = gameState.calendar,
             let weather = gameState.weather,
             let productState = gameState.productState,
-            let reputation = gameState.reputation
+            let reputation = gameState.reputation,
+            let advertisementState = gameState.advertisementState,
+            let activeAdvertisementID = advertisementState.activeAdvertisementID
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -126,7 +135,13 @@ extension GameSave {
 
         self.reputation = ReputationSave(
             overallReputation: reputation.overallReputation,
+            overallFactorScores: reputation.overallFactorScores,
+            recentOverallReputations: reputation.recentOverallReputations,
             hasRatings: reputation.hasRatings
+        )
+
+        self.advertisementState = AdvertisementStateSave(
+            activeAdvertisementID: activeAdvertisementID
         )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
@@ -148,7 +163,7 @@ extension GameSave {
                         amount: cost.amount
                     )
                 },
-                dailyReputation: summary.dailyReputation,
+                dailyReputationResult: summary.dailyReputationResult,
                 sections: summary.sections.map { section in
                     SummarySectionSave(
                         name: section.name,
