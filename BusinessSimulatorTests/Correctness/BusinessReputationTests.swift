@@ -19,15 +19,48 @@ extension BusinessReputationTests {
     }
 }
 
+// MARK: - Factor Star Rating
+
+struct FactorStarRatingCase: Sendable {
+    let score: Double
+    let expectedStarRating: Int
+}
+
+private let factorStarRatingCases = [
+    FactorStarRatingCase(score: 0, expectedStarRating: 1),
+    FactorStarRatingCase(score: 29, expectedStarRating: 1),
+    FactorStarRatingCase(score: 30, expectedStarRating: 2),
+    FactorStarRatingCase(score: 69, expectedStarRating: 3),
+    FactorStarRatingCase(score: 70, expectedStarRating: 4),
+    FactorStarRatingCase(score: 89, expectedStarRating: 4),
+    FactorStarRatingCase(score: 90, expectedStarRating: 5),
+    FactorStarRatingCase(score: 100, expectedStarRating: 5)
+]
+
+extension BusinessReputationTests {
+
+    @Test(arguments: factorStarRatingCases)
+    func factorScoresConvertToWholeReviewStars(
+        testCase: FactorStarRatingCase
+    ) {
+        let reputation = BusinessReputationState()
+
+        #expect(
+            reputation.factorStarRating(for: testCase.score)
+                == testCase.expectedStarRating
+        )
+    }
+}
+
 // MARK: - Reputation Sentiment Classification
 
-private enum ExpectedReputationSentiment: Sendable {
+enum ExpectedReputationSentiment: Sendable {
     case needsImprovement
     case good
     case excellent
 }
 
-private struct ReputationSentimentCase: Sendable {
+struct ReputationSentimentCase: Sendable {
     let name: String
     let score: Double
     let expectedSentiment: ExpectedReputationSentiment
@@ -107,6 +140,272 @@ extension BusinessReputationTests {
             reputation.overallSentiment == expectedSentiment,
             Comment(rawValue: testCase.name + " overall")
         )
+    }
+}
+
+// MARK: - Reputation Catalog
+
+struct FactorCommentCase: Sendable {
+    let factor: String
+    let sentiment: String
+    let expectedTitle: String
+    let expectedComment: String
+}
+
+private let factorCommentCases = [
+    FactorCommentCase(
+        factor: "price",
+        sentiment: "needsImprovement",
+        expectedTitle: "Could Improve",
+        expectedComment: "Customers feel your prices are too high for what they receive."
+    ),
+    FactorCommentCase(
+        factor: "price",
+        sentiment: "good",
+        expectedTitle: "Good",
+        expectedComment: "Your prices feel reasonable, but customers are not excited by the value."
+    ),
+    FactorCommentCase(
+        factor: "price",
+        sentiment: "excellent",
+        expectedTitle: "Excellent",
+        expectedComment: "Customers believe your products provide strong value for the price."
+    ),
+    FactorCommentCase(
+        factor: "availability",
+        sentiment: "needsImprovement",
+        expectedTitle: "Could Improve",
+        expectedComment: "Customers are leaving disappointed because you cannot meet demand."
+    ),
+    FactorCommentCase(
+        factor: "availability",
+        sentiment: "good",
+        expectedTitle: "Good",
+        expectedComment: "You usually meet demand, but some customers still miss out."
+    ),
+    FactorCommentCase(
+        factor: "availability",
+        sentiment: "excellent",
+        expectedTitle: "Excellent",
+        expectedComment: "Customers can count on you to have enough product throughout the day."
+    ),
+    FactorCommentCase(
+        factor: "freshness",
+        sentiment: "needsImprovement",
+        expectedTitle: "Could Improve",
+        expectedComment: "Older ingredients are noticeably affecting product quality. Try to hold less inventory so it stays fresh."
+    ),
+    FactorCommentCase(
+        factor: "freshness",
+        sentiment: "good",
+        expectedTitle: "Good",
+        expectedComment: "Ingredient freshness is acceptable, with some room to improve."
+    ),
+    FactorCommentCase(
+        factor: "freshness",
+        sentiment: "excellent",
+        expectedTitle: "Excellent",
+        expectedComment: "Fresh ingredients are helping your products make a great impression."
+    )
+]
+
+struct OverallCommentCase: Sendable {
+    let sentiment: String
+    let expectedTitle: String
+    let expectedFirstComment: String
+}
+
+private let overallCommentCases = [
+    OverallCommentCase(
+        sentiment: "needsImprovement",
+        expectedTitle: "Customers Are Losing Confidence",
+        expectedFirstComment: "Your business has disappointed customers lately, but a few strong days can begin rebuilding their trust."
+    ),
+    OverallCommentCase(
+        sentiment: "good",
+        expectedTitle: "Customers See Potential",
+        expectedFirstComment: "Your business is making a fair impression. Consistent decisions can turn satisfied customers into loyal ones."
+    ),
+    OverallCommentCase(
+        sentiment: "excellent",
+        expectedTitle: "Customers Are Cheering You On",
+        expectedFirstComment: "Customers are excited about your business. Keep delivering the experience that earned their support!"
+    )
+]
+
+struct CustomerReviewCase: Sendable {
+    let factor: String
+    let sentiment: String
+    let expectedFirstReview: String
+}
+
+private let customerReviewCases = [
+    CustomerReviewCase(
+        factor: "price",
+        sentiment: "needsImprovement",
+        expectedFirstReview: "The hot dogs are good, but the price is too high."
+    ),
+    CustomerReviewCase(
+        factor: "price",
+        sentiment: "good",
+        expectedFirstReview: "The hot dogs are ok, nothing special."
+    ),
+    CustomerReviewCase(
+        factor: "price",
+        sentiment: "excellent",
+        expectedFirstReview: "These hot dogs are absolutely worth the price!"
+    ),
+    CustomerReviewCase(
+        factor: "availability",
+        sentiment: "needsImprovement",
+        expectedFirstReview: "I really want to try a hot dog, but they are always sold out!"
+    ),
+    CustomerReviewCase(
+        factor: "availability",
+        sentiment: "good",
+        expectedFirstReview: "The hot dogs are popular, so they do not always last all day."
+    ),
+    CustomerReviewCase(
+        factor: "availability",
+        sentiment: "excellent",
+        expectedFirstReview: "They had plenty of hot dogs available when I stopped by."
+    ),
+    CustomerReviewCase(
+        factor: "freshness",
+        sentiment: "needsImprovement",
+        expectedFirstReview: "The hot dogs did not taste as fresh as I expected."
+    ),
+    CustomerReviewCase(
+        factor: "freshness",
+        sentiment: "good",
+        expectedFirstReview: "The hot dogs were fine, but they could have been fresher."
+    ),
+    CustomerReviewCase(
+        factor: "freshness",
+        sentiment: "excellent",
+        expectedFirstReview: "You can really taste the fresh ingredients in these hot dogs!"
+    )
+]
+
+extension BusinessReputationTests {
+
+    @Test(arguments: factorCommentCases)
+    func catalogReturnsCorrectFactorComment(
+        testCase: FactorCommentCase
+    ) {
+        let comment = BusinessReputationCatalog.factorComment(
+            for: reputationFactor(named: testCase.factor),
+            sentiment: reputationSentiment(named: testCase.sentiment)
+        )
+
+        #expect(comment.title == testCase.expectedTitle)
+        #expect(comment.comments == [testCase.expectedComment])
+    }
+
+    @Test(arguments: overallCommentCases)
+    func catalogReturnsCorrectOverallCommentCategory(
+        testCase: OverallCommentCase
+    ) {
+        let comment = BusinessReputationCatalog.overallComment(
+            for: reputationSentiment(named: testCase.sentiment)
+        )
+
+        #expect(comment.title == testCase.expectedTitle)
+        #expect(comment.comments.first == testCase.expectedFirstComment)
+        #expect(comment.comments.count == 3)
+        #expect(comment.comments.allSatisfy { !$0.isEmpty })
+    }
+
+    @Test(arguments: customerReviewCases)
+    func catalogReturnsCorrectCustomerReviewCategory(
+        testCase: CustomerReviewCase
+    ) {
+        let product = ProductCatalog().products.first {
+            $0.id == .hotDogs
+        }!
+        let review = BusinessReputationCatalog.customerReview(
+            for: reputationFactor(named: testCase.factor),
+            sentiment: reputationSentiment(named: testCase.sentiment),
+            product: product
+        )
+
+        #expect(review.comments.first == testCase.expectedFirstReview)
+    }
+
+    @Test
+    func customerReviewsCoverEveryFactorAndSentiment() {
+        let product = ProductCatalog().products.first {
+            $0.id == .hotDogs
+        }!
+        let factors: [ReputationFactor] = [
+            .price,
+            .availability,
+            .freshness
+        ]
+        let sentiments: [ReputationSentiment] = [
+            .needsImprovement,
+            .good,
+            .excellent
+        ]
+
+        for factor in factors {
+            for sentiment in sentiments {
+                let review = BusinessReputationCatalog.customerReview(
+                    for: factor,
+                    sentiment: sentiment,
+                    product: product
+                )
+
+                #expect(review.title == "Review")
+                #expect(review.comments.count == 3)
+                #expect(review.comments.allSatisfy { !$0.isEmpty })
+                #expect(
+                    review.comments.joined().lowercased()
+                        .contains("hot dog")
+                )
+            }
+        }
+    }
+
+    @Test
+    func customerReviewsUseSingularAndPluralProductNames() {
+        let product = ProductCatalog().products.first {
+            $0.id == .hotDogs
+        }!
+        let review = BusinessReputationCatalog.customerReview(
+            for: .availability,
+            sentiment: .needsImprovement,
+            product: product
+        )
+
+        #expect(review.comments[0].contains("a hot dog"))
+        #expect(review.comments[1].contains("hot dogs"))
+    }
+
+    private func reputationFactor(
+        named name: String
+    ) -> ReputationFactor {
+        switch name {
+        case "price":
+            .price
+        case "availability":
+            .availability
+        default:
+            .freshness
+        }
+    }
+
+    private func reputationSentiment(
+        named name: String
+    ) -> ReputationSentiment {
+        switch name {
+        case "needsImprovement":
+            .needsImprovement
+        case "good":
+            .good
+        default:
+            .excellent
+        }
     }
 }
 
@@ -409,7 +708,7 @@ extension BusinessReputationTests {
 
 // MARK: - Reputation Trend
 
-private struct ReputationTrendCase: Sendable {
+struct ReputationTrendCase: Sendable {
     let name: String
     let reputationHistory: [Double]
     let expectedTrend: String
