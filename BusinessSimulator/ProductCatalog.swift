@@ -166,7 +166,8 @@ struct ProductCatalog {
         products = [
             Product(
                 id: .pies,
-                name: "Pies",
+                singularName: "Pie",
+                pluralName: "Pies",
                 smallIcon: .emoji("🥧"),
                 accent: Color(
                     red: 0.72,
@@ -215,7 +216,8 @@ struct ProductCatalog {
             ),
             Product(
                 id: .smoothies,
-                name: "Smoothies",
+                singularName: "Smoothie",
+                pluralName: "Smoothies",
                 smallIcon: .emoji("🥤"),
                 accent: Color(
                     red: 0.86,
@@ -264,7 +266,8 @@ struct ProductCatalog {
             ),
             Product(
                 id: .hotDogs,
-                name: "Hot Dogs",
+                singularName: "Hot Dog",
+                pluralName: "Hot Dogs",
                 smallIcon: .emoji("🌭"),
                 accent: Color(
                     red: 0.34,
