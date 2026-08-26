@@ -6,6 +6,24 @@
 import Foundation
 import Observation
 
+struct BusinessReputationComment {
+    let title: String
+    let comments: [String]
+}
+
+enum ReputationFactor {
+    case price
+    case availability
+    case freshness
+    case overall
+}
+
+enum ReputationSentiment {
+    case negative
+    case neutral
+    case positive
+}
+
 struct ReputationFactorScores: Codable {
     let priceScore: Double
     let availabilityScore: Double
