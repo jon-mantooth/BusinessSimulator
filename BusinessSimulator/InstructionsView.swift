@@ -33,7 +33,7 @@ struct InstructionsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    Text(product.name)
+                    Text(product.pluralName)
                         .font(.title2)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity)
