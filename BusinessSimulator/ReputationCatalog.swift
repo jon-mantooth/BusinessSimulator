@@ -14,7 +14,7 @@ enum BusinessReputationCatalog {
         let pluralName = product.pluralName.lowercased()
 
         switch (factor, sentiment) {
-        case (.price, .negative):
+        case (.price, .needsImprovement):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -23,7 +23,7 @@ enum BusinessReputationCatalog {
                     "I can find similar treats nearby for less money."
                 ]
             )
-        case (.price, .neutral):
+        case (.price, .good):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -32,7 +32,7 @@ enum BusinessReputationCatalog {
                     "The \(pluralName) are not cheap but not terribly priced."
                 ]
             )
-        case (.price, .positive):
+        case (.price, .excellent):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -42,7 +42,7 @@ enum BusinessReputationCatalog {
                 ]
             )
 
-        case (.availability, .negative):
+        case (.availability, .needsImprovement):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -51,7 +51,7 @@ enum BusinessReputationCatalog {
                     "They always seem to run out of \(pluralName) before I arrive."
                 ]
             )
-        case (.availability, .neutral):
+        case (.availability, .good):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -60,7 +60,7 @@ enum BusinessReputationCatalog {
                     "The \(pluralName) are available most days if you do not wait too long."
                 ]
             )
-        case (.availability, .positive):
+        case (.availability, .excellent):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -70,7 +70,7 @@ enum BusinessReputationCatalog {
                 ]
             )
 
-        case (.freshness, .negative):
+        case (.freshness, .needsImprovement):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -79,7 +79,7 @@ enum BusinessReputationCatalog {
                     "My \(singularName) did not have the fresh flavor I remembered."
                 ]
             )
-        case (.freshness, .neutral):
+        case (.freshness, .good):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -88,7 +88,7 @@ enum BusinessReputationCatalog {
                     "The ingredients seemed fine, but you can get better \(pluralName) elsewhere."
                 ]
             )
-        case (.freshness, .positive):
+        case (.freshness, .excellent):
             return BusinessReputationComment(
                 title: "Review",
                 comments: [
@@ -108,21 +108,21 @@ enum BusinessReputationCatalog {
         sentiment: ReputationSentiment
     ) -> BusinessReputationComment {
         switch (factor, sentiment) {
-        case (.price, .negative):
+        case (.price, .needsImprovement):
             return BusinessReputationComment(
                 title: "Could Improve",
                 comments: [
                     "Customers feel your prices are too high for what they receive."
                 ]
             )
-        case (.price, .neutral):
+        case (.price, .good):
             return BusinessReputationComment(
                 title: "Good",
                 comments: [
                     "Your prices feel reasonable, but customers are not excited by the value."
                 ]
             )
-        case (.price, .positive):
+        case (.price, .excellent):
             return BusinessReputationComment(
                 title: "Excellent",
                 comments: [
@@ -130,21 +130,21 @@ enum BusinessReputationCatalog {
                 ]
             )
 
-        case (.availability, .negative):
+        case (.availability, .needsImprovement):
             return BusinessReputationComment(
                 title: "Could Improve",
                 comments: [
                     "Customers are leaving disappointed because you cannot meet demand."
                 ]
             )
-        case (.availability, .neutral):
+        case (.availability, .good):
             return BusinessReputationComment(
                 title: "Good",
                 comments: [
                     "You usually meet demand, but some customers still miss out."
                 ]
             )
-        case (.availability, .positive):
+        case (.availability, .excellent):
             return BusinessReputationComment(
                 title: "Excellent",
                 comments: [
@@ -152,21 +152,21 @@ enum BusinessReputationCatalog {
                 ]
             )
 
-        case (.freshness, .negative):
+        case (.freshness, .needsImprovement):
             return BusinessReputationComment(
                 title: "Could Improve",
                 comments: [
                     "Older ingredients are noticeably affecting product quality. Try to hold less inventory so it stays fresh."
                 ]
             )
-        case (.freshness, .neutral):
+        case (.freshness, .good):
             return BusinessReputationComment(
                 title: "Good",
                 comments: [
                     "Ingredient freshness is acceptable, with some room to improve."
                 ]
             )
-        case (.freshness, .positive):
+        case (.freshness, .excellent):
             return BusinessReputationComment(
                 title: "Excellent",
                 comments: [
@@ -183,7 +183,7 @@ enum BusinessReputationCatalog {
         for sentiment: ReputationSentiment
     ) -> BusinessReputationComment {
         switch sentiment {
-        case .negative:
+        case .needsImprovement:
             return BusinessReputationComment(
                 title: "Customers Are Losing Confidence",
                 comments: [
@@ -192,7 +192,7 @@ enum BusinessReputationCatalog {
                     "Your reputation has taken a hit, but thoughtful decisions can turn customer opinion around."
                 ]
             )
-        case .neutral:
+        case .good:
             return BusinessReputationComment(
                 title: "Customers See Potential",
                 comments: [
@@ -201,7 +201,7 @@ enum BusinessReputationCatalog {
                     "Your reputation is holding steady. A few improvements could make your business a local favorite."
                 ]
             )
-        case .positive:
+        case .excellent:
             return BusinessReputationComment(
                 title: "Customers Are Cheering You On",
                 comments: [
