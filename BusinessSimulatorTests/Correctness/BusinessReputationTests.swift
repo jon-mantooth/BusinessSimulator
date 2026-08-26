@@ -305,6 +305,92 @@ extension BusinessReputationTests {
 
         #expect(reputation.hasRatings == true)
     }
+
+    @Test
+    func reputationFactorsMoveTowardTheirOwnDailyScores() {
+        let reputation = BusinessReputationState()
+
+        reputation.updateOverallReputation(
+            dailyReputationResult: DailyReputationResult(
+                factorScores: ReputationFactorScores(
+                    priceScore: 100.0,
+                    availabilityScore: 0.0,
+                    freshnessScore: 50.0
+                ),
+                overallScore: 52.5
+            )
+        )
+
+        #expect(
+            abs(reputation.overallFactorScores.priceScore - 80.0)
+                < 0.000_001
+        )
+        #expect(
+            abs(reputation.overallFactorScores.availabilityScore - 67.5)
+                < 0.000_001
+        )
+        #expect(
+            abs(reputation.overallFactorScores.freshnessScore - 72.5)
+                < 0.000_001
+        )
+    }
+}
+
+// MARK: - Recent Overall Reputation History
+
+extension BusinessReputationTests {
+
+    @Test
+    func reputationHistoryStoresNewestFiveUpdatesInOrder() {
+        let reputation = BusinessReputationState(overallReputation: 0.0)
+        let perfectResult = DailyReputationResult(
+            factorScores: ReputationFactorScores(
+                priceScore: 100.0,
+                availabilityScore: 100.0,
+                freshnessScore: 100.0
+            ),
+            overallScore: 100.0
+        )
+
+        reputation.updateOverallReputation(
+            dailyReputationResult: perfectResult
+        )
+        #expect(reputation.recentOverallReputations == [20.0])
+
+        for _ in 0..<5 {
+            reputation.updateOverallReputation(
+                dailyReputationResult: perfectResult
+            )
+        }
+
+        let expectedHistory = [
+            36.0,
+            48.8,
+            59.04,
+            67.232,
+            73.7856
+        ]
+
+        #expect(reputation.recentOverallReputations.count == 5)
+        for (actual, expected) in zip(
+            reputation.recentOverallReputations,
+            expectedHistory
+        ) {
+            #expect(abs(actual - expected) < 0.000_001)
+        }
+    }
+
+    @Test
+    func restoredReputationHistoryKeepsNewestFiveValues() {
+        let reputation = BusinessReputationState(
+            recentOverallReputations: [10, 20, 30, 40, 50, 60, 70]
+        )
+
+        #expect(
+            reputation.recentOverallReputations
+                == [30, 40, 50, 60, 70]
+        )
+    }
 }
 
 // MARK: - Combined Daily Reputation
