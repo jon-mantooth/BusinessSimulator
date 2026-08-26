@@ -3,6 +3,7 @@ import SwiftUI
 struct ReputationView: View {
     let product: Product
     let reputation: BusinessReputationState
+    let simulationDay: Int
     let onClose: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
@@ -10,17 +11,6 @@ struct ReputationView: View {
     private let reviewRed = Color(red: 0.72, green: 0.16, blue: 0.12)
     private let positiveGreen = Color(red: 0.18, green: 0.48, blue: 0.17)
     private let warningOrange = Color(red: 0.88, green: 0.53, blue: 0.05)
-
-    private var productReviewName: String {
-        switch product.id {
-        case .hotDogs:
-            return "hot dogs"
-        case .smoothies:
-            return "smoothies"
-        case .pies:
-            return "pies"
-        }
-    }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -233,19 +223,37 @@ struct ReputationView: View {
 
             HStack(alignment: .top, spacing: 6) {
                 reviewCard(
-                    stars: 5,
+                    starRating: reputation.factorStarRating(
+                        for: reputation.overallFactorScores.freshnessScore
+                    ),
                     avatar: "🙂",
-                    quote: "The " + productReviewName + " taste incredibly fresh!"
+                    quote: reviewText(
+                        for: .freshness,
+                        sentiment: reputation.freshnessSentiment,
+                        variationOffset: 0
+                    )
                 )
                 reviewCard(
-                    stars: 4,
+                    starRating: reputation.factorStarRating(
+                        for: reputation.overallFactorScores.priceScore
+                    ),
                     avatar: "👩🏽",
-                    quote: "Really good, but the price feels a little high."
+                    quote: reviewText(
+                        for: .price,
+                        sentiment: reputation.priceSentiment,
+                        variationOffset: 1
+                    )
                 )
                 reviewCard(
-                    stars: 5,
+                    starRating: reputation.factorStarRating(
+                        for: reputation.overallFactorScores.availabilityScore
+                    ),
                     avatar: "🧔🏾",
-                    quote: "They had enough for everyone this time!"
+                    quote: reviewText(
+                        for: .availability,
+                        sentiment: reputation.availabilitySentiment,
+                        variationOffset: 2
+                    )
                 )
             }
         }
@@ -263,9 +271,11 @@ struct ReputationView: View {
             factorRow(
                 icon: "hand.thumbsup.fill",
                 title: "Product Quality",
-                status: "Excellent",
-                statusColor: positiveGreen,
-                description: "Customers love the quality of your " + productReviewName + "."
+                comment: factorComment(
+                    for: .freshness,
+                    sentiment: reputation.freshnessSentiment
+                ),
+                statusColor: sentimentColor(reputation.freshnessSentiment)
             )
 
             Divider()
@@ -273,9 +283,11 @@ struct ReputationView: View {
             factorRow(
                 icon: "shippingbox.fill",
                 title: "Availability",
-                status: "Good",
-                statusColor: positiveGreen,
-                description: "You usually have enough stock to meet demand."
+                comment: factorComment(
+                    for: .availability,
+                    sentiment: reputation.availabilitySentiment
+                ),
+                statusColor: sentimentColor(reputation.availabilitySentiment)
             )
 
             Divider()
@@ -283,28 +295,33 @@ struct ReputationView: View {
             factorRow(
                 icon: "tag.fill",
                 title: "Pricing",
-                status: "Could Improve",
-                statusColor: warningOrange,
-                description: "Some customers feel your prices are a little high."
+                comment: factorComment(
+                    for: .price,
+                    sentiment: reputation.priceSentiment
+                ),
+                statusColor: sentimentColor(reputation.priceSentiment)
             )
         }
         .dashboardSection()
     }
 
     private var customerSentiment: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "heart.circle.fill")
+        let comment = BusinessReputationCatalog.overallComment(
+            for: reputation.overallSentiment
+        )
+        let commentIndex = simulationDay % comment.comments.count
+
+        return HStack(spacing: 12) {
+            Image(systemName: sentimentIcon(reputation.overallSentiment))
                 .font(.system(size: 42))
-                .foregroundStyle(reviewRed)
+                .foregroundStyle(sentimentColor(reputation.overallSentiment))
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Customers Are Cheering You On")
+                Text(comment.title)
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(darkBrown)
 
-                Text(
-                    "Customers are excited about your business. Keep up the great work!"
-                )
+                Text(comment.comments[commentIndex])
                 .font(.caption)
                 .foregroundStyle(darkBrown.opacity(0.72))
             }
@@ -330,16 +347,15 @@ struct ReputationView: View {
     }
 
     private func reviewCard(
-        stars: Int,
+        starRating: Int,
         avatar: String,
         quote: String
     ) -> some View {
         VStack(spacing: 5) {
             HStack(spacing: 1) {
                 ForEach(0..<5, id: \.self) { index in
-                    Image(systemName: index < stars ? "star.fill" : "star")
-                        .font(.system(size: 8))
-                        .foregroundStyle(gold)
+                    ratingStar(fill: index < starRating ? 1 : 0)
+                    .frame(width: 8, height: 8)
                 }
             }
 
@@ -364,12 +380,26 @@ struct ReputationView: View {
         }
     }
 
+    private func reviewText(
+        for factor: ReputationFactor,
+        sentiment: ReputationSentiment,
+        variationOffset: Int
+    ) -> String {
+        let review = BusinessReputationCatalog.customerReview(
+            for: factor,
+            sentiment: sentiment,
+            product: product
+        )
+        let index = (simulationDay + variationOffset) % review.comments.count
+
+        return review.comments[index]
+    }
+
     private func factorRow(
         icon: String,
         title: String,
-        status: String,
-        statusColor: Color,
-        description: String
+        comment: BusinessReputationComment,
+        statusColor: Color
     ) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
@@ -386,18 +416,54 @@ struct ReputationView: View {
 
                     Spacer()
 
-                    Text(status)
+                    Text(comment.title)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(statusColor)
                 }
 
-                Text(description)
+                Text(comment.comments[0])
                     .font(.system(size: 9.5))
                     .foregroundStyle(darkBrown.opacity(0.68))
                     .lineLimit(2)
             }
         }
         .foregroundStyle(darkBrown)
+    }
+
+    private func factorComment(
+        for factor: ReputationFactor,
+        sentiment: ReputationSentiment
+    ) -> BusinessReputationComment {
+        BusinessReputationCatalog.factorComment(
+            for: factor,
+            sentiment: sentiment
+        )
+    }
+
+    private func sentimentColor(
+        _ sentiment: ReputationSentiment
+    ) -> Color {
+        switch sentiment {
+        case .needsImprovement:
+            return reviewRed
+        case .good:
+            return warningOrange
+        case .excellent:
+            return positiveGreen
+        }
+    }
+
+    private func sentimentIcon(
+        _ sentiment: ReputationSentiment
+    ) -> String {
+        switch sentiment {
+        case .needsImprovement:
+            return "exclamationmark.circle.fill"
+        case .good:
+            return "hand.thumbsup.circle.fill"
+        case .excellent:
+            return "heart.circle.fill"
+        }
     }
 
     private func ratingStar(
