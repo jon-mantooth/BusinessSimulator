@@ -407,6 +407,95 @@ extension BusinessReputationTests {
     }
 }
 
+// MARK: - Reputation Trend
+
+private struct ReputationTrendCase: Sendable {
+    let name: String
+    let reputationHistory: [Double]
+    let expectedTrend: String
+}
+
+private let reputationTrendCases = [
+    ReputationTrendCase(
+        name: "fewer than five ratings has no trend",
+        reputationHistory: [80, 81, 82, 83],
+        expectedTrend: "unavailable"
+    ),
+    ReputationTrendCase(
+        name: "clearly increasing ratings are improving",
+        reputationHistory: [80, 81, 82, 83, 84],
+        expectedTrend: "improving"
+    ),
+    ReputationTrendCase(
+        name: "clearly decreasing ratings are declining",
+        reputationHistory: [84, 83, 82, 81, 80],
+        expectedTrend: "declining"
+    ),
+    ReputationTrendCase(
+        name: "minor movement is stable",
+        reputationHistory: [80, 80.1, 79.9, 80.2, 80.1],
+        expectedTrend: "stable"
+    ),
+    ReputationTrendCase(
+        name: "mixed ratings with positive momentum are improving",
+        reputationHistory: [80, 78, 79, 81, 84],
+        expectedTrend: "improving"
+    ),
+    ReputationTrendCase(
+        name: "mixed ratings with negative momentum are declining",
+        reputationHistory: [80, 82, 81, 79, 76],
+        expectedTrend: "declining"
+    ),
+    ReputationTrendCase(
+        name: "recent recovery interrupts a longer decline",
+        reputationHistory: [84, 82, 80, 82.5, 85],
+        expectedTrend: "stable"
+    ),
+    ReputationTrendCase(
+        name: "recent decline interrupts longer improvement",
+        reputationHistory: [80, 82, 84, 81.5, 79],
+        expectedTrend: "stable"
+    ),
+    ReputationTrendCase(
+        name: "positive stability boundary is improving",
+        reputationHistory: [80, 80.5, 81, 81.5, 82],
+        expectedTrend: "improving"
+    ),
+    ReputationTrendCase(
+        name: "negative stability boundary is declining",
+        reputationHistory: [82, 81.5, 81, 80.5, 80],
+        expectedTrend: "declining"
+    )
+]
+
+extension BusinessReputationTests {
+
+    @Test(arguments: reputationTrendCases)
+    func reputationTrendUsesRecentOverallReputations(
+        testCase: ReputationTrendCase
+    ) {
+        let reputation = BusinessReputationState(
+            recentOverallReputations: testCase.reputationHistory
+        )
+
+        let actualTrend = switch reputation.trend {
+        case .unavailable:
+            "unavailable"
+        case .declining:
+            "declining"
+        case .stable:
+            "stable"
+        case .improving:
+            "improving"
+        }
+
+        #expect(
+            actualTrend == testCase.expectedTrend,
+            Comment(rawValue: testCase.name)
+        )
+    }
+}
+
 // MARK: - Combined Daily Reputation
 
 struct DailyReputationCase: Sendable {
