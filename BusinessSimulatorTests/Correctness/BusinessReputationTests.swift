@@ -19,6 +19,97 @@ extension BusinessReputationTests {
     }
 }
 
+// MARK: - Reputation Sentiment Classification
+
+private enum ExpectedReputationSentiment: Sendable {
+    case needsImprovement
+    case good
+    case excellent
+}
+
+private struct ReputationSentimentCase: Sendable {
+    let name: String
+    let score: Double
+    let expectedSentiment: ExpectedReputationSentiment
+}
+
+private let reputationSentimentCases = [
+    ReputationSentimentCase(
+        name: "minimum score needs improvement",
+        score: 0.0,
+        expectedSentiment: .needsImprovement
+    ),
+    ReputationSentimentCase(
+        name: "score just below good needs improvement",
+        score: 69.999,
+        expectedSentiment: .needsImprovement
+    ),
+    ReputationSentimentCase(
+        name: "lower good boundary is good",
+        score: 70.0,
+        expectedSentiment: .good
+    ),
+    ReputationSentimentCase(
+        name: "score just below excellent is good",
+        score: 89.999,
+        expectedSentiment: .good
+    ),
+    ReputationSentimentCase(
+        name: "lower excellent boundary is excellent",
+        score: 90.0,
+        expectedSentiment: .excellent
+    ),
+    ReputationSentimentCase(
+        name: "maximum score is excellent",
+        score: 100.0,
+        expectedSentiment: .excellent
+    )
+]
+
+extension BusinessReputationTests {
+
+    @Test(arguments: reputationSentimentCases)
+    func factorScoresUseExpectedSentimentBoundaries(
+        testCase: ReputationSentimentCase
+    ) {
+        let factorScores = ReputationFactorScores(
+            priceScore: testCase.score,
+            availabilityScore: testCase.score,
+            freshnessScore: testCase.score
+        )
+        let reputation = BusinessReputationState(
+            overallReputation: testCase.score,
+            overallFactorScores: factorScores
+        )
+
+        let expectedSentiment: ReputationSentiment = switch testCase.expectedSentiment {
+        case .needsImprovement:
+            .needsImprovement
+        case .good:
+            .good
+        case .excellent:
+            .excellent
+        }
+
+        #expect(
+            reputation.priceSentiment == expectedSentiment,
+            Comment(rawValue: testCase.name + " for price")
+        )
+        #expect(
+            reputation.availabilitySentiment == expectedSentiment,
+            Comment(rawValue: testCase.name + " for availability")
+        )
+        #expect(
+            reputation.freshnessSentiment == expectedSentiment,
+            Comment(rawValue: testCase.name + " for freshness")
+        )
+        #expect(
+            reputation.overallSentiment == expectedSentiment,
+            Comment(rawValue: testCase.name + " overall")
+        )
+    }
+}
+
 // MARK: - Star Rating
 
 struct StarRatingCase: Sendable {
