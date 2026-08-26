@@ -19,9 +19,9 @@ enum ReputationFactor {
 }
 
 enum ReputationSentiment {
-    case negative
-    case neutral
-    case positive
+    case needsImprovement
+    case good
+    case excellent
 }
 
 struct ReputationFactorScores: Codable {
@@ -67,6 +67,28 @@ final class BusinessReputationState {
     /// Converts the internal 0...100 reputation into a 1...5 star rating.
     var starRating: Double {
         1.0 + (overallReputation / 100.0 * 4.0)
+    }
+
+    func factorStarRating(
+        for score: Double
+    ) -> Int {
+        min(5, max(1, Int((score / 20.0).rounded())))
+    }
+
+    var priceSentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.priceScore)
+    }
+
+    var availabilitySentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.availabilityScore)
+    }
+
+    var freshnessSentiment: ReputationSentiment {
+        Self.sentiment(for: overallFactorScores.freshnessScore)
+    }
+
+    var overallSentiment: ReputationSentiment {
+        Self.sentiment(for: overallReputation)
     }
 
     var trend: ReputationTrend {
@@ -298,6 +320,20 @@ final class BusinessReputationState {
         return currentScore + adjustmentRate * (
             dailyScore - currentScore
         )
+    }
+
+    private static func sentiment(
+        for score: Double
+    ) -> ReputationSentiment {
+        if score < 70.0 {
+            return .needsImprovement
+        }
+
+        if score < 90.0 {
+            return .good
+        }
+
+        return .excellent
     }
 
     private static func isNormalized(
