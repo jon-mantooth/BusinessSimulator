@@ -3,9 +3,13 @@ import SwiftUI
 struct MarketingView: View {
     let product: Product
     let reputation: BusinessReputationState
+    let advertisementState: AdvertisementState
+    let displayedBalance: Double
+    let minimumOperatingAllowance: Double
     let simulationDay: Int
 
     @State private var showingBusinessReputation = false
+    @State private var showingAdvertisement = false
 
     private let sourceSize = CGSize(width: 1024, height: 1536)
 
@@ -53,7 +57,9 @@ struct MarketingView: View {
                         title: "Advertisement",
                         systemImage: "megaphone.fill",
                         scale: scale,
-                        action: {}
+                        action: {
+                            showingAdvertisement = true
+                        }
                     )
                     .position(
                         x: 380 * scale,
@@ -98,8 +104,21 @@ struct MarketingView: View {
                 .padding(20)
                 .transition(.scale.combined(with: .opacity))
             }
+
         }
         .animation(.easeInOut(duration: 0.2), value: showingBusinessReputation)
+        .sheet(isPresented: $showingAdvertisement) {
+            AdvertisementView(
+                advertisementState: advertisementState,
+                displayedBalance: displayedBalance,
+                minimumOperatingAllowance: minimumOperatingAllowance
+            ) {
+                showingAdvertisement = false
+            }
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+        }
     }
 
     private func marketingButton(
