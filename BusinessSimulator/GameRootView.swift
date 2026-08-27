@@ -271,10 +271,12 @@ struct GameRootView: View {
 
                     if showingMarketing,
                         let product = gameState.productState?.product,
-                        let reputation = gameState.reputation {
+                        let reputation = gameState.reputation,
+                        let advertisementState = gameState.advertisementState {
                         MarketingView(
                             product: product,
                             reputation: reputation,
+                            advertisementState: advertisementState,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }
