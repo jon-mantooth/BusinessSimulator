@@ -104,8 +104,15 @@ struct AdvertisementView: View {
             .accessibilityLabel("Close advertisement")
 
             if let advertisementPendingConfirmation {
-                purchaseConfirmation(
-                    for: advertisementPendingConfirmation
+                GamePopupView(
+                    type: .upgradeConfirmation(
+                        itemName: advertisementPendingConfirmation.name,
+                        icon: advertisementPendingConfirmation.smallIcon
+                    ),
+                    onConfirm: onClose,
+                    onDismiss: {
+                        self.advertisementPendingConfirmation = nil
+                    }
                 )
             }
 
@@ -257,66 +264,6 @@ struct AdvertisementView: View {
         case .operatingReserveRequired:
             purchaseWarning = .operatingReserveRequired
         }
-    }
-
-    private func purchaseConfirmation(
-        for advertisement: Advertisement
-    ) -> some View {
-        ZStack {
-            Color.black.opacity(0.52)
-                .ignoresSafeArea()
-
-            VStack(spacing: 16) {
-                GameIconView(icon: advertisement.smallIcon, size: 38)
-
-                Text("CONFIRM ADVERTISEMENT")
-                    .font(.headline.weight(.black))
-                    .foregroundStyle(navy)
-
-                Text("Select \(advertisement.name) as your new advertisement?")
-                    .font(.subheadline)
-                    .foregroundStyle(ink.opacity(0.82))
-                    .multilineTextAlignment(.center)
-
-                HStack(spacing: 12) {
-                    Button("CANCEL") {
-                        advertisementPendingConfirmation = nil
-                    }
-                    .foregroundStyle(fadedRed)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(palePaper)
-                    .clipShape(RoundedRectangle(cornerRadius: 9))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(fadedRed, lineWidth: 1.5)
-                    }
-
-                    Button("CONFIRM") {
-                        onClose()
-                    }
-                    .foregroundStyle(palePaper)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(navy)
-                    .clipShape(RoundedRectangle(cornerRadius: 9))
-                }
-                .font(.caption.weight(.black))
-                .buttonStyle(.plain)
-            }
-            .padding(22)
-            .frame(maxWidth: 310)
-            .background(paper)
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(fadedRed, lineWidth: 2)
-            }
-            .shadow(color: .black.opacity(0.35), radius: 12, y: 6)
-            .padding(.horizontal, 28)
-        }
-        .transition(.scale.combined(with: .opacity))
-        .zIndex(10)
     }
 
     private func sectionBanner(
