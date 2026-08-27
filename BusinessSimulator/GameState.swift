@@ -30,6 +30,7 @@ final class GameState {
     var production: Production?
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
+    var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
     
     func initializeBusiness(
@@ -38,6 +39,7 @@ final class GameState {
         self.finance = Finance(product: product)
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
+        self.upgradeTracker = UpgradeTracker()
 
         let productState = ProductState(
             product: product,
@@ -186,6 +188,10 @@ final class GameState {
         advertisementState = AdvertisementState(
             tiers: advertisementTiers,
             activeAdvertisementID: activeAdvertisementID
+        )
+
+        upgradeTracker = UpgradeTracker(
+            lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
         )
 
         simulationSummary = SimulationSummary()
