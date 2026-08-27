@@ -277,9 +277,7 @@ struct GameRootView: View {
                             product: product,
                             reputation: reputation,
                             advertisementState: advertisementState,
-                            displayedBalance: gameState.finance.displayedBalance,
-                            minimumOperatingAllowance:
-                                gameState.finance.minimumOperatingAllowance,
+                            finance: gameState.finance,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }

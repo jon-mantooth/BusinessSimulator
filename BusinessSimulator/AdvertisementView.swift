@@ -2,11 +2,10 @@ import SwiftUI
 
 struct AdvertisementView: View {
     let advertisementState: AdvertisementState
-    let displayedBalance: Double
-    let minimumOperatingAllowance: Double
+    let finance: Finance
     let onClose: () -> Void
 
-    @State private var purchaseRestriction: PurchaseRestriction?
+    @State private var purchaseWarning: GamePopupType?
     @State private var advertisementPendingConfirmation: Advertisement?
 
     private let ink = Color(red: 0.18, green: 0.14, blue: 0.11)
@@ -109,17 +108,20 @@ struct AdvertisementView: View {
                     for: advertisementPendingConfirmation
                 )
             }
+
+            if let purchaseWarning {
+                GamePopupView(
+                    type: purchaseWarning,
+                    onConfirm: {},
+                    onDismiss: {
+                        self.purchaseWarning = nil
+                    }
+                )
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 22))
         .shadow(color: .black.opacity(0.34), radius: 16, y: 8)
-        .alert(item: $purchaseRestriction) { restriction in
-            Alert(
-                title: Text("Purchase Unavailable"),
-                message: Text(restriction.message),
-                dismissButton: .default(Text("OK"))
-            )
-        }
     }
 
     private var currentAdvertisement: some View {
@@ -172,10 +174,15 @@ struct AdvertisementView: View {
         advertisement: Advertisement
     ) -> some View {
         let actionColor = actionColor(for: advertisement)
-        let canSelectAdvertisement =
-            advertisement.price == 0
-            || displayedBalance
-                >= minimumOperatingAllowance + advertisement.price
+        let canSelectAdvertisement: Bool = {
+            if case .available = finance.purchaseAvailability(
+                for: advertisement.price
+            ) {
+                return true
+            }
+
+            return false
+        }()
 
         return HStack(spacing: 10) {
             GameIconView(icon: advertisement.smallIcon, size: 30)
@@ -242,14 +249,13 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        if advertisement.price > displayedBalance {
-            purchaseRestriction = .insufficientFunds
-        } else if advertisement.price > 0
-                    && advertisement.price + minimumOperatingAllowance
-                    > displayedBalance {
-            purchaseRestriction = .operatingReserve
-        } else {
+        switch finance.purchaseAvailability(for: advertisement.price) {
+        case .available:
             advertisementPendingConfirmation = advertisement
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 
@@ -447,24 +453,6 @@ struct AdvertisementView: View {
             }
         }
         .foregroundStyle(ink)
-    }
-}
-
-private enum PurchaseRestriction: String, Identifiable {
-    case insufficientFunds
-    case operatingReserve
-
-    var id: Self {
-        self
-    }
-
-    var message: String {
-        switch self {
-        case .insufficientFunds:
-            return "You do not have enough money for this purchase."
-        case .operatingReserve:
-            return "You must have enough money remaining to purchase ingredients."
-        }
     }
 }
 

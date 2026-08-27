@@ -7,6 +7,12 @@
 
 import Foundation
 
+enum PurchaseAvailability {
+    case available
+    case insufficientFunds
+    case operatingReserveRequired
+}
+
 struct FinancialTransaction {
     let simulationDay: Int
     let calendarDate: Date
@@ -62,5 +68,23 @@ struct Finance {
         }
 
         return ceil(inventoryCost / 50.0) * 50.0
+    }
+
+    func purchaseAvailability(
+        for price: Double
+    ) -> PurchaseAvailability {
+        if price == 0 {
+            return .available
+        }
+
+        if price > displayedBalance {
+            return .insufficientFunds
+        }
+
+        if price + minimumOperatingAllowance > displayedBalance {
+            return .operatingReserveRequired
+        }
+
+        return .available
     }
 }

@@ -4,8 +4,7 @@ struct MarketingView: View {
     let product: Product
     let reputation: BusinessReputationState
     let advertisementState: AdvertisementState
-    let displayedBalance: Double
-    let minimumOperatingAllowance: Double
+    let finance: Finance
     let simulationDay: Int
 
     @State private var showingBusinessReputation = false
@@ -110,8 +109,7 @@ struct MarketingView: View {
         .sheet(isPresented: $showingAdvertisement) {
             AdvertisementView(
                 advertisementState: advertisementState,
-                displayedBalance: displayedBalance,
-                minimumOperatingAllowance: minimumOperatingAllowance
+                finance: finance
             ) {
                 showingAdvertisement = false
             }
