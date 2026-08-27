@@ -5,10 +5,12 @@ struct MarketingView: View {
     let reputation: BusinessReputationState
     let advertisementState: AdvertisementState
     let finance: Finance
+    let upgradeTracker: UpgradeTracker
     let simulationDay: Int
 
     @State private var showingBusinessReputation = false
     @State private var showingAdvertisement = false
+    @State private var showingAdvertisementUpgradeLimit = false
 
     private let sourceSize = CGSize(width: 1024, height: 1536)
 
@@ -57,7 +59,14 @@ struct MarketingView: View {
                         systemImage: "megaphone.fill",
                         scale: scale,
                         action: {
-                            showingAdvertisement = true
+                            if upgradeTracker.canUpgrade(
+                                .advertisement,
+                                on: simulationDay
+                            ) {
+                                showingAdvertisement = true
+                            } else {
+                                showingAdvertisementUpgradeLimit = true
+                            }
                         }
                     )
                     .position(
@@ -102,6 +111,18 @@ struct MarketingView: View {
                 }
                 .padding(20)
                 .transition(.scale.combined(with: .opacity))
+            }
+
+            if showingAdvertisementUpgradeLimit {
+                GamePopupView(
+                    type: .upgradeLimitReached(
+                        upgradeName: "advertising"
+                    ),
+                    onConfirm: {},
+                    onDismiss: {
+                        showingAdvertisementUpgradeLimit = false
+                    }
+                )
             }
 
         }

@@ -278,6 +278,7 @@ struct GameRootView: View {
                             reputation: reputation,
                             advertisementState: advertisementState,
                             finance: gameState.finance,
+                            upgradeTracker: gameState.upgradeTracker,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }
