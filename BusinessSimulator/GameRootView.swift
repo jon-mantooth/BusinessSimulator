@@ -297,6 +297,19 @@ struct GameRootView: View {
                     )
                 }
             }
+
+            if showingNewJourneyConfirmation {
+                GamePopupView(
+                    type: .newJourneyConfirmation,
+                    onConfirm: {
+                        showingNewJourneyConfirmation = false
+                        currentScreen = .productSelection
+                    },
+                    onDismiss: {
+                        showingNewJourneyConfirmation = false
+                    }
+                )
+            }
         }
         .sheet(isPresented: $showingCalendar) {
             CalendarView(currentDate: gameState.calendar.currentDate)
@@ -314,20 +327,6 @@ struct GameRootView: View {
         }
         .onAppear {
             hasSavedGame = saveRepository.hasSave()
-        }
-        .alert(
-            "Begin a New Journey?",
-            isPresented: $showingNewJourneyConfirmation
-        ) {
-            Button("Cancel", role: .cancel) {}
-
-            Button("Begin New Journey", role: .destructive) {
-                currentScreen = .productSelection
-            }
-        } message: {
-            Text(
-                "Starting a new journey will replace your current saved game."
-            )
         }
         .alert(
             "Unable to Continue",
