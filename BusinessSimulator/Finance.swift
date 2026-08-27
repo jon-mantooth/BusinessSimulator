@@ -48,19 +48,16 @@ struct Finance {
         let idealSales = idealRevenue / product.baseIdealPrice
         let targetSales = idealSales / 2.0
 
-        let inventoryCost = product.productInventories.reduce(0.0) {
-            totalCost,
-            productInventory in
-
+        var inventoryCost = 0.0
+        for productInventory in product.productInventories {
             let requiredIngredientAmount =
-                targetSales * productInventory.amount
+                targetSales * productInventory.recipeAmount
             let purchasePackagesNeeded = ceil(
                 requiredIngredientAmount
                     / Double(productInventory.inventory.purchaseAmount)
             )
 
-            return totalCost
-                + purchasePackagesNeeded
+            inventoryCost += purchasePackagesNeeded
                 * productInventory.inventory.pricePerUnit
         }
 
