@@ -16,7 +16,6 @@ enum GameStateRestoreError: Error {
 
 @Observable
 final class GameState {
-    private static let startingBalance = 10_000.0
     private static let startingDay = 1
 
     var finance: Finance!
@@ -36,10 +35,7 @@ final class GameState {
     func initializeBusiness(
         product: Product
     ) {
-        self.finance = Finance(
-            actualBalance: Self.startingBalance,
-            displayedBalance: Self.startingBalance
-        )
+        self.finance = Finance(product: product)
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
 
@@ -106,8 +102,8 @@ final class GameState {
         }
 
         finance = Finance(
-            actualBalance: gameSave.finance.actualBalance,
-            displayedBalance: gameSave.finance.actualBalance
+            product: product,
+            balance: gameSave.finance.actualBalance
         )
 
         calendar = GameCalendar(
