@@ -132,13 +132,17 @@ struct AdvertisementView: View {
     }
 
     private var currentAdvertisement: some View {
-        let advertisement = advertisementState.activeAdvertisement!
+        let activeAdvertisement = advertisementState.activeAdvertisement!
+        let advertisement = activeAdvertisement.advertisement
 
         return VStack(alignment: .leading, spacing: 8) {
             sectionBanner("CURRENT ADVERTISEMENT")
 
             HStack(spacing: 12) {
-                GameIconView(icon: advertisement.smallIcon, size: 25)
+                GameIconView(
+                    icon: advertisement.smallIcon,
+                    size: 25
+                )
                     .frame(width: 46, height: 46)
                     .background(paper.opacity(0.75))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
