@@ -34,6 +34,21 @@ final class GameState {
     var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
 
+    // Total cost of pending outflows. This is helpful in getting the displayed balance correct
+    // when restoring game and also when keeping up with ingredients that are in the car tbut not yet
+    // purchased
+    var pendingOutflowTotal: Double {
+        pendingBusinessEvents.reduce(0.0) {
+            total, businessEvent in
+            guard let transaction = businessEvent.financialTransaction,
+                  transaction.direction == .outflow else {
+                return total
+            }
+
+            return total + transaction.amount
+        }
+    }
+
     func movePendingBusinessEvents(
         to summary: DaySummary
     ) {
@@ -214,18 +229,8 @@ final class GameState {
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
-        //If we had outflows before game was exited then those outflows were deducted from
-        //displayed balance. When we return we need to calculate those and deduct from displayed balance again
-        let pendingOutflows = pendingBusinessEvents.reduce(0.0) {
-            total, businessEvent in
-            guard let transaction = businessEvent.financialTransaction,
-                  transaction.direction == .outflow else {
-                return total
-            }
 
-            return total + transaction.amount
-        }
-        finance.displayedBalance = finance.actualBalance - pendingOutflows
+        finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
 
         upgradeTracker = UpgradeTracker(
             lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
