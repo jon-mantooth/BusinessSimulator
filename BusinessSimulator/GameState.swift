@@ -214,6 +214,19 @@ final class GameState {
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
+        //If we had outflows before game was exited then those outflows were deducted from
+        //displayed balance. When we return we need to calculate those and deduct from displayed balance again
+        let pendingOutflows = pendingBusinessEvents.reduce(0.0) {
+            total, businessEvent in
+            guard let transaction = businessEvent.financialTransaction,
+                  transaction.direction == .outflow else {
+                return total
+            }
+
+            return total + transaction.amount
+        }
+        finance.displayedBalance = finance.actualBalance - pendingOutflows
+
         upgradeTracker = UpgradeTracker(
             lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
         )
