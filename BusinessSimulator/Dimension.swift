@@ -13,6 +13,38 @@ enum PaymentSchedule: String, Codable {
     case weekly
 }
 
+enum UpgradeCategory: String, Codable {
+    case advertisement
+    case equipment
+    case labor
+    case transportation
+    case storage
+}
+
+struct UpgradeTracker {
+    private(set) var lastUpgradeDays: [UpgradeCategory: Int]
+
+    init(
+        lastUpgradeDays: [UpgradeCategory: Int] = [:]
+    ) {
+        self.lastUpgradeDays = lastUpgradeDays
+    }
+
+    func canUpgrade(
+        _ category: UpgradeCategory,
+        on simulationDay: Int
+    ) -> Bool {
+        lastUpgradeDays[category] != simulationDay
+    }
+
+    mutating func recordUpgrade(
+        _ category: UpgradeCategory,
+        on simulationDay: Int
+    ) {
+        lastUpgradeDays[category] = simulationDay
+    }
+}
+
 protocol Dimension {
 
     func calculateDemand() -> Double

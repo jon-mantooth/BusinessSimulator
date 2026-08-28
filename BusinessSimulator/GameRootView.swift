@@ -271,10 +271,14 @@ struct GameRootView: View {
 
                     if showingMarketing,
                         let product = gameState.productState?.product,
-                        let reputation = gameState.reputation {
+                        let reputation = gameState.reputation,
+                        let advertisementState = gameState.advertisementState {
                         MarketingView(
                             product: product,
                             reputation: reputation,
+                            advertisementState: advertisementState,
+                            finance: gameState.finance,
+                            upgradeTracker: gameState.upgradeTracker,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }
@@ -291,6 +295,19 @@ struct GameRootView: View {
                         }
                     )
                 }
+            }
+
+            if showingNewJourneyConfirmation {
+                GamePopupView(
+                    type: .newJourneyConfirmation,
+                    onConfirm: {
+                        showingNewJourneyConfirmation = false
+                        currentScreen = .productSelection
+                    },
+                    onDismiss: {
+                        showingNewJourneyConfirmation = false
+                    }
+                )
             }
         }
         .sheet(isPresented: $showingCalendar) {
@@ -309,20 +326,6 @@ struct GameRootView: View {
         }
         .onAppear {
             hasSavedGame = saveRepository.hasSave()
-        }
-        .alert(
-            "Begin a New Journey?",
-            isPresented: $showingNewJourneyConfirmation
-        ) {
-            Button("Cancel", role: .cancel) {}
-
-            Button("Begin New Journey", role: .destructive) {
-                currentScreen = .productSelection
-            }
-        } message: {
-            Text(
-                "Starting a new journey will replace your current saved game."
-            )
         }
         .alert(
             "Unable to Continue",
