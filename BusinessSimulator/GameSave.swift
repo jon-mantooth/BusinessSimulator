@@ -64,6 +64,7 @@ struct DaySummarySave: Codable {
     let revenue: Double
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
+    let businessEvents: [BusinessEvent]
     let dailyReputationResult: DailyReputationResult?
     let sections: [SummarySectionSave]
 }
@@ -163,6 +164,7 @@ extension GameSave {
                         amount: cost.amount
                     )
                 },
+                businessEvents: summary.businessEvents,
                 dailyReputationResult: summary.dailyReputationResult,
                 sections: summary.sections.map { section in
                     SummarySectionSave(

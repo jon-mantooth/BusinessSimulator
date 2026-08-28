@@ -208,6 +208,7 @@ final class GameState {
             summary.cashFlowCosts = savedSummary.cashFlowCosts.map {
                 Cost(name: $0.name, amount: $0.amount)
             }
+            summary.businessEvents = savedSummary.businessEvents
             summary.dailyReputationResult =
                 savedSummary.dailyReputationResult
 
