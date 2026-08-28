@@ -11,6 +11,7 @@ struct GameSave: Codable {
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
     let advertisementState: AdvertisementStateSave
+    let pendingBusinessEvents: [BusinessEvent]
     let summaries: [DaySummarySave]
 }
 
@@ -144,6 +145,8 @@ extension GameSave {
         self.advertisementState = AdvertisementStateSave(
             activeAdvertisement: activeAdvertisement
         )
+
+        pendingBusinessEvents = gameState.pendingBusinessEvents
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
             DaySummarySave(

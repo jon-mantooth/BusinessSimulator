@@ -31,6 +31,7 @@ final class GameState {
     var production: Production?
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
+    var pendingBusinessEvents: [BusinessEvent] = []
     var simulationSummary : SimulationSummary = SimulationSummary()
     
     func initializeBusiness(
@@ -40,6 +41,7 @@ final class GameState {
             actualBalance: Self.startingBalance,
             displayedBalance: Self.startingBalance
         )
+        self.pendingBusinessEvents = []
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
 
@@ -192,6 +194,8 @@ final class GameState {
             tiers: advertisementTiers,
             activeAdvertisement: activeAdvertisement
         )
+
+        pendingBusinessEvents = gameSave.pendingBusinessEvents
 
         simulationSummary = SimulationSummary()
         simulationSummary.daySummaries = gameSave.summaries.map {
