@@ -71,6 +71,13 @@ protocol Dimension {
     )
 }
 
+protocol PurchasableDimension: Dimension {
+    // TODO: Define associated PurchaseItem and RollbackState types, then add
+    // captureRollbackState(), applyUpgrade(_:), and revertUpgrade(to:).
+    // Finalize this interface when AdvertisementDimension is connected to
+    // PurchaseWorkflow.
+}
+
 extension Dimension {
 
     func calculateDemand() -> Double {

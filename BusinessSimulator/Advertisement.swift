@@ -188,7 +188,7 @@ struct AdvertisementTier: Identifiable, Equatable {
     }
 }
 
-final class AdvertisementDimension: Dimension {
+final class AdvertisementDimension: PurchasableDimension {
     // Advertisement's portion of permanent demand and market-size growth.
     // All permanent dimension weights for each simulation factor must total 1.0.
     static let demandWeight = 0.10
