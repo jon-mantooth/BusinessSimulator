@@ -120,6 +120,11 @@ struct GameRunner {
     }
 
     func prepForNextDay() {
+        summary.businessEvents.append(
+            contentsOf: gameState.pendingBusinessEvents
+        )
+        gameState.pendingBusinessEvents.removeAll()
+
         gameState.reputation!.updateOverallReputation(
             dailyReputationResult: summary.dailyReputationResult!
         )
