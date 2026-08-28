@@ -3,9 +3,14 @@ import SwiftUI
 struct MarketingView: View {
     let product: Product
     let reputation: BusinessReputationState
+    let advertisementState: AdvertisementState
+    let finance: Finance
+    let upgradeTracker: UpgradeTracker
     let simulationDay: Int
 
     @State private var showingBusinessReputation = false
+    @State private var showingAdvertisement = false
+    @State private var showingAdvertisementUpgradeLimit = false
 
     private let sourceSize = CGSize(width: 1024, height: 1536)
 
@@ -53,7 +58,16 @@ struct MarketingView: View {
                         title: "Advertisement",
                         systemImage: "megaphone.fill",
                         scale: scale,
-                        action: {}
+                        action: {
+                            if upgradeTracker.canUpgrade(
+                                .advertisement,
+                                on: simulationDay
+                            ) {
+                                showingAdvertisement = true
+                            } else {
+                                showingAdvertisementUpgradeLimit = true
+                            }
+                        }
                     )
                     .position(
                         x: 380 * scale,
@@ -98,8 +112,32 @@ struct MarketingView: View {
                 .padding(20)
                 .transition(.scale.combined(with: .opacity))
             }
+
+            if showingAdvertisementUpgradeLimit {
+                GamePopupView(
+                    type: .upgradeLimitReached(
+                        upgradeName: "advertising"
+                    ),
+                    onConfirm: {},
+                    onDismiss: {
+                        showingAdvertisementUpgradeLimit = false
+                    }
+                )
+            }
+
         }
         .animation(.easeInOut(duration: 0.2), value: showingBusinessReputation)
+        .sheet(isPresented: $showingAdvertisement) {
+            AdvertisementView(
+                advertisementState: advertisementState,
+                finance: finance
+            ) {
+                showingAdvertisement = false
+            }
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+        }
     }
 
     private func marketingButton(

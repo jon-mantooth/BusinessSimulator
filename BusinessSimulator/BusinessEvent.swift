@@ -1,6 +1,7 @@
 import Foundation
 
 enum PurchaseCategory: String, Codable {
+    case inventory
     case advertisement
     case equipment
     case labor

@@ -73,11 +73,14 @@ struct GameRootView: View {
     
     private func updateDisplayedBalance(projectedCost: Double) {
         gameState.finance.displayedBalance =
-        gameState.finance.actualBalance - projectedCost
+            gameState.finance.actualBalance
+            - gameState.pendingOutflowTotal
+            - projectedCost
     }
 
     private func canAffordPurchase(projectedCost: Double) -> Bool {
         projectedCost <= gameState.finance.actualBalance
+            - gameState.pendingOutflowTotal
     }
 
     private func handleStartDay(
@@ -111,16 +114,32 @@ struct GameRootView: View {
         let summary = gameRunner.simulateDay()
 
         if inventoryPurchaseCost > 0 {
-            summary.cashFlowCosts.append(
-                Cost(
-                    name: "Inventory Purchases",
-                    amount: inventoryPurchaseCost
+            gameState.pendingBusinessEvents.append(
+                BusinessEvent(
+                    simulationDay: gameState.calendar.simulationDay,
+                    calendarDate: gameState.calendar.currentDate,
+                    type: .purchase(
+                        PurchaseEvent(
+                            category: .inventory,
+                            itemID: "inventory-purchase"
+                        )
+                    ),
+                    title: "Inventory Purchases",
+                    financialTransaction: FinancialTransaction(
+                        amount: inventoryPurchaseCost,
+                        direction: .outflow
+                    )
                 )
             )
         }
 
         gameRunner.prepForNextDay()
 
+        // TODO: Persist a game-progress phase before adding a passage-of-time
+        // delay. Save this completed day as awaiting summary, then show the
+        // summary after the delay. On restore, an awaiting summary should be
+        // shown instead of returning directly to PrepView. After the player
+        // acknowledges it, persist the phase for preparing the next day.
         do {
             let gameSave = GameSave(gameState: gameState)
             try saveRepository.save(gameSave)
@@ -271,10 +290,14 @@ struct GameRootView: View {
 
                     if showingMarketing,
                         let product = gameState.productState?.product,
-                        let reputation = gameState.reputation {
+                        let reputation = gameState.reputation,
+                        let advertisementState = gameState.advertisementState {
                         MarketingView(
                             product: product,
                             reputation: reputation,
+                            advertisementState: advertisementState,
+                            finance: gameState.finance,
+                            upgradeTracker: gameState.upgradeTracker,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }
@@ -291,6 +314,19 @@ struct GameRootView: View {
                         }
                     )
                 }
+            }
+
+            if showingNewJourneyConfirmation {
+                GamePopupView(
+                    type: .newJourneyConfirmation,
+                    onConfirm: {
+                        showingNewJourneyConfirmation = false
+                        currentScreen = .productSelection
+                    },
+                    onDismiss: {
+                        showingNewJourneyConfirmation = false
+                    }
+                )
             }
         }
         .sheet(isPresented: $showingCalendar) {
@@ -309,20 +345,6 @@ struct GameRootView: View {
         }
         .onAppear {
             hasSavedGame = saveRepository.hasSave()
-        }
-        .alert(
-            "Begin a New Journey?",
-            isPresented: $showingNewJourneyConfirmation
-        ) {
-            Button("Cancel", role: .cancel) {}
-
-            Button("Begin New Journey", role: .destructive) {
-                currentScreen = .productSelection
-            }
-        } message: {
-            Text(
-                "Starting a new journey will replace your current saved game."
-            )
         }
         .alert(
             "Unable to Continue",

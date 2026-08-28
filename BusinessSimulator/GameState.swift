@@ -16,7 +16,6 @@ enum GameStateRestoreError: Error {
 
 @Observable
 final class GameState {
-    private static let startingBalance = 10_000.0
     private static let startingDay = 1
 
     var finance: Finance!
@@ -32,27 +31,52 @@ final class GameState {
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var pendingBusinessEvents: [BusinessEvent] = []
+    var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
+
+    // Total cost of pending outflows. This is helpful in getting the displayed balance correct
+    // when restoring game and also when keeping up with ingredients that are in the car tbut not yet
+    // purchased
+    var pendingOutflowTotal: Double {
+        pendingBusinessEvents.reduce(0.0) {
+            total, businessEvent in
+            guard let transaction = businessEvent.financialTransaction,
+                  transaction.direction == .outflow else {
+                return total
+            }
+
+            return total + transaction.amount
+        }
+    }
 
     func movePendingBusinessEvents(
         to summary: DaySummary
     ) {
-        summary.businessEvents.append(
-            contentsOf: pendingBusinessEvents
-        )
+        for businessEvent in pendingBusinessEvents {
+            summary.businessEvents.append(businessEvent)
+
+            if let transaction = businessEvent.financialTransaction,
+               transaction.direction == .outflow {
+                summary.cashFlowCosts.append(
+                    Cost(
+                        name: businessEvent.title,
+                        amount: transaction.amount
+                    )
+                )
+            }
+        }
+
         pendingBusinessEvents.removeAll()
     }
     
     func initializeBusiness(
         product: Product
     ) {
-        self.finance = Finance(
-            actualBalance: Self.startingBalance,
-            displayedBalance: Self.startingBalance
-        )
         self.pendingBusinessEvents = []
+        self.finance = Finance(product: product)
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
+        self.upgradeTracker = UpgradeTracker()
 
         let productState = ProductState(
             product: product,
@@ -120,8 +144,8 @@ final class GameState {
         }
 
         finance = Finance(
-            actualBalance: gameSave.finance.actualBalance,
-            displayedBalance: gameSave.finance.actualBalance
+            product: product,
+            balance: gameSave.finance.actualBalance
         )
 
         calendar = GameCalendar(
@@ -205,6 +229,12 @@ final class GameState {
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
+
+        finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
+
+        upgradeTracker = UpgradeTracker(
+            lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
+        )
 
         simulationSummary = SimulationSummary()
         simulationSummary.daySummaries = gameSave.summaries.map {

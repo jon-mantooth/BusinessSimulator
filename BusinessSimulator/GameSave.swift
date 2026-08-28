@@ -12,6 +12,7 @@ struct GameSave: Codable {
     let reputation: ReputationSave
     let advertisementState: AdvertisementStateSave
     let pendingBusinessEvents: [BusinessEvent]
+    let upgradeTracker: UpgradeTrackerSave
     let summaries: [DaySummarySave]
 }
 
@@ -55,6 +56,10 @@ struct ReputationSave: Codable {
 
 struct AdvertisementStateSave: Codable {
     let activeAdvertisement: ActiveAdvertisement
+}
+
+struct UpgradeTrackerSave: Codable {
+    let lastUpgradeDays: [UpgradeCategory: Int]
 }
 
 struct DaySummarySave: Codable {
@@ -147,6 +152,9 @@ extension GameSave {
         )
 
         pendingBusinessEvents = gameState.pendingBusinessEvents
+        upgradeTracker = UpgradeTrackerSave(
+            lastUpgradeDays: gameState.upgradeTracker.lastUpgradeDays
+        )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
             DaySummarySave(
