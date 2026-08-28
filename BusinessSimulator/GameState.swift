@@ -37,9 +37,20 @@ final class GameState {
     func movePendingBusinessEvents(
         to summary: DaySummary
     ) {
-        summary.businessEvents.append(
-            contentsOf: pendingBusinessEvents
-        )
+        for businessEvent in pendingBusinessEvents {
+            summary.businessEvents.append(businessEvent)
+
+            if let transaction = businessEvent.financialTransaction,
+               transaction.direction == .outflow {
+                summary.cashFlowCosts.append(
+                    Cost(
+                        name: businessEvent.title,
+                        amount: transaction.amount
+                    )
+                )
+            }
+        }
+
         pendingBusinessEvents.removeAll()
     }
     

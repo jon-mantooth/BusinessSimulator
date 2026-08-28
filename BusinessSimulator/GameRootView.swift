@@ -128,13 +128,6 @@ struct GameRootView: View {
                     )
                 )
             )
-
-            summary.cashFlowCosts.append(
-                Cost(
-                    name: "Inventory Purchases",
-                    amount: inventoryPurchaseCost
-                )
-            )
         }
 
         gameRunner.prepForNextDay()
