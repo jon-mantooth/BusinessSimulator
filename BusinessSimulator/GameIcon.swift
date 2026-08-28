@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-enum GameIcon: Equatable {
+enum GameIcon: Equatable, Codable {
     case emoji(String)
     case system(String)
     case asset(String)
