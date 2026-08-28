@@ -33,6 +33,15 @@ final class GameState {
     var environment: EnvironmentDepartment?
     var pendingBusinessEvents: [BusinessEvent] = []
     var simulationSummary : SimulationSummary = SimulationSummary()
+
+    func movePendingBusinessEvents(
+        to summary: DaySummary
+    ) {
+        summary.businessEvents.append(
+            contentsOf: pendingBusinessEvents
+        )
+        pendingBusinessEvents.removeAll()
+    }
     
     func initializeBusiness(
         product: Product
