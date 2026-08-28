@@ -132,6 +132,11 @@ struct GameRootView: View {
 
         gameRunner.prepForNextDay()
 
+        // TODO: Persist a game-progress phase before adding a passage-of-time
+        // delay. Save this completed day as awaiting summary, then show the
+        // summary after the delay. On restore, an awaiting summary should be
+        // shown instead of returning directly to PrepView. After the player
+        // acknowledges it, persist the phase for preparing the next day.
         do {
             let gameSave = GameSave(gameState: gameState)
             try saveRepository.save(gameSave)
