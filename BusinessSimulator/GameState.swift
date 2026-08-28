@@ -31,7 +31,17 @@ final class GameState {
     var production: Production?
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
+    var pendingBusinessEvents: [BusinessEvent] = []
     var simulationSummary : SimulationSummary = SimulationSummary()
+
+    func movePendingBusinessEvents(
+        to summary: DaySummary
+    ) {
+        summary.businessEvents.append(
+            contentsOf: pendingBusinessEvents
+        )
+        pendingBusinessEvents.removeAll()
+    }
     
     func initializeBusiness(
         product: Product
@@ -40,6 +50,7 @@ final class GameState {
             actualBalance: Self.startingBalance,
             displayedBalance: Self.startingBalance
         )
+        self.pendingBusinessEvents = []
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
 
@@ -66,7 +77,10 @@ final class GameState {
         let advertisementCatalog = AdvertisementCatalog()
         self.advertisementState = AdvertisementState(
             tiers: advertisementCatalog.tiersByProduct[product.id]!,
-            activeAdvertisementID: advertisementCatalog.noAdvertisement.id
+            activeAdvertisement: ActiveAdvertisement(
+                advertisement: advertisementCatalog.noAdvertisement,
+                tierLevel: 0
+            )
         )
         
         let dimensions = BusinessDimensions.create(
@@ -176,21 +190,21 @@ final class GameState {
         let advertisementCatalog = AdvertisementCatalog()
         let advertisementTiers =
             advertisementCatalog.tiersByProduct[product.id]!
-        let activeAdvertisementID =
-            gameSave.advertisementState.activeAdvertisementID
+        let activeAdvertisement =
+            gameSave.advertisementState.activeAdvertisement
 
         guard advertisementTiers.contains(where: { tier in
-            tier.advertisements.contains { advertisement in
-                advertisement.id == activeAdvertisementID
-            }
+            tier.level == activeAdvertisement.tierLevel
         }) else {
             throw GameStateRestoreError.invalidAdvertisementData
         }
 
         advertisementState = AdvertisementState(
             tiers: advertisementTiers,
-            activeAdvertisementID: activeAdvertisementID
+            activeAdvertisement: activeAdvertisement
         )
+
+        pendingBusinessEvents = gameSave.pendingBusinessEvents
 
         simulationSummary = SimulationSummary()
         simulationSummary.daySummaries = gameSave.summaries.map {
@@ -208,6 +222,7 @@ final class GameState {
             summary.cashFlowCosts = savedSummary.cashFlowCosts.map {
                 Cost(name: $0.name, amount: $0.amount)
             }
+            summary.businessEvents = savedSummary.businessEvents
             summary.dailyReputationResult =
                 savedSummary.dailyReputationResult
 

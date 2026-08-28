@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -11,6 +11,7 @@ struct GameSave: Codable {
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
     let advertisementState: AdvertisementStateSave
+    let pendingBusinessEvents: [BusinessEvent]
     let summaries: [DaySummarySave]
 }
 
@@ -53,7 +54,7 @@ struct ReputationSave: Codable {
 }
 
 struct AdvertisementStateSave: Codable {
-    let activeAdvertisementID: AdvertisementID
+    let activeAdvertisement: ActiveAdvertisement
 }
 
 struct DaySummarySave: Codable {
@@ -64,6 +65,7 @@ struct DaySummarySave: Codable {
     let revenue: Double
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
+    let businessEvents: [BusinessEvent]
     let dailyReputationResult: DailyReputationResult?
     let sections: [SummarySectionSave]
 }
@@ -89,7 +91,7 @@ extension GameSave {
             let productState = gameState.productState,
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
-            let activeAdvertisementID = advertisementState.activeAdvertisementID
+            let activeAdvertisement = advertisementState.activeAdvertisement
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -141,8 +143,10 @@ extension GameSave {
         )
 
         self.advertisementState = AdvertisementStateSave(
-            activeAdvertisementID: activeAdvertisementID
+            activeAdvertisement: activeAdvertisement
         )
+
+        pendingBusinessEvents = gameState.pendingBusinessEvents
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
             DaySummarySave(
@@ -163,6 +167,7 @@ extension GameSave {
                         amount: cost.amount
                     )
                 },
+                businessEvents: summary.businessEvents,
                 dailyReputationResult: summary.dailyReputationResult,
                 sections: summary.sections.map { section in
                     SummarySectionSave(

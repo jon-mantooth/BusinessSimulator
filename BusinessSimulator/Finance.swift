@@ -7,12 +7,14 @@
 
 import Foundation
 
-struct FinancialTransaction {
-    let simulationDay: Int
-    let calendarDate: Date
-    let category: String
-    let description: String
+enum CashFlowDirection: String, Codable {
+    case inflow
+    case outflow
+}
+
+struct FinancialTransaction: Codable {
     let amount: Double
+    let direction: CashFlowDirection
 }
 
 struct Finance {

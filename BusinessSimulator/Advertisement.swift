@@ -9,7 +9,7 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct Advertisement: Identifiable, Equatable {
+struct Advertisement: Identifiable, Equatable, Codable {
     let id: AdvertisementID
     let name: String
     let smallIcon: GameIcon
@@ -87,6 +87,26 @@ struct Advertisement: Identifiable, Equatable {
         self.marketSizeLevel = marketSizeLevel
         self.totalLevels = totalLevels
         self.dailyTimeRequired = dailyTimeRequired
+    }
+}
+
+/// A snapshot of an advertisement at the moment it becomes active. Unlike a
+/// catalog advertisement, these values do not change when catalog balancing is
+/// updated in a later version of the game.
+struct ActiveAdvertisement: Identifiable, Equatable, Codable {
+    let advertisement: Advertisement
+    let tierLevel: Int
+
+    var id: AdvertisementID {
+        advertisement.id
+    }
+
+    init(
+        advertisement: Advertisement,
+        tierLevel: Int
+    ) {
+        self.advertisement = advertisement
+        self.tierLevel = tierLevel
     }
 }
 
@@ -187,7 +207,7 @@ final class AdvertisementDimension: Dimension {
 
     func calculateDemand() -> Double {
         let effectScore = advertisementState.activeAdvertisement?
-            .demandEffectScore ?? 0.0
+            .advertisement.demandEffectScore ?? 0.0
 
         return SimulationBalance.demand.multiplier(
             weight: Self.demandWeight,
@@ -196,7 +216,8 @@ final class AdvertisementDimension: Dimension {
     }
 
     func calculateMarketSize() -> Double {
-        let activeAdvertisement = advertisementState.activeAdvertisement
+        let activeAdvertisement =
+            advertisementState.activeAdvertisement?.advertisement
         let effectScore = activeAdvertisement?.marketSizeEffectScore ?? 0.0
         let advertisementMultiplier = SimulationBalance.marketSize.multiplier(
             weight: Self.marketSizeWeight,
@@ -220,7 +241,8 @@ final class AdvertisementDimension: Dimension {
         summary: DaySummary
     ) -> Double {
         guard
-            let activeAdvertisement = advertisementState.activeAdvertisement,
+            let activeAdvertisement = advertisementState
+                .activeAdvertisement?.advertisement,
             activeAdvertisement.paymentSchedule == .weekly
         else {
             return 0.0
@@ -240,25 +262,19 @@ final class AdvertisementDimension: Dimension {
 @Observable
 final class AdvertisementState {
     let tiers: [AdvertisementTier]
-    private(set) var activeAdvertisementID: AdvertisementID?
-
-    var activeAdvertisement: Advertisement? {
-        tiers
-            .flatMap(\.advertisements)
-            .first(where: { $0.id == activeAdvertisementID })
-    }
+    private(set) var activeAdvertisement: ActiveAdvertisement?
 
     var activeTier: AdvertisementTier? {
-        tiers.first { tier in
-            tier.advertisements.contains {
-                $0.id == activeAdvertisementID
-            }
+        guard let activeAdvertisement else {
+            return nil
         }
+
+        return tiers.first { $0.level == activeAdvertisement.tierLevel }
     }
 
     init(
         tiers: [AdvertisementTier],
-        activeAdvertisementID: AdvertisementID? = nil
+        activeAdvertisement: ActiveAdvertisement? = nil
     ) {
         let tierIDs = tiers.map(\.id)
         assert(
@@ -272,32 +288,33 @@ final class AdvertisementState {
             "Advertisement state must contain only one tier per level."
         )
 
-        if let activeAdvertisementID {
+        if let activeAdvertisement {
             assert(
                 tiers.contains { tier in
-                    tier.advertisements.contains {
-                        $0.id == activeAdvertisementID
-                    }
+                    tier.level == activeAdvertisement.tierLevel
                 },
-                "The active advertisement must belong to this state."
+                "The active advertisement tier must belong to this state."
             )
         }
 
         self.tiers = tiers.sorted { $0.level < $1.level }
-        self.activeAdvertisementID = activeAdvertisementID
+        self.activeAdvertisement = activeAdvertisement
     }
 
     func activateAdvertisement(
-        id: AdvertisementID
+        _ advertisement: Advertisement,
+        from tier: AdvertisementTier
     ) {
-        guard tiers.contains(where: { tier in
-            tier.advertisements.contains { $0.id == id }
-        }) else {
+        guard tiers.contains(tier),
+              tier.advertisements.contains(advertisement) else {
             preconditionFailure(
                 "Cannot activate an advertisement outside this state."
             )
         }
 
-        activeAdvertisementID = id
+        activeAdvertisement = ActiveAdvertisement(
+            advertisement: advertisement,
+            tierLevel: tier.level
+        )
     }
 }
