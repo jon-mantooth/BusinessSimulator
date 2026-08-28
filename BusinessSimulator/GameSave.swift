@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -53,7 +53,7 @@ struct ReputationSave: Codable {
 }
 
 struct AdvertisementStateSave: Codable {
-    let activeAdvertisementID: AdvertisementID
+    let activeAdvertisement: ActiveAdvertisement
 }
 
 struct DaySummarySave: Codable {
@@ -90,7 +90,7 @@ extension GameSave {
             let productState = gameState.productState,
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
-            let activeAdvertisementID = advertisementState.activeAdvertisementID
+            let activeAdvertisement = advertisementState.activeAdvertisement
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -142,7 +142,7 @@ extension GameSave {
         )
 
         self.advertisementState = AdvertisementStateSave(
-            activeAdvertisementID: activeAdvertisementID
+            activeAdvertisement: activeAdvertisement
         )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
