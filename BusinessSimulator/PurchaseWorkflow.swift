@@ -62,18 +62,18 @@ struct PurchaseWorkflow {
             pendingBusinessEvents: gameState.pendingBusinessEvents
         )
 
-        // 2. Apply the dimension-specific upgrade.
+        // Apply the dimension-specific upgrade.
         // TODO: Pass in a PurchasableDimension and its purchase item directly
         // once the protocol's apply and rollback requirements are finalized.
         applyUpgrade()
 
-        // 3. Reserve any immediate payment in displayed balance. The actual
+        // Reserve any immediate payment in displayed balance. The actual
         // balance is settled from cashFlowCosts when the day is completed.
         if paymentSchedule == .oneTime {
             gameState.finance!.displayedBalance -= price
         }
 
-        // 4. Record the upgrade in UpgradeTracker.
+        // Record the upgrade in UpgradeTracker.
         // TODO: Derive this identifier from the PurchasableDimension instead
         // of passing category separately once that protocol is finalized.
         gameState.upgradeTracker.recordUpgrade(
@@ -81,7 +81,7 @@ struct PurchaseWorkflow {
             on: gameState.calendar!.simulationDay
         )
 
-        // 5. Create a BusinessEvent for the purchase.
+        // Create a BusinessEvent for the purchase.
         // TODO: Get the item ID, name, description, price, and payment schedule
         // directly from the purchase item once it is passed into this method.
         let purchaseCategory: PurchaseCategory
@@ -119,7 +119,7 @@ struct PurchaseWorkflow {
             financialTransaction: financialTransaction
         )
 
-        // 6. Append the BusinessEvent to pendingBusinessEvents.
+        // Append the BusinessEvent to pendingBusinessEvents.
         gameState.pendingBusinessEvents.append(businessEvent)
 
         // Save the complete GameState. If saving succeeds, return .completed so the view can return
@@ -130,13 +130,8 @@ struct PurchaseWorkflow {
                 GameSave(gameState: gameState)
             )
 
-            // 8. If saving succeeds, return .completed so the view can return
-            //    to the department view.
             return .completed
         } catch {
-            // 9. If saving fails, restore the shared rollback snapshot and the
-            //    dimension-specific state, then return .saveFailed so the view
-            //    can present an error.
             restoreGameState(
                 from: rollbackSnapshot,
                 revertUpgrade: revertUpgrade
