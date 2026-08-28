@@ -73,11 +73,14 @@ struct GameRootView: View {
     
     private func updateDisplayedBalance(projectedCost: Double) {
         gameState.finance.displayedBalance =
-        gameState.finance.actualBalance - projectedCost
+            gameState.finance.actualBalance
+            - gameState.pendingOutflowTotal
+            - projectedCost
     }
 
     private func canAffordPurchase(projectedCost: Double) -> Bool {
         projectedCost <= gameState.finance.actualBalance
+            - gameState.pendingOutflowTotal
     }
 
     private func handleStartDay(
