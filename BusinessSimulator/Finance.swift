@@ -18,7 +18,7 @@ enum PurchaseAvailability {
     case operatingReserveRequired
 }
 
-struct FinancialTransaction {
+struct FinancialTransaction: Codable {
     let amount: Double
     let direction: CashFlowDirection
 }
