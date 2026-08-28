@@ -66,7 +66,10 @@ final class GameState {
         let advertisementCatalog = AdvertisementCatalog()
         self.advertisementState = AdvertisementState(
             tiers: advertisementCatalog.tiersByProduct[product.id]!,
-            activeAdvertisementID: advertisementCatalog.noAdvertisement.id
+            activeAdvertisement: ActiveAdvertisement(
+                advertisement: advertisementCatalog.noAdvertisement,
+                tierLevel: 0
+            )
         )
         
         let dimensions = BusinessDimensions.create(
@@ -176,20 +179,18 @@ final class GameState {
         let advertisementCatalog = AdvertisementCatalog()
         let advertisementTiers =
             advertisementCatalog.tiersByProduct[product.id]!
-        let activeAdvertisementID =
-            gameSave.advertisementState.activeAdvertisementID
+        let activeAdvertisement =
+            gameSave.advertisementState.activeAdvertisement
 
         guard advertisementTiers.contains(where: { tier in
-            tier.advertisements.contains { advertisement in
-                advertisement.id == activeAdvertisementID
-            }
+            tier.level == activeAdvertisement.tierLevel
         }) else {
             throw GameStateRestoreError.invalidAdvertisementData
         }
 
         advertisementState = AdvertisementState(
             tiers: advertisementTiers,
-            activeAdvertisementID: activeAdvertisementID
+            activeAdvertisement: activeAdvertisement
         )
 
         simulationSummary = SimulationSummary()
