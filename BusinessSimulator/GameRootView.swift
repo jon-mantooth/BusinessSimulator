@@ -111,6 +111,24 @@ struct GameRootView: View {
         let summary = gameRunner.simulateDay()
 
         if inventoryPurchaseCost > 0 {
+            gameState.pendingBusinessEvents.append(
+                BusinessEvent(
+                    simulationDay: gameState.calendar.simulationDay,
+                    calendarDate: gameState.calendar.currentDate,
+                    type: .purchase(
+                        PurchaseEvent(
+                            category: .inventory,
+                            itemID: "inventory-purchase"
+                        )
+                    ),
+                    title: "Inventory Purchases",
+                    financialTransaction: FinancialTransaction(
+                        amount: inventoryPurchaseCost,
+                        direction: .outflow
+                    )
+                )
+            )
+
             summary.cashFlowCosts.append(
                 Cost(
                     name: "Inventory Purchases",
