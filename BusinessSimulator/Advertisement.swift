@@ -241,6 +241,28 @@ final class AdvertisementDimension: Dimension {
         return advertisementMultiplier * availableSellingTimeMultiplier
     }
 
+    func calculateDailyCosts(
+        sales: Int,
+        summary: DaySummary
+    ) -> Double {
+        guard
+            let activeAdvertisement = advertisementState
+                .activeAdvertisement?.advertisement,
+            activeAdvertisement.paymentSchedule == .daily
+        else {
+            return 0.0
+        }
+
+        summary.cashFlowCosts.append(
+            Cost(
+                name: activeAdvertisement.name,
+                amount: activeAdvertisement.price
+            )
+        )
+
+        return activeAdvertisement.price
+    }
+
     func calculateWeeklyCosts(
         summary: DaySummary
     ) -> Double {
