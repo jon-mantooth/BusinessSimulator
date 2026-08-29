@@ -7,10 +7,17 @@
 
 import SwiftUI
 
+enum GameArea {
+    case gameMode
+    case production
+    case distribution
+    case marketing
+    case finance
+}
+
 struct FooterView: View {
-    let isMarketingSelected: Bool
-    let onGameModeTapped: () -> Void
-    let onMarketingTapped: () -> Void
+    let selectedArea: GameArea
+    let onAreaTapped: (GameArea) -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let gold = Color(red: 0.82, green: 0.54, blue: 0.20)
@@ -20,31 +27,47 @@ struct FooterView: View {
         HStack(spacing: 3) {
             footerButton(
                 title: "Production",
-                systemImage: "hammer.fill"
+                systemImage: "hammer.fill",
+                isSelected: selectedArea == .production,
+                action: {
+                    onAreaTapped(.production)
+                }
             )
 
             footerButton(
                 title: "Distribution",
-                systemImage: "truck.box.fill"
+                systemImage: "truck.box.fill",
+                isSelected: selectedArea == .distribution,
+                action: {
+                    onAreaTapped(.distribution)
+                }
             )
 
             footerButton(
                 title: "Game Mode",
                 systemImage: "gamecontroller.fill",
-                isSelected: !isMarketingSelected,
-                action: onGameModeTapped
+                isSelected: selectedArea == .gameMode,
+                action: {
+                    onAreaTapped(.gameMode)
+                }
             )
 
             footerButton(
                 title: "Marketing",
                 systemImage: "megaphone.fill",
-                isSelected: isMarketingSelected,
-                action: onMarketingTapped
+                isSelected: selectedArea == .marketing,
+                action: {
+                    onAreaTapped(.marketing)
+                }
             )
 
             footerButton(
                 title: "Finance",
-                systemImage: "chart.line.uptrend.xyaxis"
+                systemImage: "chart.line.uptrend.xyaxis",
+                isSelected: selectedArea == .finance,
+                action: {
+                    onAreaTapped(.finance)
+                }
             )
         }
         .padding(.horizontal, 6)

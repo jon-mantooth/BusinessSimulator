@@ -15,6 +15,7 @@ struct PrepView: View {
     let handleStartDay: ([InventoryType: Int], String, Double) -> Void
     let updateDisplayedBalance: (Double) -> Void
     let canAffordPurchase: (Double) -> Bool
+    let onPriceEditingChanged: (Bool) -> Void
     
     //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
@@ -32,6 +33,7 @@ struct PrepView: View {
     }
     @State private var showingInstructions = false
     @State private var priceDigits: String
+    @FocusState private var isPriceFieldFocused: Bool
 
     init(
         product: Product,
@@ -39,7 +41,8 @@ struct PrepView: View {
         currentAmounts: [InventoryType: Double],
         handleStartDay: @escaping ([InventoryType: Int], String, Double) -> Void,
         updateDisplayedBalance: @escaping (Double) -> Void,
-        canAffordPurchase: @escaping (Double) -> Bool
+        canAffordPurchase: @escaping (Double) -> Bool,
+        onPriceEditingChanged: @escaping (Bool) -> Void
     ) {
         self.product = product
         self.initialPrice = initialPrice
@@ -47,6 +50,7 @@ struct PrepView: View {
         self.handleStartDay = handleStartDay
         self.updateDisplayedBalance = updateDisplayedBalance
         self.canAffordPurchase = canAffordPurchase
+        self.onPriceEditingChanged = onPriceEditingChanged
 
         let initialPriceInCents = Int((initialPrice * 100).rounded())
         self._priceDigits = State(
@@ -61,104 +65,125 @@ struct PrepView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 10) {
-                header
-
+        ScrollViewReader { proxy in
+            ScrollView {
                 VStack(spacing: 10) {
-                    ingredientColumnHeader
+                    header
 
-                    ForEach(product.productInventories) { productInventory in
-                        inventoryRow(
-                            productInventory: productInventory,
-                            currentAmount: currentAmounts[productInventory.inventory.type, default: 0],
-                            purchaseAmount: purchaseAmounts[
-                                productInventory.inventory.type,
-                                default: 0
-                            ]
+                    VStack(spacing: 10) {
+                        ingredientColumnHeader
+
+                        ForEach(product.productInventories) { productInventory in
+                            inventoryRow(
+                                productInventory: productInventory,
+                                currentAmount: currentAmounts[productInventory.inventory.type, default: 0],
+                                purchaseAmount: purchaseAmounts[
+                                    productInventory.inventory.type,
+                                    default: 0
+                                ]
+                            )
+                        }
+                    }
+
+                    priceSection
+                        .id("price-section")
+
+                    Button {
+                        handleStartDay(
+                            purchaseAmounts,
+                            String(price),
+                            projectedCost
                         )
+                    } label: {
+                        Label("Start Day", systemImage: "play.fill")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .controlSize(.large)
+                    .disabled(price <= 0)
+                }
+                .frame(maxWidth: 700)
+                .padding(12)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.97, blue: 0.86),
+                            Color(red: 1.0, green: 0.91, blue: 0.68)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(product.accent.opacity(0.65), lineWidth: 2)
+                }
+                .shadow(color: .black.opacity(0.18), radius: 10, y: 5)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 4)
+            }
+            .onChange(of: isPriceFieldFocused) {
+                onPriceEditingChanged(isPriceFieldFocused)
+
+                if isPriceFieldFocused {
+                    withAnimation {
+                        proxy.scrollTo("price-section", anchor: .center)
                     }
                 }
-
-                priceSection
-
-                Button {
-                    handleStartDay(
-                        purchaseAmounts,
-                        String(price),
-                        projectedCost
-                    )
-                } label: {
-                    Label("Start Day", systemImage: "play.fill")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                .controlSize(.large)
-                .disabled(price <= 0)
             }
-            .frame(maxWidth: 700)
-            .padding(12)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 1.0, green: 0.97, blue: 0.86),
-                        Color(red: 1.0, green: 0.91, blue: 0.68)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 28))
-            .overlay {
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(product.accent.opacity(0.65), lineWidth: 2)
+            .onChange(of: purchaseAmounts) {
+                updateDisplayedBalance(projectedCost)
             }
-            .shadow(color: .black.opacity(0.18), radius: 10, y: 5)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 4)
-        }
-        .onChange(of: purchaseAmounts) {
-            updateDisplayedBalance(projectedCost)
-        }
-        .sheet(item: $selectedProductInventory) { productInventory in
-            let inventory = productInventory.inventory
-            let inventoryType = inventory.type
-            let initialQuantity = purchaseAmounts[
-                inventoryType,
-                default: 0
-            ]
-            let currentIngredientCost =
-                Double(initialQuantity) * inventory.pricePerUnit
-
-            BuyView(
-                productInventory: productInventory,
-                currentAmount: currentAmounts[
+            .sheet(item: $selectedProductInventory) { productInventory in
+                let inventory = productInventory.inventory
+                let inventoryType = inventory.type
+                let initialQuantity = purchaseAmounts[
                     inventoryType,
                     default: 0
-                ],
-                accent: product.accent,
-                initialPurchaseQuantity: initialQuantity,
-                canAffordPurchase: { proposedQuantity in
-                    let proposedIngredientCost =
-                        Double(proposedQuantity)
-                        * inventory.pricePerUnit
-                    let proposedTotalCost =
-                        projectedCost
-                        - currentIngredientCost
-                        + proposedIngredientCost
+                ]
+                let currentIngredientCost =
+                    Double(initialQuantity) * inventory.pricePerUnit
 
-                    return canAffordPurchase(proposedTotalCost)
+                BuyView(
+                    productInventory: productInventory,
+                    currentAmount: currentAmounts[
+                        inventoryType,
+                        default: 0
+                    ],
+                    accent: product.accent,
+                    initialPurchaseQuantity: initialQuantity,
+                    canAffordPurchase: { proposedQuantity in
+                        let proposedIngredientCost =
+                            Double(proposedQuantity)
+                            * inventory.pricePerUnit
+                        let proposedTotalCost =
+                            projectedCost
+                            - currentIngredientCost
+                            + proposedIngredientCost
+
+                        return canAffordPurchase(proposedTotalCost)
+                    }
+                ) { confirmedQuantity in
+                    purchaseAmounts[inventoryType] = confirmedQuantity
                 }
-            ) { confirmedQuantity in
-                purchaseAmounts[inventoryType] = confirmedQuantity
+                .presentationDetents([.fraction(0.75)])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(28)
             }
-            .presentationDetents([.fraction(0.75)])
-            .presentationDragIndicator(.hidden)
-            .presentationCornerRadius(28)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+
+                    Button("Done") {
+                        isPriceFieldFocused = false
+                    }
+                }
+            }
         }
     }
     
@@ -242,6 +267,7 @@ struct PrepView: View {
 
                 TextField("", text: $priceDigits)
                     .keyboardType(.numberPad)
+                    .focused($isPriceFieldFocused)
                     .multilineTextAlignment(.trailing)
                     .foregroundStyle(.clear)
                     .tint(.clear)
@@ -250,6 +276,19 @@ struct PrepView: View {
                         price.formatted(.currency(code: "USD"))
                     )
                     .padding(.horizontal, 10)
+
+                if isPriceFieldFocused && !priceDigits.isEmpty {
+                    Button {
+                        priceDigits = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Clear price")
+                }
             }
             .frame(width: 120, height: 42)
             .background(.white.opacity(0.65))
