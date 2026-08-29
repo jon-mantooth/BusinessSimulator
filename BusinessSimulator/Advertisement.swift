@@ -283,6 +283,14 @@ final class AdvertisementState: PurchasableState {
         return tiers.first { $0.level == activeAdvertisement.tierLevel }
     }
 
+    var nextTier: AdvertisementTier? {
+        guard let activeLevel = activeTier?.level else {
+            return nil
+        }
+
+        return tiers.first { $0.level == activeLevel + 1 }
+    }
+
     init(
         tiers: [AdvertisementTier],
         activeAdvertisement: ActiveAdvertisement? = nil
@@ -342,11 +350,8 @@ final class AdvertisementState: PurchasableState {
     func applyUpgrade(
         _ advertisement: Advertisement
     ) {
-        guard let activeLevel = activeTier?.level,
-              let nextTier = tiers.first(where: { tier in
-                  tier.level == activeLevel + 1
-                    && tier.advertisements.contains(advertisement)
-              }) else {
+        guard let nextTier,
+              nextTier.advertisements.contains(advertisement) else {
             preconditionFailure(
                 "An advertisement upgrade must come from the next tier."
             )
