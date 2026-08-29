@@ -27,7 +27,7 @@ struct GameRootView: View {
     @State private var showingNewJourneyConfirmation = false
     @State private var showingLoadError = false
     @State private var showingSaveError = false
-    @State private var showingMarketing = false
+    @State private var selectedArea: GameArea = .gameMode
     @State private var isEditingPrice = false
 
     let productCatalog = ProductCatalog()
@@ -89,6 +89,16 @@ struct GameRootView: View {
     private func canAffordPurchase(projectedCost: Double) -> Bool {
         projectedCost <= gameState.finance.actualBalance
             - gameState.pendingOutflowTotal
+    }
+
+    private func selectGameArea(_ area: GameArea) {
+        switch area {
+        case .gameMode, .marketing:
+            selectedArea = area
+        case .production, .distribution, .finance:
+            // These areas will be enabled when their views are implemented.
+            return
+        }
     }
 
     private func handleStartDay(
@@ -247,6 +257,20 @@ struct GameRootView: View {
         ZStack {
             gameBackground
 
+            if selectedArea == .marketing,
+                let product = gameState.productState?.product,
+                let reputation = gameState.reputation,
+                let advertisementState = gameState.advertisementState {
+                MarketingView(
+                    product: product,
+                    reputation: reputation,
+                    advertisementState: advertisementState,
+                    purchaseWorkflow: purchaseWorkflow,
+                    simulationDay: gameState.calendar.simulationDay
+                )
+                .ignoresSafeArea()
+            }
+
             VStack(spacing: 0) {
                 if currentScreen != .home && currentScreen != .productSelection {
                     HeaderView(
@@ -260,57 +284,48 @@ struct GameRootView: View {
                     )
                 }
 
-                ZStack {
-                    switch currentScreen {
-                    case .home:
-                        HomeView(
-                            hasSavedGame: hasSavedGame,
-                            onBeginJourney: onBeginJourney,
-                            onContinue: onContinueSavedGame
-                        )
+                if selectedArea != .gameMode {
+                    Spacer()
+                } else {
+                    ZStack {
+                        switch currentScreen {
+                        case .home:
+                            HomeView(
+                                hasSavedGame: hasSavedGame,
+                                onBeginJourney: onBeginJourney,
+                                onContinue: onContinueSavedGame
+                            )
 
-                    case .productSelection:
-                        ProductSelectionView(
-                            products: productCatalog.products,
-                            onSelectionChanged: { product in
-                                previewedProduct = product
-                            },
-                            onContinue: onContinue
-                        )
+                        case .productSelection:
+                            ProductSelectionView(
+                                products: productCatalog.products,
+                                onSelectionChanged: { product in
+                                    previewedProduct = product
+                                },
+                                onContinue: onContinue
+                            )
 
-                    case .prep:
-                        if let productState = gameState.productState {
-                            PrepView(
-                                product: productState.product,
-                                initialPrice: productState.price,
-                                currentAmounts: currentAmounts,
-                                handleStartDay: handleStartDay,
-                                updateDisplayedBalance: updateDisplayedBalance,
-                                canAffordPurchase: canAffordPurchase,
-                                onPriceEditingChanged: { isEditing in
-                                    isEditingPrice = isEditing
-                                }
+                        case .prep:
+                            if let productState = gameState.productState {
+                                PrepView(
+                                    product: productState.product,
+                                    initialPrice: productState.price,
+                                    currentAmounts: currentAmounts,
+                                    handleStartDay: handleStartDay,
+                                    updateDisplayedBalance: updateDisplayedBalance,
+                                    canAffordPurchase: canAffordPurchase,
+                                    onPriceEditingChanged: { isEditing in
+                                        isEditingPrice = isEditing
+                                    }
+                                )
+                            }
+
+                        case .summary:
+                            SummaryView(
+                                summary: currentSummary!,
+                                onNextDay: onNextDay
                             )
                         }
-
-                    case .summary:
-                        SummaryView(
-                            summary: currentSummary!,
-                            onNextDay: onNextDay
-                        )
-                    }
-
-                    if showingMarketing,
-                        let product = gameState.productState?.product,
-                        let reputation = gameState.reputation,
-                        let advertisementState = gameState.advertisementState {
-                        MarketingView(
-                            product: product,
-                            reputation: reputation,
-                            advertisementState: advertisementState,
-                            purchaseWorkflow: purchaseWorkflow,
-                            simulationDay: gameState.calendar.simulationDay
-                        )
                     }
                 }
 
@@ -318,13 +333,8 @@ struct GameRootView: View {
                     && currentScreen != .productSelection
                     && !isEditingPrice {
                     FooterView(
-                        isMarketingSelected: showingMarketing,
-                        onGameModeTapped: {
-                            showingMarketing = false
-                        },
-                        onMarketingTapped: {
-                            showingMarketing = true
-                        }
+                        selectedArea: selectedArea,
+                        onAreaTapped: selectGameArea
                     )
                 }
             }
