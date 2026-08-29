@@ -4,8 +4,7 @@ struct MarketingView: View {
     let product: Product
     let reputation: BusinessReputationState
     let advertisementState: AdvertisementState
-    let finance: Finance
-    let upgradeTracker: UpgradeTracker
+    let purchaseWorkflow: PurchaseWorkflow
     let simulationDay: Int
 
     @State private var showingBusinessReputation = false
@@ -59,10 +58,10 @@ struct MarketingView: View {
                         systemImage: "megaphone.fill",
                         scale: scale,
                         action: {
-                            if upgradeTracker.canUpgrade(
-                                .advertisement,
-                                on: simulationDay
-                            ) {
+                            if purchaseWorkflow
+                                .validateUpgradeAvailability(
+                                    category: .advertisement
+                                ) {
                                 showingAdvertisement = true
                             } else {
                                 showingAdvertisementUpgradeLimit = true
