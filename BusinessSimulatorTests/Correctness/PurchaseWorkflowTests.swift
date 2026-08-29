@@ -340,7 +340,7 @@ private struct TestPurchaseItem: PurchasableItem {
 }
 
 private final class TestPurchasableState: PurchasableState {
-    var dimensionID: UpgradeCategory {
+    var dimensionID: PurchaseCategory {
         .advertisement
     }
 
