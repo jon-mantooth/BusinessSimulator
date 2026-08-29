@@ -31,6 +31,13 @@ struct GameRootView: View {
 
     let productCatalog = ProductCatalog()
 
+    private var purchaseWorkflow: PurchaseWorkflow {
+        PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: saveRepository
+        )
+    }
+
     init(
         saveRepository: any GameSaveRepository
     ) {
@@ -296,8 +303,7 @@ struct GameRootView: View {
                             product: product,
                             reputation: reputation,
                             advertisementState: advertisementState,
-                            finance: gameState.finance,
-                            upgradeTracker: gameState.upgradeTracker,
+                            purchaseWorkflow: purchaseWorkflow,
                             simulationDay: gameState.calendar.simulationDay
                         )
                     }

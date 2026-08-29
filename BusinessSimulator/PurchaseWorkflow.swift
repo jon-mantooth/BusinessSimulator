@@ -7,6 +7,27 @@
 
 import Foundation
 
+protocol PurchasableItem {
+    var purchaseItemID: String { get }
+    var name: String { get }
+    var description: String { get }
+    var price: Double { get }
+    var paymentSchedule: PaymentSchedule { get }
+}
+
+protocol PurchasableState: AnyObject {
+    associatedtype PurchaseItem: PurchasableItem
+    associatedtype RollbackState
+
+    var dimensionID: PurchaseCategory { get }
+
+    func captureRollbackState() -> RollbackState
+
+    func applyUpgrade(_ item: PurchaseItem)
+
+    func revertUpgrade(to state: RollbackState)
+}
+
 enum PurchaseWorkflowResult {
     case completed
     case saveFailed
@@ -28,7 +49,7 @@ struct PurchaseWorkflow {
     // MARK: - Before Purchase
 
     func validateUpgradeAvailability(
-        category: UpgradeCategory
+        category: PurchaseCategory
     ) -> Bool {
         gameState.upgradeTracker.canUpgrade(
             category,
@@ -44,15 +65,9 @@ struct PurchaseWorkflow {
 
     // MARK: - Purchase Transaction
 
-    func completePurchase(
-        category: UpgradeCategory,
-        itemID: String,
-        itemName: String,
-        itemDescription: String? = nil,
-        price: Double,
-        paymentSchedule: PaymentSchedule,
-        applyUpgrade: () -> Void,
-        revertUpgrade: () -> Void
+    func completePurchase<State: PurchasableState>(
+        state: State,
+        item: State.PurchaseItem
     ) -> PurchaseWorkflowResult {
         // 1. Capture a rollback snapshot before mutating GameState.
         let rollbackSnapshot = RollbackSnapshot(
@@ -62,45 +77,28 @@ struct PurchaseWorkflow {
             pendingBusinessEvents: gameState.pendingBusinessEvents
         )
 
-        // Apply the dimension-specific upgrade.
-        // TODO: Pass in a PurchasableDimension and its purchase item directly
-        // once the protocol's apply and rollback requirements are finalized.
-        applyUpgrade()
+        //Capture rollback state in case we need to revert. Upgrade state
+        let dimensionRollbackState = state.captureRollbackState()
+        state.applyUpgrade(item)
 
         // Reserve any immediate payment in displayed balance. The actual
         // balance is settled from cashFlowCosts when the day is completed.
-        if paymentSchedule == .oneTime {
-            gameState.finance!.displayedBalance -= price
+        if item.paymentSchedule == .oneTime {
+            gameState.finance!.displayedBalance -= item.price
         }
 
         // Record the upgrade in UpgradeTracker.
-        // TODO: Derive this identifier from the PurchasableDimension instead
-        // of passing category separately once that protocol is finalized.
         gameState.upgradeTracker.recordUpgrade(
-            category,
+            state.dimensionID,
             on: gameState.calendar!.simulationDay
         )
 
         // Create a BusinessEvent for the purchase.
-        // TODO: Get the item ID, name, description, price, and payment schedule
-        // directly from the purchase item once it is passed into this method.
-        let purchaseCategory: PurchaseCategory
-        switch category {
-        case .advertisement:
-            purchaseCategory = .advertisement
-        case .equipment:
-            purchaseCategory = .equipment
-        case .labor:
-            purchaseCategory = .labor
-        case .transportation:
-            purchaseCategory = .transportation
-        case .storage:
-            purchaseCategory = .storage
-        }
+        let purchaseCategory = state.dimensionID
 
-        let financialTransaction = paymentSchedule == .oneTime
+        let financialTransaction = item.paymentSchedule == .oneTime
             ? FinancialTransaction(
-                amount: price,
+                amount: item.price,
                 direction: .outflow
             )
             : nil
@@ -111,11 +109,11 @@ struct PurchaseWorkflow {
             type: .purchase(
                 PurchaseEvent(
                     category: purchaseCategory,
-                    itemID: itemID
+                    itemID: item.purchaseItemID
                 )
             ),
-            title: itemName,
-            details: itemDescription,
+            title: item.name,
+            details: item.description,
             financialTransaction: financialTransaction
         )
 
@@ -134,21 +132,23 @@ struct PurchaseWorkflow {
         } catch {
             restoreGameState(
                 from: rollbackSnapshot,
-                revertUpgrade: revertUpgrade
+                state: state,
+                dimensionRollbackState: dimensionRollbackState
             )
 
             return .saveFailed
         }
     }
 
-    private func restoreGameState(
+    private func restoreGameState<State: PurchasableState>(
         from snapshot: RollbackSnapshot,
-        revertUpgrade: () -> Void
+        state: State,
+        dimensionRollbackState: State.RollbackState
     ) {
         gameState.finance!.actualBalance = snapshot.actualBalance
         gameState.finance!.displayedBalance = snapshot.displayedBalance
         gameState.upgradeTracker = snapshot.upgradeTracker
         gameState.pendingBusinessEvents = snapshot.pendingBusinessEvents
-        revertUpgrade()
+        state.revertUpgrade(to: dimensionRollbackState)
     }
 }

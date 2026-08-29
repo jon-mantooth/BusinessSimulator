@@ -215,9 +215,6 @@ final class BusinessReputationState {
         demandFulfillmentRate
     }
 
-    // TODO: For now, recalculate freshness here rather than storing derived
-    // freshness state. Revisit whether this can safely reuse freshness already
-    // calculated by InventoryDimension without creating stale state.
     func calculateFreshnessEffectScore(
         productInventories: [ProductInventory],
         inventoryStates: [InventoryState]

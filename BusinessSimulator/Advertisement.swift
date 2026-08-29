@@ -9,7 +9,7 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct Advertisement: Identifiable, Equatable, Codable {
+struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
     let id: AdvertisementID
     let name: String
     let smallIcon: GameIcon
@@ -27,6 +27,10 @@ struct Advertisement: Identifiable, Equatable, Codable {
 
     var marketSizeEffectScore: Double {
         Double(marketSizeLevel) / Double(totalLevels)
+    }
+
+    var purchaseItemID: String {
+        id.rawValue
     }
 
     static func cleanPrice(
@@ -188,7 +192,7 @@ struct AdvertisementTier: Identifiable, Equatable {
     }
 }
 
-final class AdvertisementDimension: PurchasableDimension {
+final class AdvertisementDimension: Dimension {
     // Advertisement's portion of permanent demand and market-size growth.
     // All permanent dimension weights for each simulation factor must total 1.0.
     static let demandWeight = 0.10
@@ -237,6 +241,28 @@ final class AdvertisementDimension: PurchasableDimension {
         return advertisementMultiplier * availableSellingTimeMultiplier
     }
 
+    func calculateDailyCosts(
+        sales: Int,
+        summary: DaySummary
+    ) -> Double {
+        guard
+            let activeAdvertisement = advertisementState
+                .activeAdvertisement?.advertisement,
+            activeAdvertisement.paymentSchedule == .daily
+        else {
+            return 0.0
+        }
+
+        summary.cashFlowCosts.append(
+            Cost(
+                name: activeAdvertisement.name,
+                amount: activeAdvertisement.price
+            )
+        )
+
+        return activeAdvertisement.price
+    }
+
     func calculateWeeklyCosts(
         summary: DaySummary
     ) -> Double {
@@ -260,9 +286,16 @@ final class AdvertisementDimension: PurchasableDimension {
 }
 
 @Observable
-final class AdvertisementState {
+final class AdvertisementState: PurchasableState {
+    typealias PurchaseItem = Advertisement
+    typealias RollbackState = ActiveAdvertisement
+
     let tiers: [AdvertisementTier]
     private(set) var activeAdvertisement: ActiveAdvertisement?
+
+    var dimensionID: PurchaseCategory {
+        .advertisement
+    }
 
     var activeTier: AdvertisementTier? {
         guard let activeAdvertisement else {
@@ -270,6 +303,14 @@ final class AdvertisementState {
         }
 
         return tiers.first { $0.level == activeAdvertisement.tierLevel }
+    }
+
+    var nextTier: AdvertisementTier? {
+        guard let activeLevel = activeTier?.level else {
+            return nil
+        }
+
+        return tiers.first { $0.level == activeLevel + 1 }
     }
 
     init(
@@ -315,6 +356,46 @@ final class AdvertisementState {
         activeAdvertisement = ActiveAdvertisement(
             advertisement: advertisement,
             tierLevel: tier.level
+        )
+    }
+
+    func captureRollbackState() -> ActiveAdvertisement {
+        guard let activeAdvertisement else {
+            preconditionFailure(
+                "Advertisement purchases require an active starting state."
+            )
+        }
+
+        return activeAdvertisement
+    }
+
+    func applyUpgrade(
+        _ advertisement: Advertisement
+    ) {
+        guard let nextTier,
+              nextTier.advertisements.contains(advertisement) else {
+            preconditionFailure(
+                "An advertisement upgrade must come from the next tier."
+            )
+        }
+
+        activateAdvertisement(advertisement, from: nextTier)
+    }
+
+    func revertUpgrade(
+        to activeAdvertisement: ActiveAdvertisement
+    ) {
+        guard let previousTier = tiers.first(
+            where: { $0.level == activeAdvertisement.tierLevel }
+        ) else {
+            preconditionFailure(
+                "Cannot restore an advertisement outside this state."
+            )
+        }
+
+        activateAdvertisement(
+            activeAdvertisement.advertisement,
+            from: previousTier
         )
     }
 }

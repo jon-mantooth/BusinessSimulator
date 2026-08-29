@@ -133,6 +133,63 @@ extension DemandTests {
     }
 }
 
+// MARK: - Advertisements
+
+struct AdvertisementDemandCase: Sendable {
+    let name: String
+    let demandLevel: Int
+}
+
+private let advertisementDemandCases = (0...5).map { demandLevel in
+    AdvertisementDemandCase(
+        name: "demand level \(demandLevel)",
+        demandLevel: demandLevel
+    )
+}
+
+extension DemandTests {
+
+    @Test(arguments: advertisementDemandCases)
+    func advertisementReturnsExpectedDemand(
+        testCase: AdvertisementDemandCase
+    ) {
+        let totalLevels = 5
+        let advertisementDimension = makeAdvertisementDimension(
+            demandLevel: testCase.demandLevel,
+            marketSizeLevel: 0,
+            totalLevels: totalLevels
+        )
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: AdvertisementDimension.demandWeight,
+            effectScore: Double(testCase.demandLevel)
+                / Double(totalLevels)
+        )
+
+        let demand = advertisementDimension.calculateDemand()
+
+        #expect(
+            abs(demand - expectedDemand) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+
+    @Test
+    func advertisementMarketSizeLevelDoesNotAffectDemand() {
+        let lowMarketSizeDemand = makeAdvertisementDimension(
+            demandLevel: 3,
+            marketSizeLevel: 0
+        ).calculateDemand()
+        let highMarketSizeDemand = makeAdvertisementDimension(
+            demandLevel: 3,
+            marketSizeLevel: 5
+        ).calculateDemand()
+
+        #expect(
+            abs(lowMarketSizeDemand - highMarketSizeDemand) < 0.000_001
+        )
+    }
+}
+
 // MARK: - Business Reputation Demand
 
 struct ReputationDemandCase: Sendable {
@@ -193,6 +250,43 @@ extension DemandTests {
             Comment(rawValue: testCase.name)
         )
     }
+}
+
+private func makeAdvertisementDimension(
+    demandLevel: Int,
+    marketSizeLevel: Int,
+    totalLevels: Int = 5
+) -> AdvertisementDimension {
+    let advertisement = Advertisement(
+        id: AdvertisementID(rawValue: "demand-test-advertisement"),
+        name: "Demand Test Advertisement",
+        smallIcon: .system("megaphone.fill"),
+        description: "Tests advertisement demand.",
+        paymentSchedule: .oneTime,
+        demandLevel: demandLevel,
+        marketSizeLevel: marketSizeLevel,
+        totalLevels: totalLevels
+    )
+    let tier = AdvertisementTier(
+        id: AdvertisementTierID(rawValue: "demand-test-tier"),
+        level: 0,
+        advertisements: [advertisement]
+    )
+    let advertisementState = AdvertisementState(
+        tiers: [tier],
+        activeAdvertisement: ActiveAdvertisement(
+            advertisement: advertisement,
+            tierLevel: tier.level
+        )
+    )
+
+    return AdvertisementDimension(
+        advertisementState: advertisementState,
+        businessHours: BusinessHours(
+            openingTime: BusinessTime(hour: 9, minute: 0),
+            closingTime: BusinessTime(hour: 17, minute: 0)
+        )
+    )
 }
 
 // MARK: - Weather Demand

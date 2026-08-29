@@ -66,8 +66,6 @@ struct GameRunner {
             )
         }
 
-        // TODO: Use the stored daily demand to update total demand. When
-        // non-inventory sales limits exist, distinguish them from sellouts.
         let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
             demandedBatches: demandedBatches,
             actualBatches: actualBatches

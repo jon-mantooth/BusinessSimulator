@@ -18,6 +18,84 @@ struct MarketSizeTests {}
 //     #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
 // }
 
+// MARK: - Advertisements
+
+struct AdvertisementMarketSizeCase: Sendable {
+    let name: String
+    let marketSizeLevel: Int
+}
+
+private let advertisementMarketSizeCases = (0...5).map { marketSizeLevel in
+    AdvertisementMarketSizeCase(
+        name: "market size level \(marketSizeLevel)",
+        marketSizeLevel: marketSizeLevel
+    )
+}
+
+extension MarketSizeTests {
+
+    @Test(arguments: advertisementMarketSizeCases)
+    func advertisementReturnsExpectedMarketSize(
+        testCase: AdvertisementMarketSizeCase
+    ) {
+        let totalLevels = 5
+        let advertisementDimension = makeAdvertisementDimension(
+            demandLevel: 0,
+            marketSizeLevel: testCase.marketSizeLevel,
+            totalLevels: totalLevels
+        )
+        let expectedMarketSize = SimulationBalance.marketSize.multiplier(
+            weight: AdvertisementDimension.marketSizeWeight,
+            effectScore: Double(testCase.marketSizeLevel)
+                / Double(totalLevels)
+        )
+
+        let marketSize = advertisementDimension.calculateMarketSize()
+
+        #expect(
+            abs(marketSize - expectedMarketSize) < 0.000_001,
+            Comment(rawValue: testCase.name)
+        )
+    }
+
+    @Test
+    func advertisementDemandLevelDoesNotAffectMarketSize() {
+        let lowDemandMarketSize = makeAdvertisementDimension(
+            demandLevel: 0,
+            marketSizeLevel: 3
+        ).calculateMarketSize()
+        let highDemandMarketSize = makeAdvertisementDimension(
+            demandLevel: 5,
+            marketSizeLevel: 3
+        ).calculateMarketSize()
+
+        #expect(
+            abs(lowDemandMarketSize - highDemandMarketSize) < 0.000_001
+        )
+    }
+
+    @Test
+    func canvassingTimeReducesEntireReachableMarket() {
+        let catalog = AdvertisementCatalog()
+        let canvassing = catalog.canvassing
+        let advertisementDimension = makeAdvertisementDimension(
+            advertisement: canvassing
+        )
+        let advertisementMultiplier =
+            SimulationBalance.marketSize.multiplier(
+                weight: AdvertisementDimension.marketSizeWeight,
+                effectScore: canvassing.marketSizeEffectScore
+            )
+        let expectedSellingTimeMultiplier = 7.5 / 8.0
+        let expectedMarketSize =
+            advertisementMultiplier * expectedSellingTimeMultiplier
+
+        let marketSize = advertisementDimension.calculateMarketSize()
+
+        #expect(abs(marketSize - expectedMarketSize) < 0.000_001)
+    }
+}
+
 // MARK: - Business Reputation Market Size
 
 struct ReputationMarketSizeCase: Sendable {
@@ -78,6 +156,50 @@ extension MarketSizeTests {
             Comment(rawValue: testCase.name)
         )
     }
+}
+
+private func makeAdvertisementDimension(
+    demandLevel: Int,
+    marketSizeLevel: Int,
+    totalLevels: Int = 5
+) -> AdvertisementDimension {
+    makeAdvertisementDimension(
+        advertisement: Advertisement(
+            id: AdvertisementID(rawValue: "market-size-test-advertisement"),
+            name: "Market Size Test Advertisement",
+            smallIcon: .system("megaphone.fill"),
+            description: "Tests advertisement market size.",
+            paymentSchedule: .oneTime,
+            demandLevel: demandLevel,
+            marketSizeLevel: marketSizeLevel,
+            totalLevels: totalLevels
+        )
+    )
+}
+
+private func makeAdvertisementDimension(
+    advertisement: Advertisement
+) -> AdvertisementDimension {
+    let tier = AdvertisementTier(
+        id: AdvertisementTierID(rawValue: "market-size-test-tier"),
+        level: 0,
+        advertisements: [advertisement]
+    )
+    let advertisementState = AdvertisementState(
+        tiers: [tier],
+        activeAdvertisement: ActiveAdvertisement(
+            advertisement: advertisement,
+            tierLevel: tier.level
+        )
+    )
+
+    return AdvertisementDimension(
+        advertisementState: advertisementState,
+        businessHours: BusinessHours(
+            openingTime: BusinessTime(hour: 9, minute: 0),
+            closingTime: BusinessTime(hour: 17, minute: 0)
+        )
+    )
 }
 
 // MARK: - Weather Market Size

@@ -91,18 +91,18 @@ extension PurchaseWorkflowTests {
         )
         let startingActualBalance = gameState.finance.actualBalance
         let startingDisplayedBalance = gameState.finance.displayedBalance
-        var didApplyUpgrade = false
-        var didRevertUpgrade = false
+        let purchaseState = TestPurchasableState()
+        let item = TestPurchaseItem(
+            id: "neighborhood-flyers",
+            name: "Neighborhood Flyers",
+            description: "Post flyers throughout the neighborhood.",
+            price: 25,
+            paymentSchedule: .oneTime
+        )
 
         let result = workflow.completePurchase(
-            category: .advertisement,
-            itemID: "neighborhood-flyers",
-            itemName: "Neighborhood Flyers",
-            itemDescription: "Post flyers throughout the neighborhood.",
-            price: 25,
-            paymentSchedule: .oneTime,
-            applyUpgrade: { didApplyUpgrade = true },
-            revertUpgrade: { didRevertUpgrade = true }
+            state: purchaseState,
+            item: item
         )
 
         guard case .completed = result else {
@@ -110,8 +110,8 @@ extension PurchaseWorkflowTests {
             return
         }
 
-        #expect(didApplyUpgrade)
-        #expect(!didRevertUpgrade)
+        #expect(purchaseState.upgradeIsActive)
+        #expect(!purchaseState.didRevertUpgrade)
         #expect(gameState.finance.actualBalance == startingActualBalance)
         #expect(
             gameState.finance.displayedBalance
@@ -159,15 +159,17 @@ extension PurchaseWorkflowTests {
             )
             let startingDisplayedBalance =
                 gameState.finance.displayedBalance
+            let purchaseState = TestPurchasableState()
+            let item = TestPurchaseItem(
+                id: "scheduled-ad",
+                name: "Scheduled Advertisement",
+                price: 40,
+                paymentSchedule: schedule
+            )
 
             let result = workflow.completePurchase(
-                category: .advertisement,
-                itemID: "scheduled-ad",
-                itemName: "Scheduled Advertisement",
-                price: 40,
-                paymentSchedule: schedule,
-                applyUpgrade: {},
-                revertUpgrade: {}
+                state: purchaseState,
+                item: item
             )
 
             guard case .completed = result else {
@@ -207,20 +209,17 @@ extension PurchaseWorkflowTests {
             gameState: gameState,
             saveRepository: repository
         )
-        var upgradeIsActive = false
-        var didRevertUpgrade = false
+        let purchaseState = TestPurchasableState()
+        let item = TestPurchaseItem(
+            id: "failed-purchase",
+            name: "Failed Purchase",
+            price: 25,
+            paymentSchedule: .oneTime
+        )
 
         let result = workflow.completePurchase(
-            category: .advertisement,
-            itemID: "failed-purchase",
-            itemName: "Failed Purchase",
-            price: 25,
-            paymentSchedule: .oneTime,
-            applyUpgrade: { upgradeIsActive = true },
-            revertUpgrade: {
-                upgradeIsActive = false
-                didRevertUpgrade = true
-            }
+            state: purchaseState,
+            item: item
         )
 
         guard case .saveFailed = result else {
@@ -228,8 +227,8 @@ extension PurchaseWorkflowTests {
             return
         }
 
-        #expect(!upgradeIsActive)
-        #expect(didRevertUpgrade)
+        #expect(!purchaseState.upgradeIsActive)
+        #expect(purchaseState.didRevertUpgrade)
         #expect(gameState.finance.actualBalance == startingActualBalance)
         #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
         #expect(
@@ -326,6 +325,40 @@ extension PurchaseWorkflowTests {
 
 private enum TestSaveError: Error {
     case failed
+}
+
+private struct TestPurchaseItem: PurchasableItem {
+    let id: String
+    let name: String
+    var description: String = ""
+    let price: Double
+    let paymentSchedule: PaymentSchedule
+
+    var purchaseItemID: String {
+        id
+    }
+}
+
+private final class TestPurchasableState: PurchasableState {
+    var dimensionID: PurchaseCategory {
+        .advertisement
+    }
+
+    private(set) var upgradeIsActive = false
+    private(set) var didRevertUpgrade = false
+
+    func captureRollbackState() -> Bool {
+        upgradeIsActive
+    }
+
+    func applyUpgrade(_ item: TestPurchaseItem) {
+        upgradeIsActive = true
+    }
+
+    func revertUpgrade(to state: Bool) {
+        upgradeIsActive = state
+        didRevertUpgrade = true
+    }
 }
 
 private final class TestGameSaveRepository: GameSaveRepository {

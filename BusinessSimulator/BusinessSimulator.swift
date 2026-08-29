@@ -9,10 +9,12 @@ import SwiftUI
 
 @main
 struct BusinessSimulator: App {
-    private let saveRepository: FileGameSaveRepository?
+    @State private var saveRepository: FileGameSaveRepository?
 
     init() {
-        saveRepository = try? FileGameSaveRepository()
+        _saveRepository = State(
+            initialValue: try? FileGameSaveRepository()
+        )
     }
 
     var body: some Scene {
@@ -22,16 +24,24 @@ struct BusinessSimulator: App {
                     saveRepository: saveRepository
                 )
             } else {
-                // TODO: Replace this temporary failure screen with a
-                // production recovery flow that supports retrying repository
-                // initialization and decides whether warned play without
-                // saving should be allowed.
                 ContentUnavailableView(
-                    "Unable to Access Saved Games",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(
-                        "Business Simulator could not access its save folder."
-                    )
+                    label: {
+                        Label(
+                            "Saved Games Unavailable",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                    },
+                    description: {
+                        Text(
+                            "The game cannot access its saved-game storage. If the issue persists, close and reopen the app and check that your device has available storage."
+                        )
+                    },
+                    actions: {
+                        Button("Try Again") {
+                            saveRepository = try? FileGameSaveRepository()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                 )
             }
         }

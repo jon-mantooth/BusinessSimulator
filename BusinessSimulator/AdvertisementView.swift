@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AdvertisementView: View {
     let advertisementState: AdvertisementState
-    let finance: Finance
+    let purchaseWorkflow: PurchaseWorkflow
     let onClose: () -> Void
 
     @State private var purchaseWarning: GamePopupType?
@@ -13,16 +13,6 @@ struct AdvertisementView: View {
     private let fadedRed = Color(red: 0.63, green: 0.19, blue: 0.17)
     private let paper = Color(red: 0.96, green: 0.90, blue: 0.76)
     private let palePaper = Color(red: 1.00, green: 0.97, blue: 0.88)
-
-    private var nextTier: AdvertisementTier? {
-        guard let activeLevel = advertisementState.activeTier?.level else {
-            return nil
-        }
-
-        return advertisementState.tiers.first {
-            $0.level == activeLevel + 1
-        }
-    }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -35,7 +25,7 @@ struct AdvertisementView: View {
                     VStack(spacing: 12) {
                         currentAdvertisement
 
-                        if let nextTier {
+                        if let nextTier = advertisementState.nextTier {
                             VStack(spacing: 10) {
                                 nextTierBanner(level: nextTier.level)
 
@@ -109,7 +99,9 @@ struct AdvertisementView: View {
                         itemName: advertisementPendingConfirmation.name,
                         icon: advertisementPendingConfirmation.smallIcon
                     ),
-                    onConfirm: onClose,
+                    onConfirm: {
+                        confirmPurchase(advertisementPendingConfirmation)
+                    },
                     onDismiss: {
                         self.advertisementPendingConfirmation = nil
                     }
@@ -186,9 +178,11 @@ struct AdvertisementView: View {
     ) -> some View {
         let actionColor = actionColor(for: advertisement)
         let canSelectAdvertisement: Bool = {
-            if case .available = finance.purchaseAvailability(
-                for: advertisement.price
-            ) {
+            if case .available = purchaseWorkflow
+                .validateFinancialAvailability(
+                    price: advertisement.price
+                )
+            {
                 return true
             }
 
@@ -260,13 +254,33 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        switch finance.purchaseAvailability(for: advertisement.price) {
+        switch purchaseWorkflow.validateFinancialAvailability(
+            price: advertisement.price
+        ) {
         case .available:
             advertisementPendingConfirmation = advertisement
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:
             purchaseWarning = .operatingReserveRequired
+        }
+    }
+
+    private func confirmPurchase(
+        _ advertisement: Advertisement
+    ) {
+        let result = purchaseWorkflow.completePurchase(
+            state: advertisementState,
+            item: advertisement
+        )
+
+        advertisementPendingConfirmation = nil
+
+        switch result {
+        case .completed:
+            onClose()
+        case .saveFailed:
+            purchaseWarning = .purchaseSaveFailed
         }
     }
 

@@ -9,6 +9,7 @@ enum GamePopupType {
     case insufficientFunds
     case operatingReserveRequired
     case upgradeLimitReached(upgradeName: String)
+    case purchaseSaveFailed
 
     var title: String {
         switch self {
@@ -20,6 +21,8 @@ enum GamePopupType {
              .operatingReserveRequired,
              .upgradeLimitReached:
             return "PURCHASE UNAVAILABLE"
+        case .purchaseSaveFailed:
+            return "PURCHASE NOT SAVED"
         }
     }
 
@@ -35,6 +38,8 @@ enum GamePopupType {
             return "You must have enough money remaining to purchase ingredients."
         case let .upgradeLimitReached(upgradeName):
             return "You can only upgrade \(upgradeName) once per business day."
+        case .purchaseSaveFailed:
+            return "Your purchase was not completed because the game could not be saved. Please try again."
         }
     }
 
@@ -50,6 +55,8 @@ enum GamePopupType {
             return .system("basket.fill")
         case .upgradeLimitReached:
             return .system("clock.fill")
+        case .purchaseSaveFailed:
+            return .system("exclamationmark.triangle.fill")
         }
     }
 
@@ -61,7 +68,8 @@ enum GamePopupType {
             return "CONFIRM"
         case .insufficientFunds,
              .operatingReserveRequired,
-             .upgradeLimitReached:
+             .upgradeLimitReached,
+             .purchaseSaveFailed:
             return "OK"
         }
     }
@@ -73,7 +81,8 @@ enum GamePopupType {
             return true
         case .insufficientFunds,
              .operatingReserveRequired,
-             .upgradeLimitReached:
+             .upgradeLimitReached,
+             .purchaseSaveFailed:
             return false
         }
     }

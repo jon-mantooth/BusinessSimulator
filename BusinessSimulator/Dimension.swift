@@ -13,32 +13,24 @@ enum PaymentSchedule: String, Codable {
     case weekly
 }
 
-enum UpgradeCategory: String, Codable {
-    case advertisement
-    case equipment
-    case labor
-    case transportation
-    case storage
-}
-
 struct UpgradeTracker {
-    private(set) var lastUpgradeDays: [UpgradeCategory: Int]
+    private(set) var lastUpgradeDays: [PurchaseCategory: Int]
 
     init(
-        lastUpgradeDays: [UpgradeCategory: Int] = [:]
+        lastUpgradeDays: [PurchaseCategory: Int] = [:]
     ) {
         self.lastUpgradeDays = lastUpgradeDays
     }
 
     func canUpgrade(
-        _ category: UpgradeCategory,
+        _ category: PurchaseCategory,
         on simulationDay: Int
     ) -> Bool {
         lastUpgradeDays[category] != simulationDay
     }
 
     mutating func recordUpgrade(
-        _ category: UpgradeCategory,
+        _ category: PurchaseCategory,
         on simulationDay: Int
     ) {
         lastUpgradeDays[category] = simulationDay
@@ -69,13 +61,6 @@ protocol Dimension {
         currentDay: Int,
         summary: DaySummary
     )
-}
-
-protocol PurchasableDimension: Dimension {
-    // TODO: Define associated PurchaseItem and RollbackState types, then add
-    // captureRollbackState(), applyUpgrade(_:), and revertUpgrade(to:).
-    // Finalize this interface when AdvertisementDimension is connected to
-    // PurchaseWorkflow.
 }
 
 extension Dimension {
