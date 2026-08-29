@@ -28,6 +28,7 @@ struct GameRootView: View {
     @State private var showingLoadError = false
     @State private var showingSaveError = false
     @State private var showingMarketing = false
+    @State private var isEditingPrice = false
 
     let productCatalog = ProductCatalog()
 
@@ -95,6 +96,7 @@ struct GameRootView: View {
         price: String,
         inventoryPurchaseCost: Double
     ) {
+        isEditingPrice = false
         let stateBeforeDay = GameSave(gameState: gameState)
 
         // Adds the current days inventory purchased to our inventoryByPurchaseDay object
@@ -284,7 +286,10 @@ struct GameRootView: View {
                                 currentAmounts: currentAmounts,
                                 handleStartDay: handleStartDay,
                                 updateDisplayedBalance: updateDisplayedBalance,
-                                canAffordPurchase: canAffordPurchase
+                                canAffordPurchase: canAffordPurchase,
+                                onPriceEditingChanged: { isEditing in
+                                    isEditingPrice = isEditing
+                                }
                             )
                         }
 
@@ -309,7 +314,9 @@ struct GameRootView: View {
                     }
                 }
 
-                if currentScreen != .home && currentScreen != .productSelection {
+                if currentScreen != .home
+                    && currentScreen != .productSelection
+                    && !isEditingPrice {
                     FooterView(
                         isMarketingSelected: showingMarketing,
                         onGameModeTapped: {

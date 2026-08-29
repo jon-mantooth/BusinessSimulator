@@ -15,6 +15,7 @@ struct PrepView: View {
     let handleStartDay: ([InventoryType: Int], String, Double) -> Void
     let updateDisplayedBalance: (Double) -> Void
     let canAffordPurchase: (Double) -> Bool
+    let onPriceEditingChanged: (Bool) -> Void
     
     //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
@@ -40,7 +41,8 @@ struct PrepView: View {
         currentAmounts: [InventoryType: Double],
         handleStartDay: @escaping ([InventoryType: Int], String, Double) -> Void,
         updateDisplayedBalance: @escaping (Double) -> Void,
-        canAffordPurchase: @escaping (Double) -> Bool
+        canAffordPurchase: @escaping (Double) -> Bool,
+        onPriceEditingChanged: @escaping (Bool) -> Void
     ) {
         self.product = product
         self.initialPrice = initialPrice
@@ -48,6 +50,7 @@ struct PrepView: View {
         self.handleStartDay = handleStartDay
         self.updateDisplayedBalance = updateDisplayedBalance
         self.canAffordPurchase = canAffordPurchase
+        self.onPriceEditingChanged = onPriceEditingChanged
 
         let initialPriceInCents = Int((initialPrice * 100).rounded())
         self._priceDigits = State(
@@ -204,6 +207,9 @@ struct PrepView: View {
                     isPriceFieldFocused = false
                 }
             }
+        }
+        .onChange(of: isPriceFieldFocused) {
+            onPriceEditingChanged(isPriceFieldFocused)
         }
     }
 
