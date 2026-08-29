@@ -32,6 +32,7 @@ struct PrepView: View {
     }
     @State private var showingInstructions = false
     @State private var priceDigits: String
+    @FocusState private var isPriceFieldFocused: Bool
 
     init(
         product: Product,
@@ -195,6 +196,15 @@ struct PrepView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 2)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+
+                Button("Done") {
+                    isPriceFieldFocused = false
+                }
+            }
+        }
     }
 
     private var ingredientColumnHeader: some View {
@@ -242,6 +252,7 @@ struct PrepView: View {
 
                 TextField("", text: $priceDigits)
                     .keyboardType(.numberPad)
+                    .focused($isPriceFieldFocused)
                     .multilineTextAlignment(.trailing)
                     .foregroundStyle(.clear)
                     .tint(.clear)
@@ -250,6 +261,19 @@ struct PrepView: View {
                         price.formatted(.currency(code: "USD"))
                     )
                     .padding(.horizontal, 10)
+
+                if isPriceFieldFocused && !priceDigits.isEmpty {
+                    Button {
+                        priceDigits = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("Clear price")
+                }
             }
             .frame(width: 120, height: 42)
             .background(.white.opacity(0.65))
