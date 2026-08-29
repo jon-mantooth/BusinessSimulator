@@ -19,31 +19,34 @@ struct BusinessSimulator: App {
 
     var body: some Scene {
         WindowGroup {
-            if let saveRepository {
-                GameRootView(
-                    saveRepository: saveRepository
-                )
-            } else {
-                ContentUnavailableView(
-                    label: {
-                        Label(
-                            "Saved Games Unavailable",
-                            systemImage: "exclamationmark.triangle"
-                        )
-                    },
-                    description: {
-                        Text(
-                            "The game cannot access its saved-game storage. If the issue persists, close and reopen the app and check that your device has available storage."
-                        )
-                    },
-                    actions: {
-                        Button("Try Again") {
-                            saveRepository = try? FileGameSaveRepository()
+            Group {
+                if let saveRepository {
+                    GameRootView(
+                        saveRepository: saveRepository
+                    )
+                } else {
+                    ContentUnavailableView(
+                        label: {
+                            Label(
+                                "Saved Games Unavailable",
+                                systemImage: "exclamationmark.triangle"
+                            )
+                        },
+                        description: {
+                            Text(
+                                "The game cannot access its saved-game storage. If the issue persists, close and reopen the app and check that your device has available storage."
+                            )
+                        },
+                        actions: {
+                            Button("Try Again") {
+                                saveRepository = try? FileGameSaveRepository()
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
-                        .buttonStyle(.borderedProminent)
-                    }
-                )
+                    )
+                }
             }
+            .preferredColorScheme(.light)
         }
     }
 }
