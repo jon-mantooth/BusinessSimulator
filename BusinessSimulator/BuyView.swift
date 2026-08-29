@@ -361,7 +361,8 @@ struct BuyView: View {
             Image(systemName: systemName)
                 .font(.title2)
                 .fontWeight(.bold)
-                .frame(width: 58, height: 36)
+                .frame(width: 62, height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .foregroundStyle(disabled ? .gray : .green)
