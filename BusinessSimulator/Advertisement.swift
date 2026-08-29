@@ -90,6 +90,12 @@ struct Advertisement: Identifiable, Equatable, Codable {
     }
 }
 
+extension Advertisement: PurchasableItem {
+    var purchaseItemID: String {
+        id.rawValue
+    }
+}
+
 /// A snapshot of an advertisement at the moment it becomes active. Unlike a
 /// catalog advertisement, these values do not change when catalog balancing is
 /// updated in a later version of the game.
@@ -188,7 +194,7 @@ struct AdvertisementTier: Identifiable, Equatable {
     }
 }
 
-final class AdvertisementDimension: PurchasableDimension {
+final class AdvertisementDimension: Dimension {
     // Advertisement's portion of permanent demand and market-size growth.
     // All permanent dimension weights for each simulation factor must total 1.0.
     static let demandWeight = 0.10
@@ -260,9 +266,16 @@ final class AdvertisementDimension: PurchasableDimension {
 }
 
 @Observable
-final class AdvertisementState {
+final class AdvertisementState: PurchasableState {
+    typealias PurchaseItem = Advertisement
+    typealias RollbackState = ActiveAdvertisement
+
     let tiers: [AdvertisementTier]
     private(set) var activeAdvertisement: ActiveAdvertisement?
+
+    var dimensionID: UpgradeCategory {
+        .advertisement
+    }
 
     var activeTier: AdvertisementTier? {
         guard let activeAdvertisement else {
@@ -315,6 +328,49 @@ final class AdvertisementState {
         activeAdvertisement = ActiveAdvertisement(
             advertisement: advertisement,
             tierLevel: tier.level
+        )
+    }
+
+    func captureRollbackState() -> ActiveAdvertisement {
+        guard let activeAdvertisement else {
+            preconditionFailure(
+                "Advertisement purchases require an active starting state."
+            )
+        }
+
+        return activeAdvertisement
+    }
+
+    func applyUpgrade(
+        _ advertisement: Advertisement
+    ) {
+        guard let activeLevel = activeTier?.level,
+              let nextTier = tiers.first(where: { tier in
+                  tier.level == activeLevel + 1
+                    && tier.advertisements.contains(advertisement)
+              }) else {
+            preconditionFailure(
+                "An advertisement upgrade must come from the next tier."
+            )
+        }
+
+        activateAdvertisement(advertisement, from: nextTier)
+    }
+
+    func revertUpgrade(
+        to activeAdvertisement: ActiveAdvertisement
+    ) {
+        guard let previousTier = tiers.first(
+            where: { $0.level == activeAdvertisement.tierLevel }
+        ) else {
+            preconditionFailure(
+                "Cannot restore an advertisement outside this state."
+            )
+        }
+
+        activateAdvertisement(
+            activeAdvertisement.advertisement,
+            from: previousTier
         )
     }
 }

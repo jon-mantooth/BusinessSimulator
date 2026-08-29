@@ -109,7 +109,9 @@ struct AdvertisementView: View {
                         itemName: advertisementPendingConfirmation.name,
                         icon: advertisementPendingConfirmation.smallIcon
                     ),
-                    onConfirm: onClose,
+                    onConfirm: {
+                        confirmPurchase(advertisementPendingConfirmation)
+                    },
                     onDismiss: {
                         self.advertisementPendingConfirmation = nil
                     }
@@ -267,6 +269,24 @@ struct AdvertisementView: View {
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:
             purchaseWarning = .operatingReserveRequired
+        }
+    }
+
+    private func confirmPurchase(
+        _ advertisement: Advertisement
+    ) {
+        let result = purchaseWorkflow.completePurchase(
+            state: advertisementState,
+            item: advertisement
+        )
+
+        advertisementPendingConfirmation = nil
+
+        switch result {
+        case .completed:
+            onClose()
+        case .saveFailed:
+            purchaseWarning = .purchaseSaveFailed
         }
     }
 
