@@ -130,7 +130,7 @@ struct MarketingView: View {
         .sheet(isPresented: $showingAdvertisement) {
             AdvertisementView(
                 advertisementState: advertisementState,
-                finance: finance
+                purchaseWorkflow: purchaseWorkflow
             ) {
                 showingAdvertisement = false
             }

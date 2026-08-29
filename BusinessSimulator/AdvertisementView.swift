@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AdvertisementView: View {
     let advertisementState: AdvertisementState
-    let finance: Finance
+    let purchaseWorkflow: PurchaseWorkflow
     let onClose: () -> Void
 
     @State private var purchaseWarning: GamePopupType?
@@ -188,9 +188,11 @@ struct AdvertisementView: View {
     ) -> some View {
         let actionColor = actionColor(for: advertisement)
         let canSelectAdvertisement: Bool = {
-            if case .available = finance.purchaseAvailability(
-                for: advertisement.price
-            ) {
+            if case .available = purchaseWorkflow
+                .validateFinancialAvailability(
+                    price: advertisement.price
+                )
+            {
                 return true
             }
 
@@ -262,7 +264,9 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        switch finance.purchaseAvailability(for: advertisement.price) {
+        switch purchaseWorkflow.validateFinancialAvailability(
+            price: advertisement.price
+        ) {
         case .available:
             advertisementPendingConfirmation = advertisement
         case .insufficientFunds:
