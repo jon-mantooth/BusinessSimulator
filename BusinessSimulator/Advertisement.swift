@@ -9,7 +9,7 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct Advertisement: Identifiable, Equatable, Codable {
+struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
     let id: AdvertisementID
     let name: String
     let smallIcon: GameIcon
@@ -27,6 +27,10 @@ struct Advertisement: Identifiable, Equatable, Codable {
 
     var marketSizeEffectScore: Double {
         Double(marketSizeLevel) / Double(totalLevels)
+    }
+
+    var purchaseItemID: String {
+        id.rawValue
     }
 
     static func cleanPrice(
@@ -87,12 +91,6 @@ struct Advertisement: Identifiable, Equatable, Codable {
         self.marketSizeLevel = marketSizeLevel
         self.totalLevels = totalLevels
         self.dailyTimeRequired = dailyTimeRequired
-    }
-}
-
-extension Advertisement: PurchasableItem {
-    var purchaseItemID: String {
-        id.rawValue
     }
 }
 
