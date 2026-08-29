@@ -19,8 +19,7 @@ protocol PurchasableState: AnyObject {
     associatedtype PurchaseItem: PurchasableItem
     associatedtype RollbackState
 
-    // TODO: Rename UpgradeCategory to a purchasable-dimension identifier.
-    var dimensionID: UpgradeCategory { get }
+    var dimensionID: PurchaseCategory { get }
 
     func captureRollbackState() -> RollbackState
 
@@ -50,7 +49,7 @@ struct PurchaseWorkflow {
     // MARK: - Before Purchase
 
     func validateUpgradeAvailability(
-        category: UpgradeCategory
+        category: PurchaseCategory
     ) -> Bool {
         gameState.upgradeTracker.canUpgrade(
             category,
@@ -95,19 +94,7 @@ struct PurchaseWorkflow {
         )
 
         // Create a BusinessEvent for the purchase.
-        let purchaseCategory: PurchaseCategory
-        switch state.dimensionID {
-        case .advertisement:
-            purchaseCategory = .advertisement
-        case .equipment:
-            purchaseCategory = .equipment
-        case .labor:
-            purchaseCategory = .labor
-        case .transportation:
-            purchaseCategory = .transportation
-        case .storage:
-            purchaseCategory = .storage
-        }
+        let purchaseCategory = state.dimensionID
 
         let financialTransaction = item.paymentSchedule == .oneTime
             ? FinancialTransaction(

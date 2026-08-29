@@ -273,7 +273,7 @@ final class AdvertisementState: PurchasableState {
     let tiers: [AdvertisementTier]
     private(set) var activeAdvertisement: ActiveAdvertisement?
 
-    var dimensionID: UpgradeCategory {
+    var dimensionID: PurchaseCategory {
         .advertisement
     }
 

@@ -59,7 +59,7 @@ struct AdvertisementStateSave: Codable {
 }
 
 struct UpgradeTrackerSave: Codable {
-    let lastUpgradeDays: [UpgradeCategory: Int]
+    let lastUpgradeDays: [PurchaseCategory: Int]
 }
 
 struct DaySummarySave: Codable {
