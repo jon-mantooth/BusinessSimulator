@@ -93,9 +93,9 @@ struct GameRootView: View {
 
     private func selectGameArea(_ area: GameArea) {
         switch area {
-        case .gameMode, .marketing:
+        case .gameMode, .production, .marketing:
             selectedArea = area
-        case .production, .distribution, .finance:
+        case .distribution, .finance:
             // These areas will be enabled when their views are implemented.
             return
         }
@@ -256,6 +256,11 @@ struct GameRootView: View {
         )
         ZStack {
             gameBackground
+
+            if selectedArea == .production {
+                ProductionView()
+                    .ignoresSafeArea()
+            }
 
             if selectedArea == .marketing,
                 let product = gameState.productState?.product,
