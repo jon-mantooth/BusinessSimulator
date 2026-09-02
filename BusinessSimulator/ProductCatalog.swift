@@ -211,7 +211,6 @@ struct ProductCatalog {
                 baseIdealPrice: 12.80,
                 idealUnitsSold: 38,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .coldWeather
             ),
             Product(
@@ -261,7 +260,6 @@ struct ProductCatalog {
                 baseIdealPrice: 3.40,
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .warmWeather
             ),
             Product(
@@ -303,7 +301,6 @@ struct ProductCatalog {
                 baseIdealPrice: 3.20,
                 idealUnitsSold: 150,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .temperateWeather
             )
         ]
