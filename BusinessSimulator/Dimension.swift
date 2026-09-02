@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum PaymentSchedule: String, Codable {
+enum PaymentSchedule: String, Codable, Hashable {
     case oneTime
     case daily
     case weekly
