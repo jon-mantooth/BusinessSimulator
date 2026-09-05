@@ -26,6 +26,7 @@ final class GameState {
     var inventoryStates: [InventoryState] = []
     var reputation: BusinessReputationState?
     var advertisementState: AdvertisementState?
+    var equipmentState: EquipmentState?
     var businessHours: BusinessHours?
     var production: Production?
     var marketing: MarketingDepartment?
@@ -105,6 +106,13 @@ final class GameState {
                 advertisement: advertisementCatalog.noAdvertisement,
                 tierLevel: 0
             )
+        )
+
+        let equipmentCatalog = EquipmentCatalog()
+        self.equipmentState = EquipmentState(
+            primaryTiers: equipmentCatalog.primaryTiers(for: product),
+            secondaryEquipmentCatalog:
+                equipmentCatalog.secondaryEquipmentByProduct[product.id]!
         )
         
         let dimensions = BusinessDimensions.create(
