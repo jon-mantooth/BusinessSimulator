@@ -257,8 +257,9 @@ struct GameRootView: View {
         ZStack {
             gameBackground
 
-            if selectedArea == .production {
-                ProductionView()
+            if selectedArea == .production,
+                let product = gameState.productState?.product {
+                ProductionView(product: product)
                     .ignoresSafeArea()
             }
 
