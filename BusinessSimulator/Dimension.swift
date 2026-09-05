@@ -209,6 +209,9 @@ struct BusinessDimensions {
                 InventoryDimension(
                     productInventories: product.productInventories,
                     inventoryStates: gameState.inventoryStates
+                ),
+                EquipmentDimension(
+                    equipmentState: gameState.equipmentState!
                 )
             ],
             marketing: [
