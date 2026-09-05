@@ -258,8 +258,12 @@ struct GameRootView: View {
             gameBackground
 
             if selectedArea == .production,
-                let product = gameState.productState?.product {
-                ProductionView(product: product)
+                let product = gameState.productState?.product,
+                let equipmentState = gameState.equipmentState {
+                ProductionView(
+                    product: product,
+                    equipmentState: equipmentState
+                )
                     .ignoresSafeArea()
             }
 
