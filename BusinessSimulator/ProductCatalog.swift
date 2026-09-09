@@ -8,6 +8,17 @@
 import Foundation
 import SwiftUI
 
+// BALANCE-DEPENDENT: Manually maintained fields in this catalog:
+// - Inventory.pricePerUnit
+// - Inventory.purchaseAmount
+// - Inventory.lifespan
+// - ProductInventory.recipeAmount
+// - ProductInventory.freshnessCoefficient
+// - Product.baseIdealPrice
+// - Product.idealUnitsSold
+// - Product.priceSensitivity
+// - Product.temperatureInterpolationFormula
+
 struct ProductCatalog {
     
     let products: [Product]
