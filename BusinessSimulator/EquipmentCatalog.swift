@@ -36,38 +36,54 @@ struct EquipmentCatalog {
     let iceCrusher: Equipment
     let produceCooler: Equipment
 
-    var secondaryEquipmentByProduct: [
-        ProductID: SecondaryEquipmentCollection
-    ] {
-        [
-            .pies: SecondaryEquipmentCollection(
-                equipment: [
-                    appleCorer,
-                    standMixer,
-                    foodProcessor,
-                    doughSheeter,
-                    piePrepStation
-                ]
-            ),
-            .hotDogs: SecondaryEquipmentCollection(
-                equipment: [
-                    produceSlicer,
-                    foodProcessor,
-                    breadMaker,
-                    meatGrinder,
-                    hotDogPrepStation
-                ]
-            ),
-            .smoothies: SecondaryEquipmentCollection(
-                equipment: [
-                    foodProcessor,
-                    produceSlicer,
-                    vacuumSealer,
-                    iceCrusher,
-                    produceCooler
-                ]
-            )
-        ]
+    func secondaryEquipment(
+        for product: Product
+    ) -> SecondaryEquipmentCollection {
+        let equipment: [Equipment]
+
+        switch product.id {
+        case .pies:
+            equipment = [
+                appleCorer,
+                standMixer,
+                foodProcessor,
+                doughSheeter,
+                piePrepStation
+            ]
+        case .hotDogs:
+            equipment = [
+                produceSlicer,
+                foodProcessor,
+                breadMaker,
+                meatGrinder,
+                hotDogPrepStation
+            ]
+        case .smoothies:
+            equipment = [
+                foodProcessor,
+                produceSlicer,
+                vacuumSealer,
+                iceCrusher,
+                produceCooler
+            ]
+        }
+
+        return SecondaryEquipmentCollection(
+            equipment: equipment.map { equipment in
+                guard case let .secondary(capacityStrength, _) =
+                    equipment.category else {
+                    preconditionFailure(
+                        "Secondary equipment catalogs can contain only secondary equipment."
+                    )
+                }
+
+                var configuredEquipment = equipment
+                configuredEquipment.capacity = capacityStrength.capacity(
+                    for: product.idealUnitsSold
+                )
+                return configuredEquipment
+            }
+        )
     }
 
     func primaryTiers(
