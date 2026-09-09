@@ -199,12 +199,12 @@ struct EquipmentCatalog {
             name: "Apple Corer",
             smallIcon: .emoji("🍎"),
             description: "Core apples quickly and keep pie preparation moving smoothly.",
+            price: 99,
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .low,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         standMixer = Equipment(
@@ -212,12 +212,12 @@ struct EquipmentCatalog {
             name: "Stand Mixer",
             smallIcon: .system("dial.medium.fill"),
             description: "Mix dough and fillings consistently while freeing time for other preparation work.",
+            price: 349,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         foodProcessor = Equipment(
@@ -225,12 +225,12 @@ struct EquipmentCatalog {
             name: "Food Processor",
             smallIcon: .system("gearshape.2.fill"),
             description: "Speed up repetitive preparation tasks and produce more consistent ingredients.",
+            price: 249,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         doughSheeter = Equipment(
@@ -238,12 +238,12 @@ struct EquipmentCatalog {
             name: "Dough Sheeter",
             smallIcon: .system("rectangle.compress.vertical"),
             description: "Roll uniform sheets of dough quickly for dependable crust thickness and texture.",
+            price: 499,
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .high,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         piePrepStation = Equipment(
@@ -251,12 +251,12 @@ struct EquipmentCatalog {
             name: "Pie Prep Station",
             smallIcon: .system("table.furniture.fill"),
             description: "Organize ingredients and tools in a dedicated workspace built for efficient pie assembly.",
+            price: 699,
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .high,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         smallCharcoalGrill = Equipment(
@@ -324,12 +324,12 @@ struct EquipmentCatalog {
             name: "Produce Slicer",
             smallIcon: .system("square.grid.3x3.fill"),
             description: "Slice fruits, vegetables, and toppings quickly for consistent portions and faster preparation.",
+            price: 99,
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .low,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         breadMaker = Equipment(
@@ -337,12 +337,12 @@ struct EquipmentCatalog {
             name: "Bread Maker",
             smallIcon: .system("takeoutbag.and.cup.and.straw.fill"),
             description: "Prepare fresh, consistent buns in-house while streamlining the bread-making process.",
+            price: 349,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         meatGrinder = Equipment(
@@ -350,12 +350,12 @@ struct EquipmentCatalog {
             name: "Meat Grinder",
             smallIcon: .system("gearshape.fill"),
             description: "Grind and prepare custom hot dog blends for better control over flavor and production.",
+            price: 499,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         hotDogPrepStation = Equipment(
@@ -363,12 +363,12 @@ struct EquipmentCatalog {
             name: "Hot Dog Prep Station",
             smallIcon: .system("table.furniture.fill"),
             description: "Keep buns, toppings, and tools organized in a dedicated station built for fast assembly.",
+            price: 699,
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .high,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         handMixer = Equipment(
@@ -442,8 +442,7 @@ struct EquipmentCatalog {
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         iceCrusher = Equipment(
@@ -452,11 +451,10 @@ struct EquipmentCatalog {
             smallIcon: .system("snowflake"),
             description: "Crush ice quickly and consistently for smoother drinks and faster preparation.",
             category: .secondary(
-                capacityStrength: .medium,
+                capacityStrength: .high,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
 
         produceCooler = Equipment(
@@ -468,8 +466,7 @@ struct EquipmentCatalog {
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
             ),
-            demandLevel: 1,
-            capacity: 2
+            demandLevel: 1
         )
     }
 }
