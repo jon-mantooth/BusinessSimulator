@@ -12,6 +12,7 @@ enum GameStateRestoreError: Error {
     case productNotFound(ProductID)
     case invalidInventoryData
     case invalidAdvertisementData
+    case invalidEquipmentData
 }
 
 @Observable
@@ -234,6 +235,22 @@ final class GameState {
         advertisementState = AdvertisementState(
             tiers: advertisementTiers,
             activeAdvertisement: activeAdvertisement
+        )
+
+        let equipmentCatalog = EquipmentCatalog()
+        guard let secondaryEquipmentCatalog =
+            equipmentCatalog.secondaryEquipmentByProduct[product.id]
+        else {
+            throw GameStateRestoreError.invalidEquipmentData
+        }
+
+        equipmentState = EquipmentState(
+            primaryTiers: equipmentCatalog.primaryTiers(for: product),
+            secondaryEquipmentCatalog: secondaryEquipmentCatalog,
+            activePrimaryEquipment:
+                gameSave.equipmentState.activePrimaryEquipment,
+            ownedSecondaryEquipment:
+                gameSave.equipmentState.ownedSecondaryEquipment
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
