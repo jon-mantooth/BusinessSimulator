@@ -24,6 +24,36 @@ enum SecondaryCapacityStrength: String, Equatable, Codable {
     case low
     case medium
     case high
+
+    // Calculate capacity based on CapacityStrength. Low will be 3% of ideal units sold,
+    // medium 5% and high 7%
+    func capacity(
+        for idealUnitsSold: Int
+    ) -> Int {
+        assert(idealUnitsSold > 0)
+
+        let lowCapacity = max(
+            1,
+            Int((Double(idealUnitsSold) * 0.03).rounded())
+        )
+        let mediumCapacity = max(
+            lowCapacity + 1,
+            Int((Double(idealUnitsSold) * 0.05).rounded())
+        )
+        let highCapacity = max(
+            mediumCapacity + 1,
+            Int((Double(idealUnitsSold) * 0.07).rounded())
+        )
+
+        switch self {
+        case .low:
+            return lowCapacity
+        case .medium:
+            return mediumCapacity
+        case .high:
+            return highCapacity
+        }
+    }
 }
 
 enum EquipmentCategory: Equatable, Codable {
