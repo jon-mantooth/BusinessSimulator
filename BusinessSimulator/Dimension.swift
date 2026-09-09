@@ -13,16 +13,6 @@ enum PaymentSchedule: String, Codable, Hashable {
     case weekly
 }
 
-enum CapacityApplication {
-    /// The purchased item replaces the current item, so it stores the full
-    /// production capacity available at its tier.
-    case replacement
-
-    /// The purchased item remains alongside existing items, so it stores only
-    /// the capacity contributed by that individual tier.
-    case additive
-}
-
 /// Defines the shared capacity progression for equipment, labor, storage, and
 /// other production constraints. Tier zero starts at 90% of ideal unit sales,
 /// and completing all five tiers reaches 200% of ideal unit sales.
@@ -32,50 +22,36 @@ enum ProductionCapacityBalance {
     static let targetRatio = 2.00
     static let totalTiers = 5
 
-    static func capacity(
+    static func baseCapacity(
+        baseIdealUnitsSold: Int
+    ) -> Int {
+        assert(baseIdealUnitsSold > 0)
+
+        return Int(
+            (Double(baseIdealUnitsSold) * baselineRatio)
+                .rounded(.up)
+        )
+    }
+
+    /// Returns the cumulative capacity increase above the baseline expected
+    /// after reaching the supplied tier.
+    static func expectedCapacityIncrease(
         baseIdealUnitsSold: Int,
-        tierLevel: Int,
-        application: CapacityApplication
+        tierLevel: Int
     ) -> Int {
         assert(baseIdealUnitsSold > 0)
         assert((0...totalTiers).contains(tierLevel))
 
-        let baselineCapacity = Int(
-            (Double(baseIdealUnitsSold) * baselineRatio)
-                .rounded(.up)
+        let baselineCapacity = baseCapacity(
+            baseIdealUnitsSold: baseIdealUnitsSold
         )
         let targetCapacity = Int(
             (Double(baseIdealUnitsSold) * targetRatio)
                 .rounded()
         )
         let totalCapacityIncrease = targetCapacity - baselineCapacity
-
-        let cumulativeIncrease = capacityIncrease(
-            through: tierLevel,
-            totalCapacityIncrease: totalCapacityIncrease
-        )
-
-        switch application {
-        case .replacement:
-            return baselineCapacity + cumulativeIncrease
-        case .additive:
-            guard tierLevel > 0 else {
-                return 0
-            }
-
-            let precedingIncrease = capacityIncrease(
-                through: tierLevel - 1,
-                totalCapacityIncrease: totalCapacityIncrease
-            )
-            return cumulativeIncrease - precedingIncrease
-        }
-    }
-
-    private static func capacityIncrease(
-        through tierLevel: Int,
-        totalCapacityIncrease: Int
-    ) -> Int {
         let tierProgress = Double(tierLevel) / Double(totalTiers)
+
         return Int(
             (Double(totalCapacityIncrease) * tierProgress)
                 .rounded()

@@ -104,10 +104,8 @@ enum UpgradePricing {
         profitMultiplier: Double = 1.0
     ) -> Double {
         assert(baseIdealUnitsSold > 0)
-        let baselineCapacity = ProductionCapacityBalance.capacity(
-            baseIdealUnitsSold: baseIdealUnitsSold,
-            tierLevel: 0,
-            application: .replacement
+        let baselineCapacity = ProductionCapacityBalance.baseCapacity(
+            baseIdealUnitsSold: baseIdealUnitsSold
         )
 
         assert(upgradedCapacity >= baselineCapacity)

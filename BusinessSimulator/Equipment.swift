@@ -275,11 +275,16 @@ struct EquipmentTier: Identifiable, Equatable {
         self.level = level
         self.equipment = equipment.map { equipment in
             var configuredEquipment = equipment
-            configuredEquipment.capacity = ProductionCapacityBalance.capacity(
-                baseIdealUnitsSold: product.idealUnitsSold,
-                tierLevel: level,
-                application: .replacement
+            let baseCapacity = ProductionCapacityBalance.baseCapacity(
+                baseIdealUnitsSold: product.idealUnitsSold
             )
+            let expectedCapacityIncrease = ProductionCapacityBalance
+                .expectedCapacityIncrease(
+                    baseIdealUnitsSold: product.idealUnitsSold,
+                    tierLevel: level
+                )
+            configuredEquipment.capacity =
+                baseCapacity + expectedCapacityIncrease
 
             guard level > 0 else {
                 configuredEquipment.price = 0
