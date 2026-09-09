@@ -113,7 +113,7 @@ final class GameState {
         self.equipmentState = EquipmentState(
             primaryTiers: equipmentCatalog.primaryTiers(for: product),
             secondaryEquipmentCatalog:
-                equipmentCatalog.secondaryEquipmentByProduct[product.id]!
+                equipmentCatalog.secondaryEquipment(for: product)
         )
         
         let dimensions = BusinessDimensions.create(
@@ -238,19 +238,40 @@ final class GameState {
         )
 
         let equipmentCatalog = EquipmentCatalog()
-        guard let secondaryEquipmentCatalog =
-            equipmentCatalog.secondaryEquipmentByProduct[product.id]
-        else {
+        let secondaryEquipmentCatalog =
+            equipmentCatalog.secondaryEquipment(for: product)
+
+        let primaryTiers = equipmentCatalog.primaryTiers(for: product)
+        let savedActiveEquipment =
+            gameSave.equipmentState.activePrimaryEquipment
+        let savedOwnedEquipment =
+            gameSave.equipmentState.ownedSecondaryEquipment
+
+        guard primaryTiers.contains(where: { tier in
+            tier.level == savedActiveEquipment.tierLevel
+                && tier.equipment.contains {
+                    $0.id == savedActiveEquipment.id
+                }
+        }) else {
+            throw GameStateRestoreError.invalidEquipmentData
+        }
+
+        let ownedEquipmentIDs = savedOwnedEquipment.equipment.map(\.id)
+        let secondaryCatalogIDs = Set(
+            secondaryEquipmentCatalog.equipment.map(\.id)
+        )
+        guard Set(ownedEquipmentIDs).count == ownedEquipmentIDs.count,
+              ownedEquipmentIDs.allSatisfy({
+                  secondaryCatalogIDs.contains($0)
+              }) else {
             throw GameStateRestoreError.invalidEquipmentData
         }
 
         equipmentState = EquipmentState(
-            primaryTiers: equipmentCatalog.primaryTiers(for: product),
+            primaryTiers: primaryTiers,
             secondaryEquipmentCatalog: secondaryEquipmentCatalog,
-            activePrimaryEquipment:
-                gameSave.equipmentState.activePrimaryEquipment,
-            ownedSecondaryEquipment:
-                gameSave.equipmentState.ownedSecondaryEquipment
+            activePrimaryEquipment: savedActiveEquipment,
+            ownedSecondaryEquipment: savedOwnedEquipment
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
