@@ -96,11 +96,9 @@ struct ProductionView: View {
                             availableEquipment:
                                 equipmentState.availableSecondaryEquipment,
                             selectedEquipmentID:
-                                selectedSecondaryEquipmentID,
+                                selectedSecondaryEquipment?.id,
                             onEquipmentTapped: { equipment in
-                                // The equipment-detail popup will be connected
-                                // after its design is finalized.
-                                selectedSecondaryEquipmentID = equipment.id
+                                selectedSecondaryEquipment = equipment
                             }
                         )
                     }
@@ -122,7 +120,36 @@ struct ProductionView: View {
             .padding(.top, 10)
             .padding(.trailing, 14)
             .accessibilityLabel("Close equipment")
+
+            if let selectedSecondaryEquipment {
+                Color.black.opacity(0.42)
+                    .ignoresSafeArea()
+
+                SecondaryEquipmentDetailCard(
+                    equipment: selectedSecondaryEquipment,
+                    isOwned: equipmentState.ownedSecondaryEquipment.contains(
+                        selectedSecondaryEquipment
+                    ),
+                    purchaseAvailability: purchaseWorkflow
+                        .validateFinancialAvailability(
+                            price: selectedSecondaryEquipment.price
+                        ),
+                    onPurchase: {
+                        // Equipment purchases will be connected to
+                        // PurchaseWorkflow after persistence is implemented.
+                    },
+                    onClose: {
+                        self.selectedSecondaryEquipment = nil
+                    }
+                )
+                .padding(.horizontal, 22)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
+        .animation(
+            .easeInOut(duration: 0.2),
+            value: selectedSecondaryEquipment?.id
+        )
     }
 
     private var equipmentTabs: some View {
