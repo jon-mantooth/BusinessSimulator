@@ -2,7 +2,7 @@ import Foundation
 
 // BALANCE-DEPENDENT: Manually maintained fields in this catalog:
 // - Secondary Equipment.price
-// - Secondary Equipment.capacity
+// - Secondary Equipment.capacityStrength
 
 struct EquipmentCatalog {
     let basicHomeOven: Equipment
