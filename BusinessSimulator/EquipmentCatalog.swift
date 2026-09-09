@@ -438,6 +438,7 @@ struct EquipmentCatalog {
             name: "Vacuum Sealer",
             smallIcon: .system("shippingbox.fill"),
             description: "Seal prepared ingredients against air to preserve their quality and freshness longer.",
+            price: 349,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
@@ -450,6 +451,7 @@ struct EquipmentCatalog {
             name: "Ice Crusher",
             smallIcon: .system("snowflake"),
             description: "Crush ice quickly and consistently for smoother drinks and faster preparation.",
+            price: 499,
             category: .secondary(
                 capacityStrength: .high,
                 ingredientUpgradeID: nil
@@ -462,6 +464,7 @@ struct EquipmentCatalog {
             name: "Produce Cooler",
             smallIcon: .system("refrigerator.fill"),
             description: "Keep fruit and other perishable ingredients chilled, organized, and ready for service.",
+            price: 699,
             category: .secondary(
                 capacityStrength: .medium,
                 ingredientUpgradeID: nil
