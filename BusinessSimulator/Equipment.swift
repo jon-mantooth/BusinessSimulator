@@ -39,6 +39,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
     let name: String
     let smallIcon: GameIcon
     let description: String
+    let equipmentBenefit: String?
     var price: Double
     let category: EquipmentCategory
     let demandLevel: Int
@@ -75,6 +76,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
         name: String,
         smallIcon: GameIcon,
         description: String,
+        equipmentBenefit: String? = nil,
         price: Double = 0.00,
         category: EquipmentCategory,
         demandLevel: Int,
@@ -97,6 +99,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
         self.name = name
         self.smallIcon = smallIcon
         self.description = description
+        self.equipmentBenefit = equipmentBenefit
         self.price = price
         self.category = category
         self.demandLevel = demandLevel
