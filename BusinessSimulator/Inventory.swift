@@ -65,21 +65,6 @@ struct Inventory: Identifiable, Equatable {
     }
 }
 
-
-final class InventoryState: Identifiable {
-    let inventory: Inventory
-
-    var inventoryByAge: InventoryByAge
-
-    init(
-        inventory: Inventory,
-        currentDay: Int
-    ) {
-        self.inventory = inventory
-        self.inventoryByAge = InventoryByAge(currentDay: currentDay)
-    }
-}
-
 ///Purchase Date is very important for inventory as it
 ///degrades and expires over time. For this reason we will
 ///store inventory as an object with a dictionary of the amount owned

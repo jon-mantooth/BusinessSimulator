@@ -24,7 +24,6 @@ final class GameState {
     var weather: WeatherState!
 
     var productState: ProductState?
-    var inventoryStates: [InventoryState] = []
     var reputation: BusinessReputationState?
     var advertisementState: AdvertisementState?
     var equipmentState: EquipmentState?
@@ -82,18 +81,11 @@ final class GameState {
 
         let productState = ProductState(
             product: product,
+            currentDay: self.calendar.simulationDay,
             price: 0.00
         )
         
-        let inventoryStates = product.productInventories.map {
-            InventoryState(
-                inventory: $0.inventory,
-                currentDay: self.calendar.simulationDay
-            )
-        }
-
         self.productState = productState
-        self.inventoryStates = inventoryStates
         self.reputation = BusinessReputationState()
         self.businessHours = BusinessHours(
             openingTime: BusinessTime(hour: 9, minute: 0),
@@ -177,35 +169,9 @@ final class GameState {
 
         productState = ProductState(
             product: product,
+            currentDay: calendar.simulationDay,
             price: gameSave.productState.price
         )
-
-        let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
-        guard Set(savedInventoryIDs).count == savedInventoryIDs.count else {
-            throw GameStateRestoreError.invalidInventoryData
-        }
-
-        inventoryStates = try product.productInventories.map {
-            productInventory in
-            guard let savedInventory = gameSave.inventoryStates.first(
-                where: { $0.inventoryID == productInventory.inventory.id }
-            ) else {
-                throw GameStateRestoreError.invalidInventoryData
-            }
-
-            let inventoryState = InventoryState(
-                inventory: productInventory.inventory,
-                currentDay: calendar.simulationDay
-            )
-            inventoryState.inventoryByAge.inventoryByPurchaseDay =
-                savedInventory.inventoryByPurchaseDay
-
-            return inventoryState
-        }
-
-        guard inventoryStates.count == gameSave.inventoryStates.count else {
-            throw GameStateRestoreError.invalidInventoryData
-        }
 
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,
