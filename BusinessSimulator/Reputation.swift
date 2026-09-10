@@ -228,7 +228,7 @@ final class BusinessReputationState {
 
             let freshness = productInventoryState.inventoryByAge
                 .calculateFreshness(
-                    lifespan: productInventory.inventory.lifespan
+                    lifespan: productInventoryState.effectiveLifespan
                 )
             let weightedFreshnessPenalty =
                 (1.0 - freshness)

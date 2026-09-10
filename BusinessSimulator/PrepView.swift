@@ -10,6 +10,7 @@ import SwiftUI
 struct PrepView: View {
     
     let product: Product
+    let productInventoryStates: [ProductInventoryState]
     let initialPrice: Double
     let currentAmounts: [InventoryType: Double]
     let handleStartDay: ([InventoryType: Int], String, Double) -> Void
@@ -19,12 +20,13 @@ struct PrepView: View {
     
     //a dictionary mapping the amount for purchase to the ingredient
     @State private var purchaseAmounts: [InventoryType: Int] = [:]
-    @State private var selectedProductInventory: ProductInventory?
+    @State private var selectedProductInventoryState: ProductInventoryState?
 
     //a real time running total of costs so the player can see how their
     //inventory decisions will affect their total balance before making a final decision 
     private var projectedCost: Double {
-        product.productInventories.reduce(0) { total, productInventory in
+        productInventoryStates.reduce(0) { total, productInventoryState in
+            let productInventory = productInventoryState.productInventory
             let inventory = productInventory.inventory
             let quantity = purchaseAmounts[inventory.type, default: 0]
 
@@ -37,6 +39,7 @@ struct PrepView: View {
 
     init(
         product: Product,
+        productInventoryStates: [ProductInventoryState],
         initialPrice: Double,
         currentAmounts: [InventoryType: Double],
         handleStartDay: @escaping ([InventoryType: Int], String, Double) -> Void,
@@ -45,6 +48,7 @@ struct PrepView: View {
         onPriceEditingChanged: @escaping (Bool) -> Void
     ) {
         self.product = product
+        self.productInventoryStates = productInventoryStates
         self.initialPrice = initialPrice
         self.currentAmounts = currentAmounts
         self.handleStartDay = handleStartDay
@@ -73,9 +77,13 @@ struct PrepView: View {
                     VStack(spacing: 10) {
                         ingredientColumnHeader
 
-                        ForEach(product.productInventories) { productInventory in
+                        ForEach(productInventoryStates) {
+                            productInventoryState in
+                            let productInventory =
+                                productInventoryState.productInventory
                             inventoryRow(
-                                productInventory: productInventory,
+                                productInventoryState:
+                                    productInventoryState,
                                 currentAmount: currentAmounts[productInventory.inventory.type, default: 0],
                                 purchaseAmount: purchaseAmounts[
                                     productInventory.inventory.type,
@@ -139,7 +147,10 @@ struct PrepView: View {
             .onChange(of: purchaseAmounts) {
                 updateDisplayedBalance(projectedCost)
             }
-            .sheet(item: $selectedProductInventory) { productInventory in
+            .sheet(item: $selectedProductInventoryState) {
+                productInventoryState in
+                let productInventory =
+                    productInventoryState.productInventory
                 let inventory = productInventory.inventory
                 let inventoryType = inventory.type
                 let initialQuantity = purchaseAmounts[
@@ -150,7 +161,7 @@ struct PrepView: View {
                     Double(initialQuantity) * inventory.pricePerUnit
 
                 BuyView(
-                    productInventory: productInventory,
+                    productInventoryState: productInventoryState,
                     currentAmount: currentAmounts[
                         inventoryType,
                         default: 0
@@ -312,16 +323,17 @@ struct PrepView: View {
     }
 
     private func inventoryRow(
-        productInventory: ProductInventory,
+        productInventoryState: ProductInventoryState,
         currentAmount: Double,
         purchaseAmount: Int
     ) -> some View {
+        let productInventory = productInventoryState.productInventory
         let inventory = productInventory.inventory
         let totalAmount = currentAmount
             + Double(purchaseAmount * inventory.purchaseAmount)
 
         return Button {
-            selectedProductInventory = productInventory
+            selectedProductInventoryState = productInventoryState
         } label: {
             HStack(spacing: 8) {
                 HStack(spacing: 10) {

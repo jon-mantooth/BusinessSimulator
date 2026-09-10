@@ -322,6 +322,8 @@ struct GameRootView: View {
                             if let productState = gameState.productState {
                                 PrepView(
                                     product: productState.product,
+                                    productInventoryStates:
+                                        productState.productInventoryStates,
                                     initialPrice: productState.price,
                                     currentAmounts: currentAmounts,
                                     handleStartDay: handleStartDay,

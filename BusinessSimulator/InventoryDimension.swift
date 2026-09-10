@@ -24,7 +24,6 @@ final class InventoryDimension: Dimension {
         let purchaseUnitPrice: Double
         let purchaseUnitAmount: Double
         let recipeUnitAmount: Double
-        let lifespan: Int
         let freshnessCoefficient: Double
 
         init(
@@ -39,7 +38,6 @@ final class InventoryDimension: Dimension {
             self.purchaseUnitPrice = inventory.pricePerUnit
             self.purchaseUnitAmount = Double(inventory.purchaseAmount)
             self.recipeUnitAmount = productInventory.recipeAmount
-            self.lifespan = inventory.lifespan
             self.freshnessCoefficient =
                 productInventory.freshnessCoefficient
         }
@@ -63,7 +61,8 @@ final class InventoryDimension: Dimension {
             //and lifespan of ingredient
             let freshness = inventory.productInventoryState.inventoryByAge
                 .calculateFreshness(
-                    lifespan: inventory.lifespan
+                    lifespan:
+                        inventory.productInventoryState.effectiveLifespan
                 )
 
             //converts freshness into impact on demand
@@ -167,8 +166,8 @@ final class InventoryDimension: Dimension {
         var totalCost: Double = 0
         for inventory in inventories {
             inventory.productInventoryState.inventoryByAge.currentDay = currentDay
-            let lifeSpan: Int = inventory.productInventoryState
-                .productInventory.inventory.lifespan
+            let lifeSpan =
+                inventory.productInventoryState.effectiveLifespan
             let expiredUnits = inventory.productInventoryState.inventoryByAge.removeExpiredInventory(
                 lifeSpan: lifeSpan
             )
