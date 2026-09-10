@@ -134,6 +134,8 @@ final class ProductState: Identifiable {
             }
 
             replacementState.isActive = true
+            replacementState.inventoryByAge.currentDay =
+                replacedInventoryState.inventoryByAge.currentDay
             replacementState.inventoryByAge.inventoryByPurchaseDay = [:]
         }
 
