@@ -16,8 +16,19 @@ struct EquipmentTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct IngredientUpgradeID: RawRepresentable, Hashable, Codable {
-    let rawValue: String
+enum IngredientUpgradeEffect: String, Equatable, Codable {
+    case recipeAmount
+    case lifespan
+    case ingredientReplacement
+}
+
+/// Describes a product-inventory change unlocked by an equipment purchase.
+/// The value can be persisted while the upgrade waits to be applied at the
+/// end of the current day.
+struct IngredientUpgrade: Equatable, Codable {
+    let effect: IngredientUpgradeEffect
+    let ingredientID: InventoryType
+    let description: String
 }
 
 enum SecondaryCapacityStrength: String, Equatable, Codable {
@@ -59,8 +70,7 @@ enum SecondaryCapacityStrength: String, Equatable, Codable {
 enum EquipmentCategory: Equatable, Codable {
     case primary
     case secondary(
-        capacityStrength: SecondaryCapacityStrength,
-        ingredientUpgradeID: IngredientUpgradeID?
+        capacityStrength: SecondaryCapacityStrength
     )
 }
 
@@ -72,6 +82,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
     let equipmentBenefit: String?
     var price: Double
     let category: EquipmentCategory
+    let ingredientUpgrade: IngredientUpgrade?
     let demandLevel: Int
     let totalLevels: Int
     /// Primary equipment stores its total daily production capacity. Secondary
@@ -109,6 +120,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
         equipmentBenefit: String? = nil,
         price: Double = 0.00,
         category: EquipmentCategory,
+        ingredientUpgrade: IngredientUpgrade? = nil,
         demandLevel: Int,
         totalLevels: Int = 5,
         capacity: Int = 0
@@ -132,6 +144,7 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
         self.equipmentBenefit = equipmentBenefit
         self.price = price
         self.category = category
+        self.ingredientUpgrade = ingredientUpgrade
         self.demandLevel = demandLevel
         self.totalLevels = totalLevels
         self.capacity = capacity
@@ -576,9 +589,8 @@ final class EquipmentState: PurchasableState {
 
             ownedSecondaryEquipment.add(equipment)
 
-            // TODO: Apply the product-specific ingredient transformation when
-            // this equipment has a new ingredientUpgradeID. Include that
-            // transformation in this state's rollback and persistence model.
+            // TODO: Add this equipment's ingredientUpgrade to the persisted
+            // pending-upgrade collection as part of the purchase workflow.
         }
     }
 
