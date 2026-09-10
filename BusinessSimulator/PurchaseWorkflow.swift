@@ -7,6 +7,10 @@
 
 import Foundation
 
+enum PendingUpgrade: Equatable, Codable {
+    case ingredient(IngredientUpgrade)
+}
+
 protocol PurchasableItem {
     var purchaseItemID: String { get }
     var name: String { get }
@@ -41,6 +45,7 @@ struct PurchaseWorkflow {
         let displayedBalance: Double
         let upgradeTracker: UpgradeTracker
         let pendingBusinessEvents: [BusinessEvent]
+        let pendingUpgrades: [PendingUpgrade]
     }
 
     let gameState: GameState
@@ -67,19 +72,25 @@ struct PurchaseWorkflow {
 
     func completePurchase<State: PurchasableState>(
         state: State,
-        item: State.PurchaseItem
+        item: State.PurchaseItem,
+        pendingUpgrade: PendingUpgrade? = nil
     ) -> PurchaseWorkflowResult {
         // 1. Capture a rollback snapshot before mutating GameState.
         let rollbackSnapshot = RollbackSnapshot(
             actualBalance: gameState.finance!.actualBalance,
             displayedBalance: gameState.finance!.displayedBalance,
             upgradeTracker: gameState.upgradeTracker,
-            pendingBusinessEvents: gameState.pendingBusinessEvents
+            pendingBusinessEvents: gameState.pendingBusinessEvents,
+            pendingUpgrades: gameState.pendingUpgrades
         )
 
         //Capture rollback state in case we need to revert. Upgrade state
         let dimensionRollbackState = state.captureRollbackState()
         state.applyUpgrade(item)
+
+        if let pendingUpgrade {
+            gameState.pendingUpgrades.append(pendingUpgrade)
+        }
 
         // Reserve any immediate payment in displayed balance. The actual
         // balance is settled from cashFlowCosts when the day is completed.
@@ -149,6 +160,7 @@ struct PurchaseWorkflow {
         gameState.finance!.displayedBalance = snapshot.displayedBalance
         gameState.upgradeTracker = snapshot.upgradeTracker
         gameState.pendingBusinessEvents = snapshot.pendingBusinessEvents
+        gameState.pendingUpgrades = snapshot.pendingUpgrades
         state.revertUpgrade(to: dimensionRollbackState)
     }
 }

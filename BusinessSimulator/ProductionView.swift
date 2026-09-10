@@ -224,7 +224,10 @@ struct ProductionView: View {
     ) {
         let result = purchaseWorkflow.completePurchase(
             state: equipmentState,
-            item: equipment
+            item: equipment,
+            pendingUpgrade: equipment.ingredientUpgrade.map {
+                .ingredient($0)
+            }
         )
 
         equipmentPendingConfirmation = nil

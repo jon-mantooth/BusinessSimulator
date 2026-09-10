@@ -32,6 +32,7 @@ final class GameState {
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var pendingBusinessEvents: [BusinessEvent] = []
+    var pendingUpgrades: [PendingUpgrade] = []
     var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
 
@@ -74,6 +75,7 @@ final class GameState {
         product: Product
     ) {
         self.pendingBusinessEvents = []
+        self.pendingUpgrades = []
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
