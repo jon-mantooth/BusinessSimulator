@@ -36,3 +36,25 @@ struct ProductInventory: Equatable, Identifiable {
         }
     }
 }
+
+/// The state of one product ingredient within the current game.
+///
+/// `ProductInventory` remains the immutable catalog definition of the
+/// ingredient's relationship to its product. This object adds the inventory
+/// quantities and ages that change as the player operates the business.
+final class ProductInventoryState: Identifiable {
+    let productInventory: ProductInventory
+    var inventoryByAge: InventoryByAge
+
+    var id: InventoryType {
+        productInventory.id
+    }
+
+    init(
+        productInventory: ProductInventory,
+        currentDay: Int
+    ) {
+        self.productInventory = productInventory
+        self.inventoryByAge = InventoryByAge(currentDay: currentDay)
+    }
+}
