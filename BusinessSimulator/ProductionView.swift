@@ -3,10 +3,14 @@ import SwiftUI
 struct ProductionView: View {
     let product: Product
     let equipmentState: EquipmentState
+    let purchaseWorkflow: PurchaseWorkflow
 
     @State private var showingEquipment = false
+    @State private var showingEquipmentUpgradeLimit = false
     @State private var selectedEquipmentTab: EquipmentViewTab = .primary
-    @State private var selectedSecondaryEquipmentID: EquipmentID?
+    @State private var selectedSecondaryEquipment: Equipment?
+    @State private var equipmentPendingConfirmation: Equipment?
+    @State private var purchaseWarning: GamePopupType?
 
     private let sourceSize = CGSize(width: 851, height: 1_849)
     private let darkBrown = Color(red: 0.20, green: 0.12, blue: 0.06)
@@ -37,8 +41,14 @@ struct ProductionView: View {
                     systemImage: "gearshape.fill",
                     scale: scale,
                     action: {
-                        selectedEquipmentTab = .primary
-                        showingEquipment = true
+                        if purchaseWorkflow.validateUpgradeAvailability(
+                            category: .equipment
+                        ) {
+                            selectedEquipmentTab = .primary
+                            showingEquipment = true
+                        } else {
+                            showingEquipmentUpgradeLimit = true
+                        }
                     }
                 )
                 .position(
@@ -49,7 +59,8 @@ struct ProductionView: View {
                 productionButton(
                     title: "Labor",
                     systemImage: "person.2.fill",
-                    scale: scale
+                    scale: scale,
+                    action: {}
                 )
                 .position(
                     x: 555 * scale,
@@ -72,6 +83,17 @@ struct ProductionView: View {
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(28)
         }
+        .overlay {
+            if showingEquipmentUpgradeLimit {
+                GamePopupView(
+                    type: .upgradeLimitReached(upgradeName: "equipment"),
+                    onConfirm: {},
+                    onDismiss: {
+                        showingEquipmentUpgradeLimit = false
+                    }
+                )
+            }
+        }
     }
 
     private var equipmentSheet: some View {
@@ -87,7 +109,13 @@ struct ProductionView: View {
                     case .primary:
                         EquipmentViewPrimary(
                             activeTier: equipmentState.activePrimaryTier,
-                            availableTier: equipmentState.nextPrimaryTier
+                            availableTier: equipmentState.nextPrimaryTier,
+                            purchaseAvailability: { equipment in
+                                purchaseWorkflow.validateFinancialAvailability(
+                                    price: equipment.price
+                                )
+                            },
+                            onPurchase: attemptPurchase
                         )
                     case .secondary:
                         EquipmentViewSecondary(
@@ -135,8 +163,7 @@ struct ProductionView: View {
                             price: selectedSecondaryEquipment.price
                         ),
                     onPurchase: {
-                        // Equipment purchases will be connected to
-                        // PurchaseWorkflow after persistence is implemented.
+                        attemptPurchase(selectedSecondaryEquipment)
                     },
                     onClose: {
                         self.selectedSecondaryEquipment = nil
@@ -145,11 +172,70 @@ struct ProductionView: View {
                 .padding(.horizontal, 22)
                 .transition(.scale.combined(with: .opacity))
             }
+
+            if let equipmentPendingConfirmation {
+                GamePopupView(
+                    type: .upgradeConfirmation(
+                        itemName: equipmentPendingConfirmation.name,
+                        icon: equipmentPendingConfirmation.smallIcon
+                    ),
+                    onConfirm: {
+                        confirmPurchase(equipmentPendingConfirmation)
+                    },
+                    onDismiss: {
+                        self.equipmentPendingConfirmation = nil
+                    }
+                )
+            }
+
+            if let purchaseWarning {
+                GamePopupView(
+                    type: purchaseWarning,
+                    onConfirm: {},
+                    onDismiss: {
+                        self.purchaseWarning = nil
+                    }
+                )
+            }
         }
         .animation(
             .easeInOut(duration: 0.2),
             value: selectedSecondaryEquipment?.id
         )
+    }
+
+    private func attemptPurchase(
+        _ equipment: Equipment
+    ) {
+        switch purchaseWorkflow.validateFinancialAvailability(
+            price: equipment.price
+        ) {
+        case .available:
+            equipmentPendingConfirmation = equipment
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
+        }
+    }
+
+    private func confirmPurchase(
+        _ equipment: Equipment
+    ) {
+        let result = purchaseWorkflow.completePurchase(
+            state: equipmentState,
+            item: equipment
+        )
+
+        equipmentPendingConfirmation = nil
+
+        switch result {
+        case .completed:
+            selectedSecondaryEquipment = nil
+            showingEquipment = false
+        case .saveFailed:
+            purchaseWarning = .purchaseSaveFailed
+        }
     }
 
     private var equipmentTabs: some View {

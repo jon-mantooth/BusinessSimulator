@@ -3,6 +3,8 @@ import SwiftUI
 struct EquipmentViewPrimary: View {
     let activeTier: EquipmentTier
     let availableTier: EquipmentTier?
+    let purchaseAvailability: (Equipment) -> PurchaseAvailability
+    let onPurchase: (Equipment) -> Void
 
     private let green = Color(red: 0.05, green: 0.39, blue: 0.20)
     private let ink = Color(red: 0.20, green: 0.12, blue: 0.06)
@@ -115,14 +117,14 @@ struct EquipmentViewPrimary: View {
 
             if !isActive {
                 Button {
-                    // Purchase workflow will be connected with EquipmentState.
+                    onPurchase(equipment)
                 } label: {
-                    Text("PURCHASE")
+                    Text(purchaseButtonTitle(for: equipment))
                         .font(.headline.weight(.black))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(green)
+                        .background(purchaseButtonColor(for: equipment))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
@@ -136,6 +138,30 @@ struct EquipmentViewPrimary: View {
                 .stroke(Color.brown.opacity(0.25), lineWidth: 1.5)
         }
         .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
+    }
+
+    private func purchaseButtonTitle(
+        for equipment: Equipment
+    ) -> String {
+        switch purchaseAvailability(equipment) {
+        case .available:
+            return "PURCHASE"
+        case .insufficientFunds:
+            return "NOT ENOUGH MONEY"
+        case .operatingReserveRequired:
+            return "KEEP FUNDS FOR INGREDIENTS"
+        }
+    }
+
+    private func purchaseButtonColor(
+        for equipment: Equipment
+    ) -> Color {
+        switch purchaseAvailability(equipment) {
+        case .available:
+            return green
+        case .insufficientFunds, .operatingReserveRequired:
+            return .gray
+        }
     }
 
     private func equipmentPlaceholder(

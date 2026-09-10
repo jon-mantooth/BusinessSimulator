@@ -262,7 +262,8 @@ struct GameRootView: View {
                 let equipmentState = gameState.equipmentState {
                 ProductionView(
                     product: product,
-                    equipmentState: equipmentState
+                    equipmentState: equipmentState,
+                    purchaseWorkflow: purchaseWorkflow
                 )
                     .ignoresSafeArea()
             }
