@@ -155,7 +155,9 @@ final class GameState {
     func restoreBusiness(
         from gameSave: GameSave
     ) throws {
-        guard let product = ProductCatalog().products.first(
+        let productCatalog = ProductCatalog()
+
+        guard let product = productCatalog.products.first(
             where: { $0.id == gameSave.productState.productID }
         ) else {
             throw GameStateRestoreError.productNotFound(
@@ -181,19 +183,26 @@ final class GameState {
             }
         )
 
+        let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
+        guard Set(savedInventoryIDs).count == savedInventoryIDs.count else {
+            throw GameStateRestoreError.invalidInventoryData
+        }
+
         let restoredProductState = ProductState(
             product: product,
             currentDay: calendar.simulationDay,
             price: gameSave.productState.price
         )
 
-        let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
-        guard Set(savedInventoryIDs).count == savedInventoryIDs.count else {
+        let restoredInventoryIDs =
+            restoredProductState.allProductInventoryStates.map(\.id)
+        guard Set(restoredInventoryIDs) == Set(savedInventoryIDs),
+              restoredInventoryIDs.count == savedInventoryIDs.count else {
             throw GameStateRestoreError.invalidInventoryData
         }
 
         for productInventoryState in
-            restoredProductState.productInventoryStates {
+            restoredProductState.allProductInventoryStates {
             guard let savedInventory = gameSave.inventoryStates.first(
                 where: {
                     $0.inventoryID == productInventoryState
@@ -209,9 +218,10 @@ final class GameState {
                 savedInventory.recipeAmountMultiplier
             productInventoryState.lifespanMultiplier =
                 savedInventory.lifespanMultiplier
+            productInventoryState.isActive = savedInventory.isActive
         }
 
-        guard restoredProductState.productInventoryStates.count
+        guard restoredProductState.allProductInventoryStates.count
                 == gameSave.inventoryStates.count else {
             throw GameStateRestoreError.invalidInventoryData
         }
