@@ -231,6 +231,32 @@ struct SecondaryEquipmentDetailCard: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
+                if let ingredientUpgrade = equipment.ingredientUpgrade {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "leaf.fill")
+                                .foregroundStyle(green)
+
+                            Text("INGREDIENT BENEFIT")
+                                .font(.caption.weight(.black))
+                                .foregroundStyle(ink)
+                        }
+
+                        Text(ingredientUpgrade.description)
+                            .font(.caption)
+                            .foregroundStyle(ink.opacity(0.78))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("This change takes effect the next business day.")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(green)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(12)
+                    .background(Color.green.opacity(0.10))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
                 HStack {
                     Text("ONE-TIME COST")
                         .font(.caption.weight(.black))
