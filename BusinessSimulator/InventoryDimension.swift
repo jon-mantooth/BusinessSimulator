@@ -23,7 +23,9 @@ final class InventoryDimension: Dimension {
         let name: String
         let purchaseUnitPrice: Double
         let purchaseUnitAmount: Double
-        let recipeUnitAmount: Double
+        var recipeUnitAmount: Double {
+            productInventoryState.effectiveRecipeAmount
+        }
         let freshnessCoefficient: Double
 
         init(
@@ -37,7 +39,6 @@ final class InventoryDimension: Dimension {
             self.name = inventory.name
             self.purchaseUnitPrice = inventory.pricePerUnit
             self.purchaseUnitAmount = Double(inventory.purchaseAmount)
-            self.recipeUnitAmount = productInventory.recipeAmount
             self.freshnessCoefficient =
                 productInventory.freshnessCoefficient
         }

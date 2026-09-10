@@ -30,10 +30,14 @@ struct Finance {
 
     init(
         product: Product,
+        productInventoryStates: [ProductInventoryState],
         balance: Double? = nil
     ) {
         let minimumOperatingAllowance =
-            Self.minimumOperatingReserve(for: product)
+            Self.minimumOperatingReserve(
+                for: product,
+                productInventoryStates: productInventoryStates
+            )
         let initialBalance = max(
             balance ?? minimumOperatingAllowance,
             minimumOperatingAllowance
@@ -49,7 +53,8 @@ struct Finance {
     /// up to the next $50. New games use this amount as both their starting
     /// balance and minimum operating reserve.
     static func minimumOperatingReserve(
-        for product: Product
+        for product: Product,
+        productInventoryStates: [ProductInventoryState]
     ) -> Double {
         let idealRevenue =
             product.baseIdealPrice * Double(product.idealUnitsSold)
@@ -57,9 +62,12 @@ struct Finance {
         let targetSales = idealSales / 2.0
 
         var inventoryCost = 0.0
-        for productInventory in product.productInventories {
+        for productInventoryState in productInventoryStates {
+            let productInventory =
+                productInventoryState.productInventory
             let requiredIngredientAmount =
-                targetSales * productInventory.recipeAmount
+                targetSales
+                    * productInventoryState.effectiveRecipeAmount
             let purchasePackagesNeeded = ceil(
                 requiredIngredientAmount
                     / Double(productInventory.inventory.purchaseAmount)

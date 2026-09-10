@@ -165,7 +165,7 @@ struct BuyView: View {
 
                 informationTile(
                     title: "Recipe Amount",
-                    value: productInventory.recipeAmountLabel,
+                    value: productInventoryState.effectiveRecipeAmountLabel,
                     systemName: "fork.knife"
                 )
 
@@ -282,11 +282,13 @@ struct BuyView: View {
     }
 
     private func productsPossible(with amount: Double) -> Int {
-        guard productInventory.recipeAmount > 0 else {
+        guard productInventoryState.effectiveRecipeAmount > 0 else {
             return 0
         }
 
-        return Int(floor(amount / productInventory.recipeAmount))
+        return Int(
+            floor(amount / productInventoryState.effectiveRecipeAmount)
+        )
     }
 
     private func amountText(_ amount: Double) -> some View {

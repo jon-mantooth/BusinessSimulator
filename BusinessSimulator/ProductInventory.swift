@@ -56,6 +56,18 @@ final class ProductInventoryState: Identifiable {
         productInventory.recipeAmount * recipeAmountMultiplier
     }
 
+    var effectiveRecipeAmountLabel: String {
+        let amount = effectiveRecipeAmount.formatted(
+            .number.precision(.fractionLength(0...2))
+        )
+
+        if let unit = productInventory.recipeUnit {
+            return "\(amount) \(unit)"
+        }
+
+        return amount
+    }
+
     var effectiveLifespan: Days {
         Int(
             (

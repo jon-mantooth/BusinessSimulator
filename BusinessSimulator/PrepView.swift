@@ -225,7 +225,10 @@ struct PrepView: View {
                 }
                 .help(product.productLine.instructionLabel)
                 .sheet(isPresented: $showingInstructions) {
-                    InstructionsView(product: product)
+                    InstructionsView(
+                        product: product,
+                        productInventoryStates: productInventoryStates
+                    )
                 }
             }
         }

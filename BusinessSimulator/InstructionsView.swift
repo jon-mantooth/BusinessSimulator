@@ -9,6 +9,7 @@ import SwiftUI
 
 struct InstructionsView: View {
     let product: Product
+    let productInventoryStates: [ProductInventoryState]
 
     @Environment(\.dismiss) private var dismiss
 
@@ -45,13 +46,15 @@ struct InstructionsView: View {
                         .font(.headline)
 
                     VStack(spacing: 8) {
-                        ForEach(product.productInventories, id: \.id) { requirement in
+                        ForEach(productInventoryStates) { requirement in
                             HStack(alignment: .firstTextBaseline) {
-                                Text(requirement.inventory.name)
+                                Text(
+                                    requirement.productInventory.inventory.name
+                                )
 
                                 Spacer()
 
-                                Text(requirement.recipeAmountLabel)
+                                Text(requirement.effectiveRecipeAmountLabel)
                                     .fontWeight(.medium)
                             }
                         }

@@ -74,7 +74,6 @@ final class GameState {
         product: Product
     ) {
         self.pendingBusinessEvents = []
-        self.finance = Finance(product: product)
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
@@ -86,6 +85,10 @@ final class GameState {
         )
         
         self.productState = productState
+        self.finance = Finance(
+            product: product,
+            productInventoryStates: productState.productInventoryStates
+        )
         self.reputation = BusinessReputationState()
         self.businessHours = BusinessHours(
             openingTime: BusinessTime(hour: 9, minute: 0),
@@ -144,11 +147,6 @@ final class GameState {
             )
         }
 
-        finance = Finance(
-            product: product,
-            balance: gameSave.finance.actualBalance
-        )
-
         calendar = GameCalendar(
             simulationDay: gameSave.calendar.simulationDay,
             locationStartDate: gameSave.calendar.locationStartDate,
@@ -199,6 +197,13 @@ final class GameState {
         }
 
         productState = restoredProductState
+
+        finance = Finance(
+            product: product,
+            productInventoryStates:
+                restoredProductState.productInventoryStates,
+            balance: gameSave.finance.actualBalance
+        )
 
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,
