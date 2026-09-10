@@ -70,7 +70,7 @@ struct EquipmentCatalog {
 
         return SecondaryEquipmentCollection(
             equipment: equipment.map { equipment in
-                guard case let .secondary(capacityStrength, _) =
+                guard case let .secondary(capacityStrength) =
                     equipment.category else {
                     preconditionFailure(
                         "Secondary equipment catalogs can contain only secondary equipment."
@@ -201,8 +201,7 @@ struct EquipmentCatalog {
             description: "Core apples quickly and keep pie preparation moving smoothly.",
             price: 99,
             category: .secondary(
-                capacityStrength: .low,
-                ingredientUpgradeID: nil
+                capacityStrength: .low
             ),
             demandLevel: 1
         )
@@ -214,8 +213,7 @@ struct EquipmentCatalog {
             description: "Mix dough and fillings consistently while freeing time for other preparation work.",
             price: 349,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
@@ -227,8 +225,7 @@ struct EquipmentCatalog {
             description: "Speed up repetitive preparation tasks and produce more consistent ingredients.",
             price: 249,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
@@ -240,8 +237,7 @@ struct EquipmentCatalog {
             description: "Roll uniform sheets of dough quickly for dependable crust thickness and texture.",
             price: 499,
             category: .secondary(
-                capacityStrength: .high,
-                ingredientUpgradeID: nil
+                capacityStrength: .high
             ),
             demandLevel: 1
         )
@@ -253,8 +249,7 @@ struct EquipmentCatalog {
             description: "Organize ingredients and tools in a dedicated workspace built for efficient pie assembly.",
             price: 699,
             category: .secondary(
-                capacityStrength: .high,
-                ingredientUpgradeID: nil
+                capacityStrength: .high
             ),
             demandLevel: 1
         )
@@ -326,8 +321,7 @@ struct EquipmentCatalog {
             description: "Slice fruits, vegetables, and toppings quickly for consistent portions and faster preparation.",
             price: 99,
             category: .secondary(
-                capacityStrength: .low,
-                ingredientUpgradeID: nil
+                capacityStrength: .low
             ),
             demandLevel: 1
         )
@@ -339,8 +333,7 @@ struct EquipmentCatalog {
             description: "Prepare fresh, consistent buns in-house while streamlining the bread-making process.",
             price: 349,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
@@ -352,8 +345,7 @@ struct EquipmentCatalog {
             description: "Grind and prepare custom hot dog blends for better control over flavor and production.",
             price: 499,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
@@ -365,8 +357,7 @@ struct EquipmentCatalog {
             description: "Keep buns, toppings, and tools organized in a dedicated station built for fast assembly.",
             price: 699,
             category: .secondary(
-                capacityStrength: .high,
-                ingredientUpgradeID: nil
+                capacityStrength: .high
             ),
             demandLevel: 1
         )
@@ -440,8 +431,7 @@ struct EquipmentCatalog {
             description: "Seal prepared ingredients against air to preserve their quality and freshness longer.",
             price: 349,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
@@ -453,8 +443,7 @@ struct EquipmentCatalog {
             description: "Crush ice quickly and consistently for smoother drinks and faster preparation.",
             price: 499,
             category: .secondary(
-                capacityStrength: .high,
-                ingredientUpgradeID: nil
+                capacityStrength: .high
             ),
             demandLevel: 1
         )
@@ -466,8 +455,7 @@ struct EquipmentCatalog {
             description: "Keep fruit and other perishable ingredients chilled, organized, and ready for service.",
             price: 699,
             category: .secondary(
-                capacityStrength: .medium,
-                ingredientUpgradeID: nil
+                capacityStrength: .medium
             ),
             demandLevel: 1
         )
