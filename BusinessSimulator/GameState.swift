@@ -303,6 +303,7 @@ final class GameState {
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
+        pendingUpgrades = gameSave.pendingUpgrades
 
         finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
 

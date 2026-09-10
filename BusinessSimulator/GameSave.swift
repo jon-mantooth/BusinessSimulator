@@ -13,6 +13,7 @@ struct GameSave: Codable {
     let advertisementState: AdvertisementStateSave
     let equipmentState: EquipmentStateSave
     let pendingBusinessEvents: [BusinessEvent]
+    let pendingUpgrades: [PendingUpgrade]
     let upgradeTracker: UpgradeTrackerSave
     let summaries: [DaySummarySave]
 }
@@ -177,6 +178,7 @@ extension GameSave {
         )
 
         pendingBusinessEvents = gameState.pendingBusinessEvents
+        pendingUpgrades = gameState.pendingUpgrades
         upgradeTracker = UpgradeTrackerSave(
             lastUpgradeDays: gameState.upgradeTracker.lastUpgradeDays
         )
