@@ -203,6 +203,11 @@ struct EquipmentCatalog {
             category: .secondary(
                 capacityStrength: .low
             ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .recipeAmount,
+                ingredientID: .apple,
+                description: "Uses more of each apple, reducing the number needed for every pie."
+            ),
             demandLevel: 1
         )
 
@@ -214,6 +219,11 @@ struct EquipmentCatalog {
             price: 349,
             category: .secondary(
                 capacityStrength: .medium
+            ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .recipeAmount,
+                ingredientID: .butter,
+                description: "Mixes dough more efficiently, reducing the butter needed for every pie."
             ),
             demandLevel: 1
         )
@@ -238,6 +248,11 @@ struct EquipmentCatalog {
             price: 499,
             category: .secondary(
                 capacityStrength: .high
+            ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .recipeAmount,
+                ingredientID: .flour,
+                description: "Rolls dough evenly, reducing the flour needed for every pie."
             ),
             demandLevel: 1
         )
@@ -335,6 +350,11 @@ struct EquipmentCatalog {
             category: .secondary(
                 capacityStrength: .medium
             ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .ingredientReplacement,
+                ingredientID: .bun,
+                description: "Replaces purchased buns with ingredients for making fresh buns in-house."
+            ),
             demandLevel: 1
         )
 
@@ -346,6 +366,11 @@ struct EquipmentCatalog {
             price: 499,
             category: .secondary(
                 capacityStrength: .medium
+            ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .ingredientReplacement,
+                ingredientID: .hotDog,
+                description: "Replaces purchased hot dogs with ingredients for producing a custom blend in-house."
             ),
             demandLevel: 1
         )
@@ -433,6 +458,11 @@ struct EquipmentCatalog {
             category: .secondary(
                 capacityStrength: .medium
             ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .lifespan,
+                ingredientID: .strawberry,
+                description: "Keeps strawberries fresh longer by protecting them from air."
+            ),
             demandLevel: 1
         )
 
@@ -456,6 +486,11 @@ struct EquipmentCatalog {
             price: 699,
             category: .secondary(
                 capacityStrength: .medium
+            ),
+            ingredientUpgrade: IngredientUpgrade(
+                effect: .lifespan,
+                ingredientID: .milk,
+                description: "Keeps milk properly chilled so it remains fresh longer."
             ),
             demandLevel: 1
         )
