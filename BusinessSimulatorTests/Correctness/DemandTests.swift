@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import BusinessSimulator
 
@@ -104,24 +105,44 @@ extension DemandTests {
             )
         ]
 
-        let butterState = ProductInventoryState(
-            productInventory: productInventories[0],
+        let product = Product(
+            id: .pies,
+            singularName: "Test Product",
+            pluralName: "Test Products",
+            smallIcon: .emoji("🧪"),
+            accent: .brown,
+            description: "Inventory demand test product.",
+            productLine: FoodProductLine(),
+            productInventories: productInventories,
+            upgradeProductInventories: [],
+            instructions: [],
+            baseIdealPrice: 1,
+            idealUnitsSold: 1,
+            priceSensitivity: 1,
+            temperatureInterpolationFormula: .coldWeather
+        )
+
+        let productState = ProductState(
+            product: product,
             currentDay: testCase.currentDay
         )
+
+        let butterState = productState.productInventoryStates.first {
+            $0.id == .butter
+        }!
         butterState.inventoryByAge.inventoryByPurchaseDay = [
             testCase.butterPurchaseDay: 1
         ]
 
-        let appleState = ProductInventoryState(
-            productInventory: productInventories[1],
-            currentDay: testCase.currentDay
-        )
+        let appleState = productState.productInventoryStates.first {
+            $0.id == .apple
+        }!
         appleState.inventoryByAge.inventoryByPurchaseDay = [
             testCase.applePurchaseDay: 1
         ]
 
         let inventoryDimension = InventoryDimension(
-            productInventoryStates: [butterState, appleState]
+            productState: productState
         )
 
         let demand = inventoryDimension.calculateDemand()
