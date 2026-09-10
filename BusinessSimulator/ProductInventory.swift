@@ -45,16 +45,44 @@ struct ProductInventory: Equatable, Identifiable {
 final class ProductInventoryState: Identifiable {
     let productInventory: ProductInventory
     var inventoryByAge: InventoryByAge
+    var recipeAmountMultiplier: Double
+    var lifespanMultiplier: Double
 
     var id: InventoryType {
         productInventory.id
     }
 
+    var effectiveRecipeAmount: Double {
+        productInventory.recipeAmount * recipeAmountMultiplier
+    }
+
+    var effectiveLifespan: Days {
+        Int(
+            (
+                Double(productInventory.inventory.lifespan)
+                    * lifespanMultiplier
+            ).rounded(.up)
+        )
+    }
+
     init(
         productInventory: ProductInventory,
-        currentDay: Int
+        currentDay: Int,
+        recipeAmountMultiplier: Double = 1.0,
+        lifespanMultiplier: Double = 1.0
     ) {
+        assert(
+            recipeAmountMultiplier > 0,
+            "Recipe amount multiplier must be positive."
+        )
+        assert(
+            lifespanMultiplier > 0,
+            "Lifespan multiplier must be positive."
+        )
+
         self.productInventory = productInventory
         self.inventoryByAge = InventoryByAge(currentDay: currentDay)
+        self.recipeAmountMultiplier = recipeAmountMultiplier
+        self.lifespanMultiplier = lifespanMultiplier
     }
 }
