@@ -47,6 +47,7 @@ final class ProductInventoryState: Identifiable {
     var inventoryByAge: InventoryByAge
     var recipeAmountMultiplier: Double
     var lifespanMultiplier: Double
+    var isActive: Bool
 
     var id: InventoryType {
         productInventory.id
@@ -81,7 +82,8 @@ final class ProductInventoryState: Identifiable {
         productInventory: ProductInventory,
         currentDay: Int,
         recipeAmountMultiplier: Double = 1.0,
-        lifespanMultiplier: Double = 1.0
+        lifespanMultiplier: Double = 1.0,
+        isActive: Bool = true
     ) {
         assert(
             recipeAmountMultiplier > 0,
@@ -96,5 +98,6 @@ final class ProductInventoryState: Identifiable {
         self.inventoryByAge = InventoryByAge(currentDay: currentDay)
         self.recipeAmountMultiplier = recipeAmountMultiplier
         self.lifespanMultiplier = lifespanMultiplier
+        self.isActive = isActive
     }
 }

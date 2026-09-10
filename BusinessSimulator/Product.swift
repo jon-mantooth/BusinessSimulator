@@ -16,6 +16,7 @@ struct Product: Identifiable {
     let description: String
     let productLine: any ProductLine
     let productInventories: [ProductInventory]
+    let upgradeProductInventories: [ProductInventory]
     let instructions: [String]
     let baseIdealPrice: Double
     let idealUnitsSold: Int
@@ -32,7 +33,11 @@ enum ProductID: String, Codable {
 
 final class ProductState: Identifiable {
     let product: Product
-    let productInventoryStates: [ProductInventoryState]
+    private(set) var allProductInventoryStates: [ProductInventoryState]
+
+    var productInventoryStates: [ProductInventoryState] {
+        allProductInventoryStates.filter(\.isActive)
+    }
 
     var price: Double
     private(set) var currentIdealPrice: Double
@@ -43,12 +48,24 @@ final class ProductState: Identifiable {
         price: Double = 0
     ) {
         self.product = product
-        self.productInventoryStates = product.productInventories.map {
+
+        let baseStates = product.productInventories.map {
             ProductInventoryState(
                 productInventory: $0,
-                currentDay: currentDay
+                currentDay: currentDay,
+                isActive: true
             )
         }
+
+        let upgradeStates = product.upgradeProductInventories.map {
+            ProductInventoryState(
+                productInventory: $0,
+                currentDay: currentDay,
+                isActive: false
+            )
+        }
+
+        self.allProductInventoryStates = baseStates + upgradeStates
         self.price = price
         self.currentIdealPrice = product.baseIdealPrice
     }
@@ -58,6 +75,68 @@ final class ProductState: Identifiable {
     ) {
         currentIdealPrice = product.baseIdealPrice * demand
         assert(currentIdealPrice > 0, "Ideal price must be positive.")
+    }
+
+    /// Applies an ingredient upgrade when its delayed activation date arrives.
+    func applyIngredientUpgrade(
+        _ upgrade: IngredientUpgrade
+    ) {
+        guard let inventoryState = productInventoryStates.first(
+            where: { $0.id == upgrade.ingredientID }
+        ) else {
+            preconditionFailure(
+                "Ingredient upgrade target was not found in ProductState."
+            )
+        }
+
+        switch upgrade.effect {
+        case .recipeAmount:
+            inventoryState.recipeAmountMultiplier = 0.8
+
+        case .lifespan:
+            inventoryState.lifespanMultiplier = 1.5
+
+        case .ingredientReplacement:
+            replaceIngredient(
+                inventoryState,
+                withUpgradeFor: upgrade.ingredientID
+            )
+        }
+    }
+
+    private func replaceIngredient(
+        _ replacedInventoryState: ProductInventoryState,
+        withUpgradeFor inventoryID: InventoryType
+    ) {
+        let replacementInventoryIDs: [InventoryType]
+
+        switch inventoryID {
+        case .hotDog:
+            replacementInventoryIDs = [.beef, .spices]
+        case .bun:
+            replacementInventoryIDs = [.flour, .yeast]
+        default:
+            preconditionFailure(
+                "No replacement recipe exists for this ingredient."
+            )
+        }
+
+        replacedInventoryState.isActive = false
+        replacedInventoryState.inventoryByAge.inventoryByPurchaseDay = [:]
+
+        for replacementInventoryID in replacementInventoryIDs {
+            guard let replacementState = allProductInventoryStates.first(
+                where: { $0.id == replacementInventoryID }
+            ) else {
+                preconditionFailure(
+                    "Replacement ingredient was not found in ProductState."
+                )
+            }
+
+            replacementState.isActive = true
+            replacementState.inventoryByAge.inventoryByPurchaseDay = [:]
+        }
+
     }
     
     ///calculates what revenue should be based on the difference between
