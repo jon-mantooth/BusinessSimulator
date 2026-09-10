@@ -70,6 +70,20 @@ final class GameState {
 
         pendingBusinessEvents.removeAll()
     }
+
+    /// Routes delayed upgrades to the state responsible for applying them.
+    func applyPendingUpgrades() {
+        for pendingUpgrade in pendingUpgrades {
+            switch pendingUpgrade {
+            case let .ingredient(ingredientUpgrade):
+                productState!.applyIngredientUpgrade(
+                    ingredientUpgrade
+                )
+            }
+        }
+
+        pendingUpgrades.removeAll()
+    }
     
     func initializeBusiness(
         product: Product
