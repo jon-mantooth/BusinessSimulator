@@ -32,15 +32,23 @@ enum ProductID: String, Codable {
 
 final class ProductState: Identifiable {
     let product: Product
+    let productInventoryStates: [ProductInventoryState]
 
     var price: Double
     private(set) var currentIdealPrice: Double
 
     init(
         product: Product,
+        currentDay: Int,
         price: Double = 0
     ) {
         self.product = product
+        self.productInventoryStates = product.productInventories.map {
+            ProductInventoryState(
+                productInventory: $0,
+                currentDay: currentDay
+            )
+        }
         self.price = price
         self.currentIdealPrice = product.baseIdealPrice
     }
