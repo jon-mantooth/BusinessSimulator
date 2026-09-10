@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -46,6 +46,8 @@ struct ProductStateSave: Codable {
 struct InventoryStateSave: Codable {
     let inventoryID: InventoryType
     let inventoryByPurchaseDay: [Int: Double]
+    let recipeAmountMultiplier: Double
+    let lifespanMultiplier: Double
 }
 
 struct ReputationSave: Codable {
@@ -146,7 +148,11 @@ extension GameSave {
                     productInventoryState.productInventory.inventory.id,
                 inventoryByPurchaseDay:
                     productInventoryState.inventoryByAge
-                        .inventoryByPurchaseDay
+                        .inventoryByPurchaseDay,
+                recipeAmountMultiplier:
+                    productInventoryState.recipeAmountMultiplier,
+                lifespanMultiplier:
+                    productInventoryState.lifespanMultiplier
             )
         }
 

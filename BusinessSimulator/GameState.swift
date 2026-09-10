@@ -189,6 +189,10 @@ final class GameState {
 
             productInventoryState.inventoryByAge.inventoryByPurchaseDay =
                 savedInventory.inventoryByPurchaseDay
+            productInventoryState.recipeAmountMultiplier =
+                savedInventory.recipeAmountMultiplier
+            productInventoryState.lifespanMultiplier =
+                savedInventory.lifespanMultiplier
         }
 
         guard restoredProductState.productInventoryStates.count
