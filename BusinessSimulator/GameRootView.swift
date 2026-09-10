@@ -111,9 +111,9 @@ struct GameRootView: View {
 
         // Adds the current days inventory purchased to our inventoryByPurchaseDay object
         // in inventoryByAge
-        for item in gameState.inventoryStates{
+        for item in gameState.productState!.productInventoryStates {
 
-            let inventoryType = item.inventory.type
+            let inventoryType = item.productInventory.inventory.type
 
             let purchasedAmount =
                 purchaseAmounts[inventoryType, default: 0]
@@ -245,12 +245,14 @@ struct GameRootView: View {
     }
 
     var body: some View {
+        let productInventoryStates =
+            gameState.productState?.productInventoryStates ?? []
         let currentAmounts = Dictionary(
-            uniqueKeysWithValues: gameState.inventoryStates.map {
+            uniqueKeysWithValues: productInventoryStates.map {
                 (
-                    $0.inventory.type,
+                    $0.productInventory.inventory.type,
                     $0.inventoryByAge.totalInventory *
-                        Double($0.inventory.purchaseAmount)
+                        Double($0.productInventory.inventory.purchaseAmount)
                 )
             }
         )

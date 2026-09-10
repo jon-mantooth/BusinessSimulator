@@ -139,11 +139,14 @@ extension GameSave {
             price: productState.price
         )
 
-        inventoryStates = gameState.inventoryStates.map { inventoryState in
+        inventoryStates = productState.productInventoryStates.map {
+            productInventoryState in
             InventoryStateSave(
-                inventoryID: inventoryState.inventory.id,
+                inventoryID:
+                    productInventoryState.productInventory.inventory.id,
                 inventoryByPurchaseDay:
-                    inventoryState.inventoryByAge.inventoryByPurchaseDay
+                    productInventoryState.inventoryByAge
+                        .inventoryByPurchaseDay
             )
         }
 

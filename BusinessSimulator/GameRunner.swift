@@ -84,9 +84,8 @@ struct GameRunner {
                 price: gameState.productState!.price,
                 idealPrice: gameState.productState!.currentIdealPrice,
                 demandFulfillmentRate: demandFulfillmentRate,
-                productInventories:
-                    gameState.productState!.product.productInventories,
-                inventoryStates: gameState.inventoryStates
+                productInventoryStates:
+                    gameState.productState!.productInventoryStates
             )
         summary.dailyReputationResult = dailyReputationResult
         

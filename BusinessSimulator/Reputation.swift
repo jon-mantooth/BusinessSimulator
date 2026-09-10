@@ -153,8 +153,7 @@ final class BusinessReputationState {
         price: Double,
         idealPrice: Double,
         demandFulfillmentRate: Double,
-        productInventories: [ProductInventory],
-        inventoryStates: [InventoryState]
+        productInventoryStates: [ProductInventoryState]
     ) -> DailyReputationResult {
         let factorWeights = [
             Self.priceWeight,
@@ -179,8 +178,7 @@ final class BusinessReputationState {
             demandFulfillmentRate: demandFulfillmentRate
         )
         let freshnessEffectScore = calculateFreshnessEffectScore(
-            productInventories: productInventories,
-            inventoryStates: inventoryStates
+            productInventoryStates: productInventoryStates
         )
 
         assert(
@@ -216,30 +214,21 @@ final class BusinessReputationState {
     }
 
     func calculateFreshnessEffectScore(
-        productInventories: [ProductInventory],
-        inventoryStates: [InventoryState]
+        productInventoryStates: [ProductInventoryState]
     ) -> Double {
         var largestWeightedFreshnessPenalty = 0.0
 
-        for productInventory in productInventories {
+        for productInventoryState in productInventoryStates {
+            let productInventory =
+                productInventoryState.productInventory
+
             guard productInventory.freshnessCoefficient > 0 else {
                 continue
             }
 
-            guard let inventoryState = inventoryStates.first(
-                where: {
-                    $0.inventory.id == productInventory.inventory.id
-                }
-            ) else {
-                assertionFailure(
-                    "No inventory state exists for \(productInventory.inventory.name)."
-                )
-                continue
-            }
-
-            let freshness = inventoryState.inventoryByAge
+            let freshness = productInventoryState.inventoryByAge
                 .calculateFreshness(
-                    lifespan: inventoryState.inventory.lifespan
+                    lifespan: productInventory.inventory.lifespan
                 )
             let weightedFreshnessPenalty =
                 (1.0 - freshness)

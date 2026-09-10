@@ -13,12 +13,12 @@ import Foundation
 final class InventoryDimension: Dimension {
 
     
-    ///The InventoryDimension class needs attributes of the inventory itself
-    ///as well as the relationship between the inventory and product (ProductInventory).
-    ///This struct aggregates the data from both objects into its own object.
+    ///The InventoryDimension class needs attributes of the inventory itself,
+    ///its relationship to the product, and its current game state.
+    ///This struct aggregates those fields from ProductInventoryState.
     struct InventoryItem {
 
-        let inventoryState: InventoryState
+        let productInventoryState: ProductInventoryState
 
         let name: String
         let purchaseUnitPrice: Double
@@ -28,58 +28,30 @@ final class InventoryDimension: Dimension {
         let freshnessCoefficient: Double
 
         init(
-            inventory: Inventory,
-            inventoryState: InventoryState,
-            recipeUnitAmount: Double,
-            freshnessCoefficient: Double
+            productInventoryState: ProductInventoryState
         ) {
-            self.inventoryState = inventoryState
+            self.productInventoryState = productInventoryState
+
+            let productInventory = productInventoryState.productInventory
+            let inventory = productInventory.inventory
 
             self.name = inventory.name
             self.purchaseUnitPrice = inventory.pricePerUnit
             self.purchaseUnitAmount = Double(inventory.purchaseAmount)
-            self.recipeUnitAmount = recipeUnitAmount
+            self.recipeUnitAmount = productInventory.recipeAmount
             self.lifespan = inventory.lifespan
-            self.freshnessCoefficient = freshnessCoefficient
+            self.freshnessCoefficient =
+                productInventory.freshnessCoefficient
         }
     }
     
     private let inventories: [InventoryItem]
 
     init(
-        productInventories: [ProductInventory],
-        inventoryStates: [InventoryState]
+        productInventoryStates: [ProductInventoryState]
     ) {
-        self.inventories = Self.aggregateInventoryFields(
-            productInventories: productInventories,
-            inventoryStates: inventoryStates
-        )
-    }
-
-    /// Build the InventoryItem object
-    private static func aggregateInventoryFields(
-        productInventories: [ProductInventory],
-        inventoryStates: [InventoryState]
-    ) -> [InventoryItem] {
-
-        productInventories.compactMap { productInventory -> InventoryItem? in
-
-            guard let inventoryState = inventoryStates.first(
-                where: {
-                    $0.inventory.id ==
-                    productInventory.inventory.id
-                }
-            ) else {
-                return nil
-            }
-
-            return InventoryItem(
-                inventory: productInventory.inventory,
-                inventoryState: inventoryState,
-                recipeUnitAmount: productInventory.recipeAmount,
-                freshnessCoefficient:
-                    productInventory.freshnessCoefficient
-            )
+        self.inventories = productInventoryStates.map {
+            InventoryItem(productInventoryState: $0)
         }
     }
 
@@ -89,7 +61,7 @@ final class InventoryDimension: Dimension {
         for inventory in inventories {
             //calculates freshness of ingredient based on age of next used item
             //and lifespan of ingredient
-            let freshness = inventory.inventoryState.inventoryByAge
+            let freshness = inventory.productInventoryState.inventoryByAge
                 .calculateFreshness(
                     lifespan: inventory.lifespan
                 )
@@ -128,7 +100,7 @@ final class InventoryDimension: Dimension {
             // Convert the total inventory into recipe units so it can
             // be compared with the amount required for one product.
             let totalRecipeUnits =
-                inventory.inventoryState.inventoryByAge.totalInventory
+                inventory.productInventoryState.inventoryByAge.totalInventory
                 * inventory.purchaseUnitAmount
 
             let unitsPossible = Int(
@@ -171,7 +143,7 @@ final class InventoryDimension: Dimension {
 
             //We run this to calculate costs. But since in order to do that we need 
             //to know how much inventory is consumed we will also consume the inventory here
-            totalCosts += inventory.inventoryState.inventoryByAge.consumeInventory(
+            totalCosts += inventory.productInventoryState.inventoryByAge.consumeInventory(
                 productsSold: Double(sales),
                 recipeUnit: inventory.recipeUnitAmount,
                 purchaseUnit: inventory.purchaseUnitAmount,
@@ -194,15 +166,17 @@ final class InventoryDimension: Dimension {
     ) {
         var totalCost: Double = 0
         for inventory in inventories {
-            inventory.inventoryState.inventoryByAge.currentDay = currentDay
-            let lifeSpan: Int = inventory.inventoryState.inventory.lifespan
-            let expiredUnits = inventory.inventoryState.inventoryByAge.removeExpiredInventory(
+            inventory.productInventoryState.inventoryByAge.currentDay = currentDay
+            let lifeSpan: Int = inventory.productInventoryState
+                .productInventory.inventory.lifespan
+            let expiredUnits = inventory.productInventoryState.inventoryByAge.removeExpiredInventory(
                 lifeSpan: lifeSpan
             )
             if expiredUnits > 0{
                 
                 let purchaseUnit =
-                    inventory.inventoryState.inventory.purchaseUnit ?? ""
+                    inventory.productInventoryState.productInventory
+                        .inventory.purchaseUnit ?? ""
                 let amountExpired =
                     purchaseUnit.isEmpty
                         ? "\(expiredUnits * inventory.purchaseUnitAmount)"

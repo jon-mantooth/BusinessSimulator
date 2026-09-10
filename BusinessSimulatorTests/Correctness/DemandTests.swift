@@ -104,16 +104,16 @@ extension DemandTests {
             )
         ]
 
-        let butterState = InventoryState(
-            inventory: butter,
+        let butterState = ProductInventoryState(
+            productInventory: productInventories[0],
             currentDay: testCase.currentDay
         )
         butterState.inventoryByAge.inventoryByPurchaseDay = [
             testCase.butterPurchaseDay: 1
         ]
 
-        let appleState = InventoryState(
-            inventory: apple,
+        let appleState = ProductInventoryState(
+            productInventory: productInventories[1],
             currentDay: testCase.currentDay
         )
         appleState.inventoryByAge.inventoryByPurchaseDay = [
@@ -121,8 +121,7 @@ extension DemandTests {
         ]
 
         let inventoryDimension = InventoryDimension(
-            productInventories: productInventories,
-            inventoryStates: [butterState, appleState]
+            productInventoryStates: [butterState, appleState]
         )
 
         let demand = inventoryDimension.calculateDemand()

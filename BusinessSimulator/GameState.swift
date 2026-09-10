@@ -167,11 +167,38 @@ final class GameState {
             }
         )
 
-        productState = ProductState(
+        let restoredProductState = ProductState(
             product: product,
             currentDay: calendar.simulationDay,
             price: gameSave.productState.price
         )
+
+        let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
+        guard Set(savedInventoryIDs).count == savedInventoryIDs.count else {
+            throw GameStateRestoreError.invalidInventoryData
+        }
+
+        for productInventoryState in
+            restoredProductState.productInventoryStates {
+            guard let savedInventory = gameSave.inventoryStates.first(
+                where: {
+                    $0.inventoryID == productInventoryState
+                        .productInventory.inventory.id
+                }
+            ) else {
+                throw GameStateRestoreError.invalidInventoryData
+            }
+
+            productInventoryState.inventoryByAge.inventoryByPurchaseDay =
+                savedInventory.inventoryByPurchaseDay
+        }
+
+        guard restoredProductState.productInventoryStates.count
+                == gameSave.inventoryStates.count else {
+            throw GameStateRestoreError.invalidInventoryData
+        }
+
+        productState = restoredProductState
 
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,

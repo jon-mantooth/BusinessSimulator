@@ -183,8 +183,8 @@ struct BusinessDimensions {
         return BusinessDimensions(
             production: [
                 InventoryDimension(
-                    productInventories: product.productInventories,
-                    inventoryStates: gameState.inventoryStates
+                    productInventoryStates:
+                        gameState.productState!.productInventoryStates
                 ),
                 EquipmentDimension(
                     equipmentState: gameState.equipmentState!
