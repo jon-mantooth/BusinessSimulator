@@ -44,13 +44,19 @@ final class InventoryDimension: Dimension {
         }
     }
     
-    private let inventories: [InventoryItem]
+    private let productInventoryStates: () -> [ProductInventoryState]
+
+    private var inventories: [InventoryItem] {
+        productInventoryStates().map {
+            InventoryItem(productInventoryState: $0)
+        }
+    }
 
     init(
-        productInventoryStates: [ProductInventoryState]
+        productState: ProductState
     ) {
-        self.inventories = productInventoryStates.map {
-            InventoryItem(productInventoryState: $0)
+        self.productInventoryStates = {
+            productState.productInventoryStates
         }
     }
 
