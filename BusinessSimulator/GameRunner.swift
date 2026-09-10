@@ -139,6 +139,10 @@ struct GameRunner {
                 summary: summary
             )
         }
+
+        // Delayed purchase effects are activated only after the completed
+        // day's inventory and other department preparation has finished.
+        gameState.applyPendingUpgrades()
         
         
     }
