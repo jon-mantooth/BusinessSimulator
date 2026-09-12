@@ -54,6 +54,144 @@ extension ProductInventoryTests {
     }
 }
 
+// MARK: - Ingredient Upgrades
+
+extension ProductInventoryTests {
+
+    @Test
+    func recipeAmountUpgradeSetsMultiplierWithoutCompounding() throws {
+        let productState = try makeCatalogProductState(productID: .pies)
+        let upgrade = try #require(
+            EquipmentCatalog().appleCorer.ingredientUpgrade
+        )
+
+        productState.applyIngredientUpgrade(upgrade)
+        productState.applyIngredientUpgrade(upgrade)
+
+        let appleState = try #require(
+            productState.productInventoryStates.first { $0.id == .apple }
+        )
+        #expect(appleState.recipeAmountMultiplier == 0.8)
+        #expect(
+            abs(
+                appleState.effectiveRecipeAmount
+                    - appleState.productInventory.recipeAmount * 0.8
+            ) < 0.000_001
+        )
+    }
+
+    @Test
+    func lifespanUpgradeSetsMultiplierWithoutCompounding() throws {
+        let productState = try makeCatalogProductState(productID: .smoothies)
+        let upgrade = try #require(
+            EquipmentCatalog().vacuumSealer.ingredientUpgrade
+        )
+
+        productState.applyIngredientUpgrade(upgrade)
+        productState.applyIngredientUpgrade(upgrade)
+
+        let strawberryState = try #require(
+            productState.productInventoryStates.first {
+                $0.id == .strawberry
+            }
+        )
+        #expect(strawberryState.lifespanMultiplier == 1.5)
+    }
+
+    @Test
+    func meatGrinderReplacesHotDogsWithEmptyBeefAndSpices() throws {
+        let productState = try makeCatalogProductState(productID: .hotDogs)
+        let upgrade = try #require(
+            EquipmentCatalog().meatGrinder.ingredientUpgrade
+        )
+        let hotDogState = try inventoryState(.hotDog, in: productState)
+        let beefState = try inventoryState(.beef, in: productState)
+        let spicesState = try inventoryState(.spices, in: productState)
+        let onionState = try inventoryState(.onion, in: productState)
+        hotDogState.inventoryByAge.inventoryByPurchaseDay = [1: 3]
+        beefState.inventoryByAge.inventoryByPurchaseDay = [1: 4]
+        spicesState.inventoryByAge.inventoryByPurchaseDay = [1: 5]
+        onionState.inventoryByAge.inventoryByPurchaseDay = [1: 6]
+
+        productState.applyIngredientUpgrade(upgrade)
+
+        #expect(!hotDogState.isActive)
+        #expect(hotDogState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(beefState.isActive)
+        #expect(spicesState.isActive)
+        #expect(beefState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(spicesState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(onionState.isActive)
+        #expect(onionState.inventoryByAge.inventoryByPurchaseDay == [1: 6])
+        #expect(
+            Set(productState.productInventoryStates.map(\.id)).contains(.beef)
+        )
+        #expect(
+            Set(productState.productInventoryStates.map(\.id)).contains(.spices)
+        )
+        #expect(
+            !Set(productState.productInventoryStates.map(\.id))
+                .contains(.hotDog)
+        )
+    }
+
+    @Test
+    func breadMakerReplacesBunsWithEmptyFlourAndYeast() throws {
+        let productState = try makeCatalogProductState(productID: .hotDogs)
+        let upgrade = try #require(
+            EquipmentCatalog().breadMaker.ingredientUpgrade
+        )
+        let bunState = try inventoryState(.bun, in: productState)
+        let flourState = try inventoryState(.flour, in: productState)
+        let yeastState = try inventoryState(.yeast, in: productState)
+        let condimentState = try inventoryState(.condiments, in: productState)
+        bunState.inventoryByAge.inventoryByPurchaseDay = [1: 3]
+        flourState.inventoryByAge.inventoryByPurchaseDay = [1: 4]
+        yeastState.inventoryByAge.inventoryByPurchaseDay = [1: 5]
+        condimentState.inventoryByAge.inventoryByPurchaseDay = [1: 6]
+
+        productState.applyIngredientUpgrade(upgrade)
+
+        #expect(!bunState.isActive)
+        #expect(bunState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(flourState.isActive)
+        #expect(yeastState.isActive)
+        #expect(flourState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(yeastState.inventoryByAge.inventoryByPurchaseDay.isEmpty)
+        #expect(condimentState.isActive)
+        #expect(
+            condimentState.inventoryByAge.inventoryByPurchaseDay == [1: 6]
+        )
+        #expect(
+            Set(productState.productInventoryStates.map(\.id)).contains(.flour)
+        )
+        #expect(
+            Set(productState.productInventoryStates.map(\.id)).contains(.yeast)
+        )
+        #expect(
+            !Set(productState.productInventoryStates.map(\.id)).contains(.bun)
+        )
+    }
+
+    @Test
+    func replacementIngredientsReceiveReplacedIngredientsCurrentDay() throws {
+        let productState = try makeCatalogProductState(productID: .hotDogs)
+        let upgrade = try #require(
+            EquipmentCatalog().meatGrinder.ingredientUpgrade
+        )
+        let hotDogState = try inventoryState(.hotDog, in: productState)
+        hotDogState.inventoryByAge.currentDay = 12
+
+        productState.applyIngredientUpgrade(upgrade)
+
+        let beefState = try inventoryState(.beef, in: productState)
+        let spicesState = try inventoryState(.spices, in: productState)
+
+        #expect(beefState.inventoryByAge.currentDay == 12)
+        #expect(spicesState.inventoryByAge.currentDay == 12)
+    }
+}
+
 // MARK: - Product Ingredient Activation
 
 extension ProductInventoryTests {
@@ -113,6 +251,29 @@ private func makeProductInventoryState(
         currentDay: 1,
         recipeAmountMultiplier: recipeAmountMultiplier,
         lifespanMultiplier: lifespanMultiplier
+    )
+}
+
+@MainActor
+private func makeCatalogProductState(
+    productID: ProductID,
+    currentDay: Int = 1
+) throws -> ProductState {
+    let product = try #require(
+        ProductCatalog().products.first { $0.id == productID }
+    )
+
+    return ProductState(product: product, currentDay: currentDay)
+}
+
+private func inventoryState(
+    _ inventoryID: InventoryType,
+    in productState: ProductState
+) throws -> ProductInventoryState {
+    try #require(
+        productState.allProductInventoryStates.first {
+            $0.id == inventoryID
+        }
     )
 }
 
