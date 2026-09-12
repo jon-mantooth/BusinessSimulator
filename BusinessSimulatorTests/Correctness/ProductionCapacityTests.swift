@@ -69,6 +69,77 @@ extension ProductionCapacityTests {
     }
 }
 
+// MARK: - Equipment Capacity Limits
+
+extension ProductionCapacityTests {
+
+    @Test
+    func equipmentCapacityLimitsSalesAndAddsProductionNote() throws {
+        let context = try makeCapacityLimitContext()
+        let capacity = context.state.totalCapacity
+        let summary = DaySummary(day: 1, startingBalance: 500)
+
+        let limitedSales = context.dimension.applySalesLimits(
+            sales: capacity + 10,
+            summary: summary
+        )
+
+        #expect(limitedSales == capacity)
+        #expect(
+            summary.sections.contains { section in
+                section.name == "Production"
+                    && section.notes.contains(
+                        "Sales were limited by equipment capacity."
+                    )
+            }
+        )
+    }
+
+    @Test
+    func equipmentCapacityDoesNotChangeSalesAtOrBelowLimit() throws {
+        let context = try makeCapacityLimitContext()
+        let capacity = context.state.totalCapacity
+
+        for sales in [capacity - 1, capacity] {
+            let summary = DaySummary(day: 1, startingBalance: 500)
+
+            let limitedSales = context.dimension.applySalesLimits(
+                sales: sales,
+                summary: summary
+            )
+
+            #expect(limitedSales == sales)
+            #expect(
+                !summary.sections.contains { $0.name == "Production" }
+            )
+        }
+    }
+}
+
+private struct CapacityLimitContext {
+    let state: EquipmentState
+    let dimension: EquipmentDimension
+}
+
+@MainActor
+private func makeCapacityLimitContext() throws -> CapacityLimitContext {
+    let product = try #require(
+        ProductCatalog().products.first { $0.id == .pies }
+    )
+    let catalog = EquipmentCatalog()
+    let primaryTiers = catalog.primaryTiers(for: product)
+    let secondaryCatalog = catalog.secondaryEquipment(for: product)
+    let state = EquipmentState(
+        primaryTiers: primaryTiers,
+        secondaryEquipmentCatalog: secondaryCatalog
+    )
+
+    return CapacityLimitContext(
+        state: state,
+        dimension: EquipmentDimension(equipmentState: state)
+    )
+}
+
 // MARK: - Secondary Capacity Strength
 
 extension ProductionCapacityTests {
