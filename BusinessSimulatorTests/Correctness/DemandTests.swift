@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import BusinessSimulator
 
@@ -104,25 +105,44 @@ extension DemandTests {
             )
         ]
 
-        let butterState = InventoryState(
-            inventory: butter,
+        let product = Product(
+            id: .pies,
+            singularName: "Test Product",
+            pluralName: "Test Products",
+            smallIcon: .emoji("🧪"),
+            accent: .brown,
+            description: "Inventory demand test product.",
+            productLine: FoodProductLine(),
+            productInventories: productInventories,
+            upgradeProductInventories: [],
+            instructions: [],
+            baseIdealPrice: 1,
+            idealUnitsSold: 1,
+            priceSensitivity: 1,
+            temperatureInterpolationFormula: .coldWeather
+        )
+
+        let productState = ProductState(
+            product: product,
             currentDay: testCase.currentDay
         )
+
+        let butterState = productState.productInventoryStates.first {
+            $0.id == .butter
+        }!
         butterState.inventoryByAge.inventoryByPurchaseDay = [
             testCase.butterPurchaseDay: 1
         ]
 
-        let appleState = InventoryState(
-            inventory: apple,
-            currentDay: testCase.currentDay
-        )
+        let appleState = productState.productInventoryStates.first {
+            $0.id == .apple
+        }!
         appleState.inventoryByAge.inventoryByPurchaseDay = [
             testCase.applePurchaseDay: 1
         ]
 
         let inventoryDimension = InventoryDimension(
-            productInventories: productInventories,
-            inventoryStates: [butterState, appleState]
+            productState: productState
         )
 
         let demand = inventoryDimension.calculateDemand()
@@ -131,6 +151,128 @@ extension DemandTests {
             abs(demand - testCase.expectedDemand) < 0.000_001
         )
     }
+}
+
+// MARK: - Equipment Demand
+
+extension DemandTests {
+
+    @MainActor
+    @Test
+    func tierZeroEquipmentWithoutSecondaryEquipmentHasNeutralDemand() throws {
+        let dimension = try makeEquipmentDimensionForDemand()
+
+        #expect(abs(dimension.calculateDemand() - 1.0) < 0.000_001)
+    }
+
+    @MainActor
+    @Test
+    func primaryEquipmentUsesPrimaryDemandWeight() throws {
+        let tierLevel = 2
+        let context = try makeEquipmentDemandContext(
+            primaryTierLevel: tierLevel
+        )
+        let activeEquipment = context.state.activePrimaryEquipment.equipment
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: EquipmentDimension.primaryDemandWeight,
+            effectScore: activeEquipment.demandEffectScore
+        )
+
+        let demand = EquipmentDimension(
+            equipmentState: context.state
+        ).calculateDemand()
+
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+
+    @MainActor
+    @Test
+    func secondaryEquipmentDemandBenefitsAccumulate() throws {
+        let context = try makeEquipmentDemandContext(
+            ownedSecondaryCount: 3
+        )
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: EquipmentDimension.secondaryDemandWeight,
+            effectScore: context.state.ownedSecondaryEquipment
+                .totalDemandEffectScore
+        )
+
+        let demand = EquipmentDimension(
+            equipmentState: context.state
+        ).calculateDemand()
+
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+
+    @MainActor
+    @Test
+    func primaryAndSecondaryEquipmentDemandCombineMultiplicatively() throws {
+        let context = try makeEquipmentDemandContext(
+            primaryTierLevel: 3,
+            ownedSecondaryCount: 2
+        )
+        let primaryEffectScore = context.state.activePrimaryEquipment
+            .equipment.demandEffectScore
+        let secondaryEffectScore = context.state.ownedSecondaryEquipment
+            .totalDemandEffectScore
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: EquipmentDimension.primaryDemandWeight,
+            effectScore: primaryEffectScore
+        ) * SimulationBalance.demand.multiplier(
+            weight: EquipmentDimension.secondaryDemandWeight,
+            effectScore: secondaryEffectScore
+        )
+
+        let demand = EquipmentDimension(
+            equipmentState: context.state
+        ).calculateDemand()
+
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+}
+
+private struct EquipmentDemandContext {
+    let state: EquipmentState
+}
+
+@MainActor
+private func makeEquipmentDimensionForDemand() throws -> EquipmentDimension {
+    let context = try makeEquipmentDemandContext()
+    return EquipmentDimension(equipmentState: context.state)
+}
+
+@MainActor
+private func makeEquipmentDemandContext(
+    primaryTierLevel: Int = 0,
+    ownedSecondaryCount: Int = 0
+) throws -> EquipmentDemandContext {
+    let product = try #require(
+        ProductCatalog().products.first { $0.id == .pies }
+    )
+    let catalog = EquipmentCatalog()
+    let primaryTiers = catalog.primaryTiers(for: product)
+    let activeTier = try #require(
+        primaryTiers.first { $0.level == primaryTierLevel }
+    )
+    let activeEquipment = try #require(activeTier.equipment.first)
+    let secondaryCatalog = catalog.secondaryEquipment(for: product)
+    let ownedSecondaryEquipment = SecondaryEquipmentCollection(
+        equipment: Array(
+            secondaryCatalog.equipment.prefix(ownedSecondaryCount)
+        )
+    )
+
+    return EquipmentDemandContext(
+        state: EquipmentState(
+            primaryTiers: primaryTiers,
+            secondaryEquipmentCatalog: secondaryCatalog,
+            activePrimaryEquipment: ActivePrimaryEquipment(
+                equipment: activeEquipment,
+                tierLevel: activeTier.level
+            ),
+            ownedSecondaryEquipment: ownedSecondaryEquipment
+        )
+    )
 }
 
 // MARK: - Advertisements

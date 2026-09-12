@@ -90,10 +90,70 @@ enum UpgradePricing {
         )
     }
 
-    static func setCapacityPrice() -> Double {
-        // TODO: Calculate the additional profit enabled by increased capacity
-        // once equipment, labor, and their capacity constraints are implemented.
-        return 0
+    /// Prices a capacity upgrade as a standalone item by valuing its complete
+    /// capacity increase over the free baseline. This keeps an item's price the
+    /// same regardless of which item the player currently owns.
+    ///
+    /// Secondary equipment is intentionally priced manually because its items
+    /// vary too much in real-world value for this formula to produce believable
+    /// catalog prices.
+    static func setCapacityPrice(
+        baseIdealUnitsSold: Int,
+        upgradedCapacity: Int,
+        baseIdealPrice: Double,
+        profitMultiplier: Double = 1.0
+    ) -> Double {
+        assert(baseIdealUnitsSold > 0)
+        let baselineCapacity = ProductionCapacityBalance.baseCapacity(
+            baseIdealUnitsSold: baseIdealUnitsSold
+        )
+
+        assert(upgradedCapacity >= baselineCapacity)
+        assert(baseIdealPrice > 0)
+        assert(profitMultiplier > 0)
+
+        let addedCapacity = upgradedCapacity - baselineCapacity
+        let profitPerUnit = baseIdealPrice
+            * (1.0 - ingredientCostRatio)
+
+        return Double(addedCapacity)
+            * profitPerUnit
+            * targetPaybackDays
+            * profitMultiplier
+    }
+
+    /// Prices the complete demand benefit built into a standalone item. This
+    /// is used for replacement equipment whose catalog price should not depend
+    /// on which item the player currently owns.
+    static func setStandaloneDemandPrice(
+        baseIdealUnitsSold: Int,
+        baseIdealPrice: Double,
+        demandLevel: Int,
+        totalLevels: Int,
+        demandWeight: Double,
+        profitMultiplier: Double = 1.0
+    ) -> Double {
+        assert(baseIdealUnitsSold > 0)
+        assert(baseIdealPrice > 0)
+        assert(totalLevels > 0)
+        assert((0...totalLevels).contains(demandLevel))
+        assert((0.0...1.0).contains(demandWeight))
+        assert(profitMultiplier > 0)
+
+        let effectScore = Double(demandLevel) / Double(totalLevels)
+        let demandMultiplier = SimulationBalance.demand.multiplier(
+            weight: demandWeight,
+            effectScore: effectScore
+        )
+        let productIdealProfit = baseIdealPrice
+            * Double(baseIdealUnitsSold)
+            * (1.0 - ingredientCostRatio)
+        let additionalDailyProfit = productIdealProfit
+            * (demandMultiplier - 1.0)
+
+        return additionalDailyProfit
+            * targetPaybackDays
+            * profitMultiplier
     }
 
     private static func expectedProfit(

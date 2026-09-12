@@ -8,40 +8,40 @@ struct GameRunnerTests {}
 
 struct DemandFulfillmentRateCase: Sendable {
     let name: String
-    let demandedBatches: Int
-    let actualBatches: Int
+    let demandedSales: Int
+    let actualSales: Int
     let expectedRate: Double
 }
 
 private let demandFulfillmentRateCases = [
     DemandFulfillmentRateCase(
         name: "all demand is fulfilled",
-        demandedBatches: 100,
-        actualBatches: 100,
+        demandedSales: 100,
+        actualSales: 100,
         expectedRate: 1.0
     ),
     DemandFulfillmentRateCase(
         name: "three quarters of demand is fulfilled",
-        demandedBatches: 100,
-        actualBatches: 75,
+        demandedSales: 100,
+        actualSales: 75,
         expectedRate: 0.75
     ),
     DemandFulfillmentRateCase(
         name: "fractional fulfillment is preserved",
-        demandedBatches: 3,
-        actualBatches: 1,
+        demandedSales: 3,
+        actualSales: 1,
         expectedRate: 1.0 / 3.0
     ),
     DemandFulfillmentRateCase(
         name: "none of the demand is fulfilled",
-        demandedBatches: 100,
-        actualBatches: 0,
+        demandedSales: 100,
+        actualSales: 0,
         expectedRate: 0.0
     ),
     DemandFulfillmentRateCase(
         name: "zero demand is fully fulfilled",
-        demandedBatches: 0,
-        actualBatches: 0,
+        demandedSales: 0,
+        actualSales: 0,
         expectedRate: 1.0
     )
 ]
@@ -49,12 +49,12 @@ private let demandFulfillmentRateCases = [
 extension GameRunnerTests {
 
     @Test(arguments: demandFulfillmentRateCases)
-    func demandFulfillmentRateUsesActualOverDemandedBatches(
+    func demandFulfillmentRateUsesActualOverDemandedSales(
         testCase: DemandFulfillmentRateCase
     ) {
         let rate = GameRunner.calculateDemandFulfillmentRate(
-            demandedBatches: testCase.demandedBatches,
-            actualBatches: testCase.actualBatches
+            demandedSales: testCase.demandedSales,
+            actualSales: testCase.actualSales
         )
 
         #expect(abs(rate - testCase.expectedRate) < 0.000_001)

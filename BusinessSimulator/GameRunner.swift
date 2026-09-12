@@ -54,21 +54,18 @@ struct GameRunner {
             predictedRevenue: predictedRevenue)
         summary.demandedSales = predictedSales
 
-        let demandedBatches =
-            predictedSales / gameState.productState!.product.unitsPerBatch
-
-        var actualBatches = demandedBatches
+        var actualSales = predictedSales
         
         for department in departments{
-            actualBatches = department.applySalesLimits(
-                sales: actualBatches,
+            actualSales = department.applySalesLimits(
+                sales: actualSales,
                 summary: summary
             )
         }
 
         let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
-            demandedBatches: demandedBatches,
-            actualBatches: actualBatches
+            demandedSales: predictedSales,
+            actualSales: actualSales
         )
 
         if demandFulfillmentRate < 1.0 {
@@ -87,16 +84,15 @@ struct GameRunner {
                 price: gameState.productState!.price,
                 idealPrice: gameState.productState!.currentIdealPrice,
                 demandFulfillmentRate: demandFulfillmentRate,
-                productInventories:
-                    gameState.productState!.product.productInventories,
-                inventoryStates: gameState.inventoryStates
+                productInventoryStates:
+                    gameState.productState!.productInventoryStates
             )
         summary.dailyReputationResult = dailyReputationResult
         
         var totalCosts: Double = 0
         for department in departments{
             totalCosts += department.calculateDailyCosts(
-                sales: actualBatches,
+                sales: actualSales,
                 summary: summary
             )
         }
@@ -109,7 +105,6 @@ struct GameRunner {
             }
         }
 
-        let actualSales = actualBatches * gameState.productState!.product.unitsPerBatch
         let actualRevenue = Double(actualSales) * gameState.productState!.price
         summary.sales = actualSales
         summary.revenue = actualRevenue
@@ -144,6 +139,10 @@ struct GameRunner {
                 summary: summary
             )
         }
+
+        // Delayed purchase effects are activated only after the completed
+        // day's inventory and other department preparation has finished.
+        gameState.applyPendingUpgrades()
         
         
     }
@@ -155,11 +154,11 @@ struct GameRunner {
     }
 
     static func calculateDemandFulfillmentRate(
-        demandedBatches: Int,
-        actualBatches: Int
+        demandedSales: Int,
+        actualSales: Int
     ) -> Double {
-        demandedBatches > 0
-            ? Double(actualBatches) / Double(demandedBatches)
+        demandedSales > 0
+            ? Double(actualSales) / Double(demandedSales)
             : 1.0
     }
 

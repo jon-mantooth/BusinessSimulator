@@ -7,10 +7,56 @@
 
 import Foundation
 
-enum PaymentSchedule: String, Codable {
+enum PaymentSchedule: String, Codable, Hashable {
     case oneTime
     case daily
     case weekly
+}
+
+/// Defines the shared capacity progression for equipment, labor, storage, and
+/// other production constraints. Tier zero starts at 90% of ideal unit sales,
+/// and completing all five tiers reaches 200% of ideal unit sales.
+enum ProductionCapacityBalance {
+
+    static let baselineRatio = 0.90
+    static let targetRatio = 2.00
+    static let totalTiers = 5
+
+    static func baseCapacity(
+        baseIdealUnitsSold: Int
+    ) -> Int {
+        assert(baseIdealUnitsSold > 0)
+
+        return Int(
+            (Double(baseIdealUnitsSold) * baselineRatio)
+                .rounded(.up)
+        )
+    }
+
+    /// Returns the cumulative capacity increase above the baseline expected
+    /// after reaching the supplied tier.
+    static func expectedCapacityIncrease(
+        baseIdealUnitsSold: Int,
+        tierLevel: Int
+    ) -> Int {
+        assert(baseIdealUnitsSold > 0)
+        assert((0...totalTiers).contains(tierLevel))
+
+        let baselineCapacity = baseCapacity(
+            baseIdealUnitsSold: baseIdealUnitsSold
+        )
+        let targetCapacity = Int(
+            (Double(baseIdealUnitsSold) * targetRatio)
+                .rounded()
+        )
+        let totalCapacityIncrease = targetCapacity - baselineCapacity
+        let tierProgress = Double(tierLevel) / Double(totalTiers)
+
+        return Int(
+            (Double(totalCapacityIncrease) * tierProgress)
+                .rounded()
+        )
+    }
 }
 
 struct UpgradeTracker {
@@ -137,8 +183,10 @@ struct BusinessDimensions {
         return BusinessDimensions(
             production: [
                 InventoryDimension(
-                    productInventories: product.productInventories,
-                    inventoryStates: gameState.inventoryStates
+                    productState: gameState.productState!
+                ),
+                EquipmentDimension(
+                    equipmentState: gameState.equipmentState!
                 )
             ],
             marketing: [

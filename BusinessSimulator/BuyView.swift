@@ -9,7 +9,7 @@ struct BuyView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    let productInventory: ProductInventory
+    let productInventoryState: ProductInventoryState
     let currentAmount: Double
     let accent: Color
     let canAffordPurchase: (Int) -> Bool
@@ -18,14 +18,14 @@ struct BuyView: View {
     @State private var purchaseQuantity: Int
 
     init(
-        productInventory: ProductInventory,
+        productInventoryState: ProductInventoryState,
         currentAmount: Double,
         accent: Color,
         initialPurchaseQuantity: Int = 0,
         canAffordPurchase: @escaping (Int) -> Bool,
         confirmPurchase: @escaping (Int) -> Void
     ) {
-        self.productInventory = productInventory
+        self.productInventoryState = productInventoryState
         self.currentAmount = currentAmount
         self.accent = accent
         self.canAffordPurchase = canAffordPurchase
@@ -37,6 +37,10 @@ struct BuyView: View {
 
     private var inventory: Inventory {
         productInventory.inventory
+    }
+
+    private var productInventory: ProductInventory {
+        productInventoryState.productInventory
     }
 
     private var purchaseAmount: Double {
@@ -161,7 +165,7 @@ struct BuyView: View {
 
                 informationTile(
                     title: "Recipe Amount",
-                    value: productInventory.recipeAmountLabel,
+                    value: productInventoryState.effectiveRecipeAmountLabel,
                     systemName: "fork.knife"
                 )
 
@@ -269,20 +273,22 @@ struct BuyView: View {
     }
 
     private var shelfLifeLabel: String {
-        if inventory.lifespan >= 180 {
+        if productInventoryState.effectiveLifespan >= 180 {
             return "Stable"
         }
 
-        return "\(inventory.lifespan) "
-            + (inventory.lifespan == 1 ? "day" : "days")
+        return "\(productInventoryState.effectiveLifespan) "
+            + (productInventoryState.effectiveLifespan == 1 ? "day" : "days")
     }
 
     private func productsPossible(with amount: Double) -> Int {
-        guard productInventory.recipeAmount > 0 else {
+        guard productInventoryState.effectiveRecipeAmount > 0 else {
             return 0
         }
 
-        return Int(floor(amount / productInventory.recipeAmount))
+        return Int(
+            floor(amount / productInventoryState.effectiveRecipeAmount)
+        )
     }
 
     private func amountText(_ amount: Double) -> some View {

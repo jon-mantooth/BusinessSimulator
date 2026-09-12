@@ -12,6 +12,7 @@ enum GameStateRestoreError: Error {
     case productNotFound(ProductID)
     case invalidInventoryData
     case invalidAdvertisementData
+    case invalidEquipmentData
 }
 
 @Observable
@@ -23,14 +24,15 @@ final class GameState {
     var weather: WeatherState!
 
     var productState: ProductState?
-    var inventoryStates: [InventoryState] = []
     var reputation: BusinessReputationState?
     var advertisementState: AdvertisementState?
+    var equipmentState: EquipmentState?
     var businessHours: BusinessHours?
     var production: Production?
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var pendingBusinessEvents: [BusinessEvent] = []
+    var pendingUpgrades: [PendingUpgrade] = []
     var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
 
@@ -68,30 +70,41 @@ final class GameState {
 
         pendingBusinessEvents.removeAll()
     }
+
+    /// Routes delayed upgrades to the state responsible for applying them.
+    func applyPendingUpgrades() {
+        for pendingUpgrade in pendingUpgrades {
+            switch pendingUpgrade {
+            case let .ingredient(ingredientUpgrade):
+                productState!.applyIngredientUpgrade(
+                    ingredientUpgrade
+                )
+            }
+        }
+
+        pendingUpgrades.removeAll()
+    }
     
     func initializeBusiness(
         product: Product
     ) {
         self.pendingBusinessEvents = []
-        self.finance = Finance(product: product)
+        self.pendingUpgrades = []
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
 
         let productState = ProductState(
             product: product,
+            currentDay: self.calendar.simulationDay,
             price: 0.00
         )
         
-        let inventoryStates = product.productInventories.map {
-            InventoryState(
-                inventory: $0.inventory,
-                currentDay: self.calendar.simulationDay
-            )
-        }
-
         self.productState = productState
-        self.inventoryStates = inventoryStates
+        self.finance = Finance(
+            product: product,
+            productInventoryStates: productState.productInventoryStates
+        )
         self.reputation = BusinessReputationState()
         self.businessHours = BusinessHours(
             openingTime: BusinessTime(hour: 9, minute: 0),
@@ -105,6 +118,13 @@ final class GameState {
                 advertisement: advertisementCatalog.noAdvertisement,
                 tierLevel: 0
             )
+        )
+
+        let equipmentCatalog = EquipmentCatalog()
+        self.equipmentState = EquipmentState(
+            primaryTiers: equipmentCatalog.primaryTiers(for: product),
+            secondaryEquipmentCatalog:
+                equipmentCatalog.secondaryEquipment(for: product)
         )
         
         let dimensions = BusinessDimensions.create(
@@ -135,18 +155,15 @@ final class GameState {
     func restoreBusiness(
         from gameSave: GameSave
     ) throws {
-        guard let product = ProductCatalog().products.first(
+        let productCatalog = ProductCatalog()
+
+        guard let product = productCatalog.products.first(
             where: { $0.id == gameSave.productState.productID }
         ) else {
             throw GameStateRestoreError.productNotFound(
                 gameSave.productState.productID
             )
         }
-
-        finance = Finance(
-            product: product,
-            balance: gameSave.finance.actualBalance
-        )
 
         calendar = GameCalendar(
             simulationDay: gameSave.calendar.simulationDay,
@@ -166,37 +183,57 @@ final class GameState {
             }
         )
 
-        productState = ProductState(
-            product: product,
-            price: gameSave.productState.price
-        )
-
         let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
         guard Set(savedInventoryIDs).count == savedInventoryIDs.count else {
             throw GameStateRestoreError.invalidInventoryData
         }
 
-        inventoryStates = try product.productInventories.map {
-            productInventory in
+        let restoredProductState = ProductState(
+            product: product,
+            currentDay: calendar.simulationDay,
+            price: gameSave.productState.price
+        )
+
+        let restoredInventoryIDs =
+            restoredProductState.allProductInventoryStates.map(\.id)
+        guard Set(restoredInventoryIDs) == Set(savedInventoryIDs),
+              restoredInventoryIDs.count == savedInventoryIDs.count else {
+            throw GameStateRestoreError.invalidInventoryData
+        }
+
+        for productInventoryState in
+            restoredProductState.allProductInventoryStates {
             guard let savedInventory = gameSave.inventoryStates.first(
-                where: { $0.inventoryID == productInventory.inventory.id }
+                where: {
+                    $0.inventoryID == productInventoryState
+                        .productInventory.inventory.id
+                }
             ) else {
                 throw GameStateRestoreError.invalidInventoryData
             }
 
-            let inventoryState = InventoryState(
-                inventory: productInventory.inventory,
-                currentDay: calendar.simulationDay
-            )
-            inventoryState.inventoryByAge.inventoryByPurchaseDay =
+            productInventoryState.inventoryByAge.inventoryByPurchaseDay =
                 savedInventory.inventoryByPurchaseDay
-
-            return inventoryState
+            productInventoryState.recipeAmountMultiplier =
+                savedInventory.recipeAmountMultiplier
+            productInventoryState.lifespanMultiplier =
+                savedInventory.lifespanMultiplier
+            productInventoryState.isActive = savedInventory.isActive
         }
 
-        guard inventoryStates.count == gameSave.inventoryStates.count else {
+        guard restoredProductState.allProductInventoryStates.count
+                == gameSave.inventoryStates.count else {
             throw GameStateRestoreError.invalidInventoryData
         }
+
+        productState = restoredProductState
+
+        finance = Finance(
+            product: product,
+            productInventoryStates:
+                restoredProductState.productInventoryStates,
+            balance: gameSave.finance.actualBalance
+        )
 
         reputation = BusinessReputationState(
             overallReputation: gameSave.reputation.overallReputation,
@@ -228,7 +265,45 @@ final class GameState {
             activeAdvertisement: activeAdvertisement
         )
 
+        let equipmentCatalog = EquipmentCatalog()
+        let secondaryEquipmentCatalog =
+            equipmentCatalog.secondaryEquipment(for: product)
+
+        let primaryTiers = equipmentCatalog.primaryTiers(for: product)
+        let savedActiveEquipment =
+            gameSave.equipmentState.activePrimaryEquipment
+        let savedOwnedEquipment =
+            gameSave.equipmentState.ownedSecondaryEquipment
+
+        guard primaryTiers.contains(where: { tier in
+            tier.level == savedActiveEquipment.tierLevel
+                && tier.equipment.contains {
+                    $0.id == savedActiveEquipment.id
+                }
+        }) else {
+            throw GameStateRestoreError.invalidEquipmentData
+        }
+
+        let ownedEquipmentIDs = savedOwnedEquipment.equipment.map(\.id)
+        let secondaryCatalogIDs = Set(
+            secondaryEquipmentCatalog.equipment.map(\.id)
+        )
+        guard Set(ownedEquipmentIDs).count == ownedEquipmentIDs.count,
+              ownedEquipmentIDs.allSatisfy({
+                  secondaryCatalogIDs.contains($0)
+              }) else {
+            throw GameStateRestoreError.invalidEquipmentData
+        }
+
+        equipmentState = EquipmentState(
+            primaryTiers: primaryTiers,
+            secondaryEquipmentCatalog: secondaryEquipmentCatalog,
+            activePrimaryEquipment: savedActiveEquipment,
+            ownedSecondaryEquipment: savedOwnedEquipment
+        )
+
         pendingBusinessEvents = gameSave.pendingBusinessEvents
+        pendingUpgrades = gameSave.pendingUpgrades
 
         finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
 

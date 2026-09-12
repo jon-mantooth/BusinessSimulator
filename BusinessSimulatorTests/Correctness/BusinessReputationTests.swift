@@ -861,11 +861,11 @@ extension BusinessReputationTests {
             amount: 1,
             freshnessCoefficient: testCase.freshnessCoefficient
         )
-        let inventoryState = InventoryState(
-            inventory: inventory,
+        let productInventoryState = ProductInventoryState(
+            productInventory: productInventory,
             currentDay: currentDay
         )
-        inventoryState.inventoryByAge.inventoryByPurchaseDay = [
+        productInventoryState.inventoryByAge.inventoryByPurchaseDay = [
             currentDay - testCase.inventoryAge: 1
         ]
 
@@ -874,8 +874,7 @@ extension BusinessReputationTests {
             price: testCase.price,
             idealPrice: testCase.idealPrice,
             demandFulfillmentRate: testCase.demandFulfillmentRate,
-            productInventories: [productInventory],
-            inventoryStates: [inventoryState]
+            productInventoryStates: [productInventoryState]
         )
 
         #expect(
@@ -966,8 +965,7 @@ extension BusinessReputationTests {
         testCase: FreshnessEffectCase
     ) {
         let currentDay = 10
-        var productInventories: [ProductInventory] = []
-        var inventoryStates: [InventoryState] = []
+        var productInventoryStates: [ProductInventoryState] = []
 
         for (index, ingredient) in testCase.ingredients.enumerated() {
             let inventory = Inventory(
@@ -983,23 +981,21 @@ extension BusinessReputationTests {
                 amount: 1,
                 freshnessCoefficient: ingredient.freshnessCoefficient
             )
-            let inventoryState = InventoryState(
-                inventory: inventory,
+            let productInventoryState = ProductInventoryState(
+                productInventory: productInventory,
                 currentDay: currentDay
             )
-            inventoryState.inventoryByAge.inventoryByPurchaseDay = [
+            productInventoryState.inventoryByAge.inventoryByPurchaseDay = [
                 currentDay - ingredient.age: 1
             ]
 
-            productInventories.append(productInventory)
-            inventoryStates.append(inventoryState)
+            productInventoryStates.append(productInventoryState)
         }
 
         let freshnessEffectScore =
             BusinessReputationState().calculateFreshnessEffectScore(
-            productInventories: productInventories,
-            inventoryStates: inventoryStates
-        )
+            productInventoryStates: productInventoryStates
+            )
 
         #expect(
             abs(freshnessEffectScore - testCase.expectedEffectScore)

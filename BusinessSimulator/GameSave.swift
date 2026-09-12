@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 6
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -11,7 +11,9 @@ struct GameSave: Codable {
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
     let advertisementState: AdvertisementStateSave
+    let equipmentState: EquipmentStateSave
     let pendingBusinessEvents: [BusinessEvent]
+    let pendingUpgrades: [PendingUpgrade]
     let upgradeTracker: UpgradeTrackerSave
     let summaries: [DaySummarySave]
 }
@@ -45,6 +47,9 @@ struct ProductStateSave: Codable {
 struct InventoryStateSave: Codable {
     let inventoryID: InventoryType
     let inventoryByPurchaseDay: [Int: Double]
+    let recipeAmountMultiplier: Double
+    let lifespanMultiplier: Double
+    let isActive: Bool
 }
 
 struct ReputationSave: Codable {
@@ -56,6 +61,11 @@ struct ReputationSave: Codable {
 
 struct AdvertisementStateSave: Codable {
     let activeAdvertisement: ActiveAdvertisement
+}
+
+struct EquipmentStateSave: Codable {
+    let activePrimaryEquipment: ActivePrimaryEquipment
+    let ownedSecondaryEquipment: SecondaryEquipmentCollection
 }
 
 struct UpgradeTrackerSave: Codable {
@@ -96,7 +106,8 @@ extension GameSave {
             let productState = gameState.productState,
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
-            let activeAdvertisement = advertisementState.activeAdvertisement
+            let activeAdvertisement = advertisementState.activeAdvertisement,
+            let equipmentState = gameState.equipmentState
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -132,11 +143,19 @@ extension GameSave {
             price: productState.price
         )
 
-        inventoryStates = gameState.inventoryStates.map { inventoryState in
+        inventoryStates = productState.allProductInventoryStates.map {
+            productInventoryState in
             InventoryStateSave(
-                inventoryID: inventoryState.inventory.id,
+                inventoryID:
+                    productInventoryState.productInventory.inventory.id,
                 inventoryByPurchaseDay:
-                    inventoryState.inventoryByAge.inventoryByPurchaseDay
+                    productInventoryState.inventoryByAge
+                        .inventoryByPurchaseDay,
+                recipeAmountMultiplier:
+                    productInventoryState.recipeAmountMultiplier,
+                lifespanMultiplier:
+                    productInventoryState.lifespanMultiplier,
+                isActive: productInventoryState.isActive
             )
         }
 
@@ -151,7 +170,15 @@ extension GameSave {
             activeAdvertisement: activeAdvertisement
         )
 
+        self.equipmentState = EquipmentStateSave(
+            activePrimaryEquipment:
+                equipmentState.activePrimaryEquipment,
+            ownedSecondaryEquipment:
+                equipmentState.ownedSecondaryEquipment
+        )
+
         pendingBusinessEvents = gameState.pendingBusinessEvents
+        pendingUpgrades = gameState.pendingUpgrades
         upgradeTracker = UpgradeTrackerSave(
             lastUpgradeDays: gameState.upgradeTracker.lastUpgradeDays
         )

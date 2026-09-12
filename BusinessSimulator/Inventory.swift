@@ -14,7 +14,10 @@ enum InventoryType: String, Codable {
     case cup
     case ice
     case hotDog
+    case beef
+    case spices
     case bun
+    case yeast
     case condiments
     case onion
     case butter
@@ -62,21 +65,6 @@ struct Inventory: Identifiable, Equatable {
         } else {
             self.purchaseAmountLabel = "\(amount)"
         }
-    }
-}
-
-
-final class InventoryState: Identifiable {
-    let inventory: Inventory
-
-    var inventoryByAge: InventoryByAge
-
-    init(
-        inventory: Inventory,
-        currentDay: Int
-    ) {
-        self.inventory = inventory
-        self.inventoryByAge = InventoryByAge(currentDay: currentDay)
     }
 }
 

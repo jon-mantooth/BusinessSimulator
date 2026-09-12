@@ -8,6 +8,17 @@
 import Foundation
 import SwiftUI
 
+// BALANCE-DEPENDENT: Manually maintained fields in this catalog:
+// - Inventory.pricePerUnit
+// - Inventory.purchaseAmount
+// - Inventory.lifespan
+// - ProductInventory.recipeAmount
+// - ProductInventory.freshnessCoefficient
+// - Product.baseIdealPrice
+// - Product.idealUnitsSold
+// - Product.priceSensitivity
+// - Product.temperatureInterpolationFormula
+
 struct ProductCatalog {
     
     let products: [Product]
@@ -95,6 +106,26 @@ struct ProductCatalog {
             amount: 50,
             lifespan: 10
         )
+
+        let beef = Inventory(
+            type: .beef,
+            name: "Beef",
+            smallIcon: .emoji("🥩"),
+            pricePerUnit: 30.00,
+            amount: 10,
+            unit: "lbs",
+            lifespan: 30
+        )
+
+        let spices = Inventory(
+            type: .spices,
+            name: "Spices",
+            smallIcon: .emoji("🧂"),
+            pricePerUnit: 6.00,
+            amount: 8,
+            unit: "oz",
+            lifespan: 365
+        )
         
         let bun = Inventory(
             type: .bun,
@@ -103,6 +134,16 @@ struct ProductCatalog {
             pricePerUnit: 17.50,
             amount: 48,
             lifespan: 5
+        )
+
+        let yeast = Inventory(
+            type: .yeast,
+            name: "Yeast",
+            smallIcon: .system("microbe.fill"),
+            pricePerUnit: 6.00,
+            amount: 4,
+            unit: "oz",
+            lifespan: 90
         )
         
         let condiments = Inventory(
@@ -207,11 +248,11 @@ struct ProductCatalog {
                         freshnessCoefficient: 0
                     ),
                 ],
+                upgradeProductInventories: [],
                 instructions: pieInstructions,
                 baseIdealPrice: 12.80,
                 idealUnitsSold: 38,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .coldWeather
             ),
             Product(
@@ -257,11 +298,11 @@ struct ProductCatalog {
                         freshnessCoefficient: 0
                     ),
                 ],
+                upgradeProductInventories: [],
                 instructions: smoothieInstructions,
                 baseIdealPrice: 3.40,
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .warmWeather
             ),
             Product(
@@ -299,11 +340,36 @@ struct ProductCatalog {
                         freshnessCoefficient: 0
                     ),
                 ],
+                upgradeProductInventories: [
+                    ProductInventory(
+                        inventory: beef,
+                        amount: 0.2,
+                        unit: "lbs",
+                        freshnessCoefficient: 0.45
+                    ),
+                    ProductInventory(
+                        inventory: spices,
+                        amount: 0.05,
+                        unit: "oz",
+                        freshnessCoefficient: 0.05
+                    ),
+                    ProductInventory(
+                        inventory: flour,
+                        amount: 0.75,
+                        unit: "c",
+                        freshnessCoefficient: 0
+                    ),
+                    ProductInventory(
+                        inventory: yeast,
+                        amount: 1.0 / 30.0,
+                        unit: "oz",
+                        freshnessCoefficient: 0.35
+                    )
+                ],
                 instructions: hotDogInstructions,
                 baseIdealPrice: 3.20,
                 idealUnitsSold: 150,
                 priceSensitivity: 6.0,
-                unitsPerBatch: 1,
                 temperatureInterpolationFormula: .temperateWeather
             )
         ]
