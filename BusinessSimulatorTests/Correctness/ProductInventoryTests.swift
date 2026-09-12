@@ -54,6 +54,192 @@ extension ProductInventoryTests {
     }
 }
 
+// MARK: - Inventory Integration Regressions
+
+extension ProductInventoryTests {
+
+    @Test
+    func inventorySalesLimitUsesEffectiveRecipeAmount() {
+        let productState = makeSingleIngredientProductState(
+            recipeAmount: 2,
+            purchaseAmount: 10
+        )
+        let ingredientState = productState.productInventoryStates[0]
+        ingredientState.recipeAmountMultiplier = 0.5
+        ingredientState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+        let dimension = InventoryDimension(productState: productState)
+        let summary = DaySummary(day: 1, startingBalance: 100)
+
+        let sales = dimension.applySalesLimits(
+            sales: 10,
+            summary: summary
+        )
+
+        #expect(sales == 10)
+        #expect(summary.sections.isEmpty)
+    }
+
+    @Test
+    func inventoryConsumptionUsesEffectiveRecipeAmount() {
+        let productState = makeSingleIngredientProductState(
+            recipeAmount: 2,
+            purchaseAmount: 10,
+            purchasePrice: 10
+        )
+        let ingredientState = productState.productInventoryStates[0]
+        ingredientState.recipeAmountMultiplier = 0.5
+        ingredientState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+        let dimension = InventoryDimension(productState: productState)
+        let summary = DaySummary(day: 1, startingBalance: 100)
+
+        let cost = dimension.calculateDailyCosts(
+            sales: 4,
+            summary: summary
+        )
+
+        #expect(abs(cost - 4.0) < 0.000_001)
+        #expect(
+            abs(ingredientState.inventoryByAge.totalInventory - 0.6)
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func inventoryFreshnessDemandUsesEffectiveLifespan() {
+        let productState = makeSingleIngredientProductState(
+            recipeAmount: 1,
+            purchaseAmount: 1,
+            lifespan: 5
+        )
+        let ingredientState = productState.productInventoryStates[0]
+        ingredientState.lifespanMultiplier = 2.0
+        ingredientState.inventoryByAge.currentDay = 6
+        ingredientState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+        let expectedFreshness = 0.75
+        let expectedDemand = SimulationBalance.freshness.multiplier(
+            weight: 1.0,
+            effectScore: 1.0 - expectedFreshness
+        )
+
+        let demand = InventoryDimension(
+            productState: productState
+        ).calculateDemand()
+
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+
+    @Test
+    func minimumOperatingReserveUsesEffectiveRecipeAmount() {
+        let productState = makeSingleIngredientProductState(
+            recipeAmount: 2,
+            purchaseAmount: 10,
+            purchasePrice: 40,
+            idealUnitsSold: 100
+        )
+        let ingredientState = productState.productInventoryStates[0]
+        let originalReserve = Finance.minimumOperatingReserve(
+            for: productState.product,
+            productInventoryStates: productState.productInventoryStates
+        )
+
+        ingredientState.recipeAmountMultiplier = 0.5
+
+        let upgradedReserve = Finance.minimumOperatingReserve(
+            for: productState.product,
+            productInventoryStates: productState.productInventoryStates
+        )
+
+        #expect(originalReserve == 400)
+        #expect(upgradedReserve == 200)
+        #expect(upgradedReserve < originalReserve)
+    }
+
+    @Test
+    func inventoryExpirationUsesEffectiveLifespan() {
+        let baseProductState = makeSingleIngredientProductState(
+            recipeAmount: 1,
+            purchaseAmount: 1,
+            lifespan: 5
+        )
+        let upgradedProductState = makeSingleIngredientProductState(
+            recipeAmount: 1,
+            purchaseAmount: 1,
+            lifespan: 5
+        )
+        let baseState = baseProductState.productInventoryStates[0]
+        let upgradedState = upgradedProductState.productInventoryStates[0]
+        baseState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+        upgradedState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+        upgradedState.lifespanMultiplier = 2.0
+
+        InventoryDimension(productState: baseProductState).prepForNextDay(
+            currentDay: 7,
+            summary: DaySummary(day: 6, startingBalance: 100)
+        )
+        InventoryDimension(productState: upgradedProductState).prepForNextDay(
+            currentDay: 7,
+            summary: DaySummary(day: 6, startingBalance: 100)
+        )
+
+        #expect(baseState.inventoryByAge.totalInventory == 0)
+        #expect(upgradedState.inventoryByAge.totalInventory == 1)
+    }
+
+    @Test
+    func reputationFreshnessReceivesOnlyActiveIngredients() {
+        let productState = makeProductStateWithUpgradeIngredient()
+        let baseState = productState.productInventoryStates[0]
+        let inactiveState = productState.allProductInventoryStates.first {
+            !$0.isActive
+        }!
+        baseState.inventoryByAge.currentDay = 10
+        baseState.inventoryByAge.inventoryByPurchaseDay = [10: 1]
+        inactiveState.inventoryByAge.currentDay = 10
+        inactiveState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
+
+        let score = BusinessReputationState()
+            .calculateFreshnessEffectScore(
+                productInventoryStates: productState.productInventoryStates
+            )
+
+        #expect(score == 1.0)
+    }
+
+    @Test
+    func inventoryDimensionUsesReplacementIngredientsAfterUpgrade() throws {
+        let productState = try makeCatalogProductState(productID: .hotDogs)
+        let dimension = InventoryDimension(productState: productState)
+
+        for state in productState.productInventoryStates {
+            state.inventoryByAge.inventoryByPurchaseDay = [1: 100]
+        }
+
+        let upgrade = try #require(
+            EquipmentCatalog().meatGrinder.ingredientUpgrade
+        )
+        productState.applyIngredientUpgrade(upgrade)
+        let summary = DaySummary(day: 1, startingBalance: 100)
+
+        let sales = dimension.applySalesLimits(
+            sales: 10,
+            summary: summary
+        )
+
+        #expect(sales == 0)
+        #expect(
+            summary.sections.contains { section in
+                section.name == "Inventory"
+                    && section.notes.contains {
+                        $0.contains("Beef")
+                    }
+                    && section.notes.contains {
+                        $0.contains("Spices")
+                    }
+            }
+        )
+    }
+}
+
 // MARK: - Ingredient Upgrades
 
 extension ProductInventoryTests {
@@ -252,6 +438,46 @@ private func makeProductInventoryState(
         recipeAmountMultiplier: recipeAmountMultiplier,
         lifespanMultiplier: lifespanMultiplier
     )
+}
+
+@MainActor
+private func makeSingleIngredientProductState(
+    recipeAmount: Double,
+    purchaseAmount: Int,
+    purchasePrice: Double = 1,
+    lifespan: Int = 10,
+    idealUnitsSold: Int = 1
+) -> ProductState {
+    let productInventory = ProductInventory(
+        inventory: Inventory(
+            type: .apple,
+            name: "Test Ingredient",
+            smallIcon: .emoji("🍎"),
+            pricePerUnit: purchasePrice,
+            amount: purchaseAmount,
+            lifespan: lifespan
+        ),
+        amount: recipeAmount,
+        freshnessCoefficient: 1
+    )
+    let product = Product(
+        id: .pies,
+        singularName: "Test Product",
+        pluralName: "Test Products",
+        smallIcon: .emoji("🧪"),
+        accent: .brown,
+        description: "Tests inventory integration.",
+        productLine: FoodProductLine(),
+        productInventories: [productInventory],
+        upgradeProductInventories: [],
+        instructions: [],
+        baseIdealPrice: 1,
+        idealUnitsSold: idealUnitsSold,
+        priceSensitivity: 1,
+        temperatureInterpolationFormula: .coldWeather
+    )
+
+    return ProductState(product: product, currentDay: 1)
 }
 
 @MainActor
