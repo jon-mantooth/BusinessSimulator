@@ -123,6 +123,42 @@ extension CostsTests {
     }
 }
 
+// MARK: - Equipment
+
+extension CostsTests {
+
+    @MainActor
+    @Test
+    func oneTimeEquipmentDoesNotCreateDailyOrWeeklyCosts() throws {
+        let product = try #require(
+            ProductCatalog().products.first { $0.id == .pies }
+        )
+        let catalog = EquipmentCatalog()
+        let primaryTiers = catalog.primaryTiers(for: product)
+        let secondaryCatalog = catalog.secondaryEquipment(for: product)
+        let ownedSecondary = SecondaryEquipmentCollection(
+            equipment: Array(secondaryCatalog.equipment.prefix(2))
+        )
+        let equipmentState = EquipmentState(
+            primaryTiers: primaryTiers,
+            secondaryEquipmentCatalog: secondaryCatalog,
+            ownedSecondaryEquipment: ownedSecondary
+        )
+        let dimension = EquipmentDimension(equipmentState: equipmentState)
+        let summary = DaySummary(day: 1, startingBalance: 500)
+
+        let dailyCost = dimension.calculateDailyCosts(
+            sales: 100,
+            summary: summary
+        )
+        let weeklyCost = dimension.calculateWeeklyCosts(summary: summary)
+
+        #expect(dailyCost == 0)
+        #expect(weeklyCost == 0)
+        #expect(summary.cashFlowCosts.isEmpty)
+    }
+}
+
 private func makeAdvertisementDimensionForCosts(
     paymentSchedule: PaymentSchedule,
     price: Double
