@@ -255,9 +255,6 @@ struct SecondaryEquipmentCollection: Equatable, Codable {
 }
 
 struct EquipmentTier: Identifiable, Equatable {
-    private static let phaseTwoStartingTier = 4
-    private static let phaseTwoProfitMultiplier = 1.30
-
     let id: EquipmentTierID
     let level: Int
     let equipment: [Equipment]
@@ -304,22 +301,17 @@ struct EquipmentTier: Identifiable, Equatable {
                 return configuredEquipment
             }
 
-            let profitMultiplier = level >= Self.phaseTwoStartingTier
-                ? Self.phaseTwoProfitMultiplier
-                : 1.0
             let capacityPrice = UpgradePricing.setCapacityPrice(
                 baseIdealUnitsSold: product.idealUnitsSold,
                 upgradedCapacity: configuredEquipment.capacity,
-                baseIdealPrice: product.baseIdealPrice,
-                profitMultiplier: profitMultiplier
+                baseIdealPrice: product.baseIdealPrice
             )
             let demandPrice = UpgradePricing.setStandaloneDemandPrice(
                 baseIdealUnitsSold: product.idealUnitsSold,
                 baseIdealPrice: product.baseIdealPrice,
                 demandLevel: configuredEquipment.demandLevel,
                 totalLevels: configuredEquipment.totalLevels,
-                demandWeight: EquipmentDimension.primaryDemandWeight,
-                profitMultiplier: profitMultiplier
+                demandWeight: EquipmentDimension.primaryDemandWeight
             )
             configuredEquipment.price = Equipment.cleanPrice(
                 capacityPrice + demandPrice
