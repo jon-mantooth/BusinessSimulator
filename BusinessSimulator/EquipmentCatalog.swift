@@ -137,7 +137,7 @@ struct EquipmentCatalog {
         basicHomeOven = Equipment(
             id: EquipmentID(rawValue: "basic-home-oven"),
             name: "Basic Home Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier0_oven"),
             description: "A dependable household oven with enough capacity to get your pie business started.",
             category: .primary,
             demandLevel: 0,
@@ -147,7 +147,7 @@ struct EquipmentCatalog {
         doubleRangeOven = Equipment(
             id: EquipmentID(rawValue: "double-range-oven"),
             name: "Double Range Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier1_oven"),
             description: "A double-oven range that lets you bake more pies at the same time.",
             category: .primary,
             demandLevel: 1,
@@ -157,7 +157,7 @@ struct EquipmentCatalog {
         convectionOven = Equipment(
             id: EquipmentID(rawValue: "convection-oven"),
             name: "Convection Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier2_oven"),
             description: "Circulating heat delivers faster, more consistent bakes with evenly browned crusts.",
             category: .primary,
             demandLevel: 2,
@@ -167,7 +167,7 @@ struct EquipmentCatalog {
         doubleConvectionOven = Equipment(
             id: EquipmentID(rawValue: "double-convection-oven"),
             name: "Double Convection Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier3_oven"),
             description: "Dual convection chambers expand production while preserving an even, reliable bake.",
             category: .primary,
             demandLevel: 2,
@@ -177,7 +177,7 @@ struct EquipmentCatalog {
         commercialDeckOven = Equipment(
             id: EquipmentID(rawValue: "commercial-deck-oven"),
             name: "Commercial Deck Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier4_oven"),
             description: "A professional deck oven built for high-volume production and consistently crisp crusts.",
             category: .primary,
             demandLevel: 3,
@@ -187,7 +187,7 @@ struct EquipmentCatalog {
         commercialRackOven = Equipment(
             id: EquipmentID(rawValue: "commercial-rack-oven"),
             name: "Commercial Rack Oven",
-            smallIcon: .system("oven.fill"),
+            smallIcon: .asset("tier5_oven"),
             description: "A high-capacity rotating rack oven designed for efficient, uniform commercial baking.",
             category: .primary,
             demandLevel: 3,
@@ -197,7 +197,7 @@ struct EquipmentCatalog {
         appleCorer = Equipment(
             id: EquipmentID(rawValue: "apple-corer"),
             name: "Apple Corer",
-            smallIcon: .emoji("🍎"),
+            smallIcon: .asset("apple_corer"),
             description: "Core apples quickly and keep pie preparation moving smoothly.",
             price: 99,
             category: .secondary(
@@ -214,7 +214,7 @@ struct EquipmentCatalog {
         standMixer = Equipment(
             id: EquipmentID(rawValue: "stand-mixer"),
             name: "Stand Mixer",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("stand_mixer"),
             description: "Mix dough and fillings consistently while freeing time for other preparation work.",
             price: 349,
             category: .secondary(
@@ -231,7 +231,7 @@ struct EquipmentCatalog {
         foodProcessor = Equipment(
             id: EquipmentID(rawValue: "food-processor"),
             name: "Food Processor",
-            smallIcon: .system("gearshape.2.fill"),
+            smallIcon: .asset("food_processor"),
             description: "Speed up repetitive preparation tasks and produce more consistent ingredients.",
             price: 249,
             category: .secondary(
@@ -243,7 +243,7 @@ struct EquipmentCatalog {
         doughSheeter = Equipment(
             id: EquipmentID(rawValue: "dough-sheeter"),
             name: "Dough Sheeter",
-            smallIcon: .system("rectangle.compress.vertical"),
+            smallIcon: .asset("dough_sheeter"),
             description: "Roll uniform sheets of dough quickly for dependable crust thickness and texture.",
             price: 499,
             category: .secondary(
@@ -260,7 +260,7 @@ struct EquipmentCatalog {
         piePrepStation = Equipment(
             id: EquipmentID(rawValue: "pie-prep-station"),
             name: "Pie Prep Station",
-            smallIcon: .system("table.furniture.fill"),
+            smallIcon: .asset("pie_prep_station"),
             description: "Organize ingredients and tools in a dedicated workspace built for efficient pie assembly.",
             price: 699,
             category: .secondary(
