@@ -272,7 +272,7 @@ struct EquipmentCatalog {
         smallCharcoalGrill = Equipment(
             id: EquipmentID(rawValue: "small-charcoal-grill"),
             name: "Small Charcoal Grill",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier0_grill"),
             description: "A compact charcoal grill with enough cooking space to get your hot dog business started.",
             category: .primary,
             demandLevel: 0,
@@ -282,7 +282,7 @@ struct EquipmentCatalog {
         largeCharcoalGrill = Equipment(
             id: EquipmentID(rawValue: "large-charcoal-grill"),
             name: "Large Charcoal Grill",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier1_grill"),
             description: "A roomier charcoal grill that cooks more hot dogs while preserving a classic grilled flavor.",
             category: .primary,
             demandLevel: 1,
@@ -292,7 +292,7 @@ struct EquipmentCatalog {
         smallGasGrill = Equipment(
             id: EquipmentID(rawValue: "small-gas-grill"),
             name: "Small Gas Grill",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier2_grill"),
             description: "A compact gas grill offering faster heat-up times and dependable temperature control.",
             category: .primary,
             demandLevel: 2,
@@ -302,7 +302,7 @@ struct EquipmentCatalog {
         largeGasGrill = Equipment(
             id: EquipmentID(rawValue: "large-gas-grill"),
             name: "Large Gas Grill",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier3_grill"),
             description: "A high-capacity gas grill that handles larger crowds with steady, even cooking.",
             category: .primary,
             demandLevel: 2,
@@ -312,7 +312,7 @@ struct EquipmentCatalog {
         commercialFlatTop = Equipment(
             id: EquipmentID(rawValue: "commercial-flat-top"),
             name: "Commercial Flat Top",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier4_grill"),
             description: "A professional flat-top griddle built for quick service and consistently cooked hot dogs.",
             category: .primary,
             demandLevel: 3,
@@ -322,7 +322,7 @@ struct EquipmentCatalog {
         commercialGrillStation = Equipment(
             id: EquipmentID(rawValue: "commercial-grill-station"),
             name: "Commercial Grill Station",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("tier5_grill"),
             description: "A complete commercial grilling station designed for continuous, high-volume production.",
             category: .primary,
             demandLevel: 3,
@@ -332,7 +332,7 @@ struct EquipmentCatalog {
         produceSlicer = Equipment(
             id: EquipmentID(rawValue: "produce-slicer"),
             name: "Produce Slicer",
-            smallIcon: .system("square.grid.3x3.fill"),
+            smallIcon: .asset("produce_slicer"),
             description: "Slice fruits, vegetables, and toppings quickly for consistent portions and faster preparation.",
             price: 99,
             category: .secondary(
@@ -344,7 +344,7 @@ struct EquipmentCatalog {
         breadMaker = Equipment(
             id: EquipmentID(rawValue: "bread-maker"),
             name: "Bread Maker",
-            smallIcon: .system("takeoutbag.and.cup.and.straw.fill"),
+            smallIcon: .asset("bread_maker"),
             description: "Prepare fresh, consistent buns in-house while streamlining the bread-making process.",
             price: 349,
             category: .secondary(
@@ -361,7 +361,7 @@ struct EquipmentCatalog {
         meatGrinder = Equipment(
             id: EquipmentID(rawValue: "meat-grinder"),
             name: "Meat Grinder",
-            smallIcon: .system("gearshape.fill"),
+            smallIcon: .asset("meat_grinder"),
             description: "Grind and prepare custom hot dog blends for better control over flavor and production.",
             price: 499,
             category: .secondary(
@@ -378,7 +378,7 @@ struct EquipmentCatalog {
         hotDogPrepStation = Equipment(
             id: EquipmentID(rawValue: "hot-dog-prep-station"),
             name: "Hot Dog Prep Station",
-            smallIcon: .system("table.furniture.fill"),
+            smallIcon: .asset("hotdog_prep_station"),
             description: "Keep buns, toppings, and tools organized in a dedicated station built for fast assembly.",
             price: 699,
             category: .secondary(
