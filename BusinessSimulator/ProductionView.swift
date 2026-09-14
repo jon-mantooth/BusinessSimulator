@@ -98,8 +98,18 @@ struct ProductionView: View {
 
     private var equipmentSheet: some View {
         return ZStack(alignment: .topTrailing) {
-            Color(red: 0.97, green: 0.90, blue: 0.75)
+            Color(red: 0.17, green: 0.09, blue: 0.04)
                 .ignoresSafeArea()
+
+            GeometryReader { geometry in
+                Image("equipment_background")
+                    .resizable()
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+            }
+            .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 equipmentTabs
@@ -137,16 +147,14 @@ struct ProductionView: View {
             Button {
                 showingEquipment = false
             } label: {
-                Image(systemName: "xmark")
-                    .font(.headline.weight(.black))
-                    .foregroundStyle(.white)
-                    .frame(width: 34, height: 34)
-                    .background(Color.black.opacity(0.78))
-                    .clipShape(Circle())
+                Image("equipment_x")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 42, height: 42)
             }
             .buttonStyle(.plain)
-            .padding(.top, 10)
-            .padding(.trailing, 14)
+            .padding(.top, 8)
+            .padding(.trailing, 8)
             .accessibilityLabel("Close equipment")
 
             if let selectedSecondaryEquipment {
@@ -253,8 +261,8 @@ struct ProductionView: View {
             )
         }
         .padding(.top, 8)
-        .padding(.horizontal, 8)
-        .padding(.trailing, 42)
+        .padding(.horizontal, 12)
+        .padding(.trailing, 38)
     }
 
     private var primaryEquipmentTitle: String {
@@ -275,23 +283,25 @@ struct ProductionView: View {
         Button {
             selectedEquipmentTab = tab
         } label: {
-            Text(title.uppercased())
-                .font(.subheadline.weight(.black))
-                .foregroundStyle(
-                    selectedEquipmentTab == tab ? .white : Color.brown
-                )
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(
+            ZStack {
+                Image(
                     selectedEquipmentTab == tab
-                        ? Color(red: 0.05, green: 0.39, blue: 0.20)
-                        : Color.white.opacity(0.35)
+                        ? "equipment_tab_green"
+                        : "equipment_tab"
                 )
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.brown.opacity(0.55), lineWidth: 1.5)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Text(title.uppercased())
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(
+                        selectedEquipmentTab == tab ? .white : darkBrown
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .padding(.horizontal, 12)
+            }
+            .frame(height: 48)
         }
         .buttonStyle(.plain)
     }
