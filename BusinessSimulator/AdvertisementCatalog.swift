@@ -56,7 +56,15 @@ struct AdvertisementCatalog {
         ]
     }
 
-    init() {
+    init(
+        productID: ProductID
+    ) {
+        self.init(product: ProductCatalog().product(for: productID))
+    }
+
+    init(
+        product: Product
+    ) {
         let noAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "none"),
             name: "No Advertisement",
@@ -223,7 +231,8 @@ struct AdvertisementCatalog {
         tierZero = AdvertisementTier(
             id: AdvertisementTierID(rawValue: "tier-zero"),
             level: 0,
-            advertisements: [noAdvertisement]
+            advertisements: [noAdvertisement],
+            product: product
         )
 
         tierOne = AdvertisementTier(
@@ -233,7 +242,8 @@ struct AdvertisementCatalog {
                 canvassing,
                 neighborhoodFlyers,
                 clubhouseAdvertisement
-            ]
+            ],
+            product: product
         )
 
         tierTwo = AdvertisementTier(
@@ -242,7 +252,8 @@ struct AdvertisementCatalog {
             advertisements: [
                 blockPartySponsorship,
                 neighborhoodGazetteAdvertisement
-            ]
+            ],
+            product: product
         )
 
         tierThree = AdvertisementTier(
@@ -251,7 +262,8 @@ struct AdvertisementCatalog {
             advertisements: [
                 townNewspaperAdvertisement,
                 socialMediaAdvertisement
-            ]
+            ],
+            product: product
         )
 
         smoothieTierFour = AdvertisementTier(
@@ -261,7 +273,8 @@ struct AdvertisementCatalog {
                 beachVolleyballSponsorship,
                 fitnessInfluencerPartnership,
                 billboardAdvertisement
-            ]
+            ],
+            product: product
         )
 
         hotDogTierFour = AdvertisementTier(
@@ -271,7 +284,8 @@ struct AdvertisementCatalog {
                 youthBaseballSponsorship,
                 sportsPodcastPartnership,
                 billboardAdvertisement
-            ]
+            ],
+            product: product
         )
 
         pieTierFour = AdvertisementTier(
@@ -281,13 +295,15 @@ struct AdvertisementCatalog {
                 harvestEventSponsorship,
                 gardeningPodcastPartnership,
                 billboardAdvertisement
-            ]
+            ],
+            product: product
         )
 
         tierFive = AdvertisementTier(
             id: AdvertisementTierID(rawValue: "tier-five"),
             level: 5,
-            advertisements: [radioAdvertisement]
+            advertisements: [radioAdvertisement],
+            product: product
         )
     }
 }
