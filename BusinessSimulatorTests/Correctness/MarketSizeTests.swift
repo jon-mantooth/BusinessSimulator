@@ -76,7 +76,7 @@ extension MarketSizeTests {
 
     @Test
     func canvassingTimeReducesEntireReachableMarket() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .pies)
         let canvassing = catalog.canvassing
         let advertisementDimension = makeAdvertisementDimension(
             advertisement: canvassing
@@ -183,7 +183,8 @@ private func makeAdvertisementDimension(
     let tier = AdvertisementTier(
         id: AdvertisementTierID(rawValue: "market-size-test-tier"),
         level: 0,
-        advertisements: [advertisement]
+        advertisements: [advertisement],
+        product: ProductCatalog().product(for: .pies)
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],

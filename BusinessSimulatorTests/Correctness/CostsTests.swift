@@ -102,7 +102,7 @@ extension CostsTests {
 
     @Test
     func freeCanvassingDoesNotCreateScheduledCost() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .pies)
         let advertisementDimension = makeAdvertisementDimensionForCosts(
             advertisement: catalog.canvassing
         )
@@ -183,7 +183,8 @@ private func makeAdvertisementDimensionForCosts(
     let tier = AdvertisementTier(
         id: AdvertisementTierID(rawValue: "cost-test-tier"),
         level: 0,
-        advertisements: [advertisement]
+        advertisements: [advertisement],
+        product: ProductCatalog().product(for: .pies)
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],
