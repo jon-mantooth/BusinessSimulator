@@ -133,11 +133,9 @@ struct AdvertisementView: View {
             HStack(spacing: 12) {
                 GameIconView(
                     icon: advertisement.smallIcon,
-                    size: 25
+                    size: 42
                 )
                     .frame(width: 46, height: 46)
-                    .background(paper.opacity(0.75))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
@@ -190,10 +188,8 @@ struct AdvertisementView: View {
         }()
 
         return HStack(spacing: 10) {
-            GameIconView(icon: advertisement.smallIcon, size: 30)
+            GameIconView(icon: advertisement.smallIcon, size: 56)
                 .frame(width: 62, height: 76)
-                .background(paper.opacity(0.7))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(advertisement.name)
