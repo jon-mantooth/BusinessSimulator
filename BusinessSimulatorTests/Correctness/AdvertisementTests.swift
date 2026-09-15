@@ -81,7 +81,7 @@ extension AdvertisementTests {
 
     @Test
     func highestTierHasNoNextTier() throws {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
         let tiers = try #require(
             catalog.tiersByProduct[.smoothies]
         )
@@ -110,7 +110,7 @@ extension AdvertisementTests {
 
     @Test
     func everyProductHasAllAdvertisementTiersInOrder() throws {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
 
         for productID in [ProductID.smoothies, .hotDogs, .pies] {
             let tiers = try #require(catalog.tiersByProduct[productID])
@@ -121,7 +121,7 @@ extension AdvertisementTests {
 
     @Test
     func genericTiersContainExpectedAdvertisements() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
 
         #expect(
             advertisementIDs(in: catalog.tierZero)
@@ -154,7 +154,7 @@ extension AdvertisementTests {
 
     @Test
     func tierFourContainsCorrectProductSpecificAdvertisements() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
 
         #expect(
             Set(advertisementIDs(in: catalog.smoothieTierFour)) == Set([
@@ -181,7 +181,7 @@ extension AdvertisementTests {
 
     @Test
     func productSpecificAdvertisementsDoNotLeakBetweenProducts() throws {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
         let smoothieTier = try tier(
             level: 4,
             productID: .smoothies,
@@ -217,7 +217,7 @@ extension AdvertisementTests {
 
     @Test
     func timeRequiredAdvertisementRemainsFree() throws {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
         let canvassing = try #require(
             catalog.tierOne.advertisements.first {
                 $0.id == catalog.canvassing.id
@@ -230,7 +230,7 @@ extension AdvertisementTests {
 
     @Test
     func advertisementsWithoutTimeRequirementReceivePositivePrices() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .smoothies)
         let pricedAdvertisements = [
             catalog.tierOne,
             catalog.tierTwo,
@@ -346,7 +346,7 @@ extension AdvertisementTests {
 private func makeAdvertisementState(
     productID: ProductID = .smoothies
 ) throws -> AdvertisementState {
-    let catalog = AdvertisementCatalog()
+    let catalog = AdvertisementCatalog(productID: productID)
     let tiers = try #require(catalog.tiersByProduct[productID])
     let startingTier = try #require(
         tiers.first { $0.level == 0 }
