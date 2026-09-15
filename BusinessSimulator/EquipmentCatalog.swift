@@ -480,9 +480,9 @@ struct EquipmentCatalog {
 
         produceCooler = Equipment(
             id: EquipmentID(rawValue: "produce-cooler"),
-            name: "Produce Cooler",
+            name: "Cooler",
             smallIcon: .asset("produce_cooler"),
-            description: "Keep fruit and other perishable ingredients chilled, organized, and ready for service.",
+            description: "Keep milk and other perishable ingredients chilled, organized, and ready for service.",
             price: 699,
             category: .secondary(
                 capacityStrength: .medium
