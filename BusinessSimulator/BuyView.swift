@@ -133,7 +133,7 @@ struct BuyView: View {
 
                 GameIconView(
                     icon: inventory.largeIcon,
-                    size: 40
+                    size: 80
                 )
             }
             .frame(maxWidth: .infinity)
