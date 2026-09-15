@@ -72,7 +72,7 @@ struct BuyView: View {
             VStack(spacing: 5) {
                 titleHeader
                 GameIconView(
-                    icon: inventory.largeIcon,
+                    icon: inventory.smallIcon,
                     size: 42
                 )
                 .accessibilityLabel(inventory.name)
@@ -132,7 +132,7 @@ struct BuyView: View {
                 Spacer()
 
                 GameIconView(
-                    icon: inventory.smallIcon,
+                    icon: inventory.largeIcon,
                     size: 40
                 )
             }
