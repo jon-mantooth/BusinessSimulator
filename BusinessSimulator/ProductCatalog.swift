@@ -23,6 +23,16 @@ struct ProductCatalog {
     
     let products: [Product]
     let food = FoodProductLine()
+
+    func product(
+        for id: ProductID
+    ) -> Product {
+        guard let product = products.first(where: { $0.id == id }) else {
+            preconditionFailure("Product catalog is missing \(id.rawValue).")
+        }
+
+        return product
+    }
     
     init(){
         let smoothieInstructions = [
