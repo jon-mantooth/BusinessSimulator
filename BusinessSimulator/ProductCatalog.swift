@@ -26,7 +26,7 @@ struct ProductCatalog {
     
     init(){
         let smoothieInstructions = [
-            "Combine strawberries, milk, ice, and sugar in a blender.",
+            "Combine strawberries, milk, yogurt, ice, and sugar in a blender.",
             "Blend until smooth.",
             "Pour into cup and serve."
         ]
@@ -79,13 +79,14 @@ struct ProductCatalog {
             lifespan: 7
         )
         
-        let cup = Inventory(
-            type: .cup,
-            name: "Cups",
-            smallIcon: .emoji("🥤"),
-            pricePerUnit: 5.00,
-            amount: 50,
-            lifespan: 3650
+        let yogurt = Inventory(
+            type: .yogurt,
+            name: "Yogurt",
+            smallIcon: .emoji("🥣"),
+            pricePerUnit: 3.20,
+            amount: 32,
+            unit: "oz",
+            lifespan: 14
         )
         
         let ice = Inventory(
@@ -272,13 +273,13 @@ struct ProductCatalog {
                         inventory: strawberry,
                         amount: 4,
                         unit: "oz",
-                        freshnessCoefficient: 0.6
+                        freshnessCoefficient: 0.5
                     ),
                     ProductInventory(
                         inventory: milk,
                         amount: 8,
                         unit: "fl oz",
-                        freshnessCoefficient: 0.4
+                        freshnessCoefficient: 0.3
                     ),
                     ProductInventory(
                         inventory: ice,
@@ -293,9 +294,10 @@ struct ProductCatalog {
                         freshnessCoefficient: 0
                     ),
                     ProductInventory(
-                        inventory: cup,
+                        inventory: yogurt,
                         amount: 1,
-                        freshnessCoefficient: 0
+                        unit: "oz",
+                        freshnessCoefficient: 0.2
                     ),
                 ],
                 upgradeProductInventories: [],

@@ -11,7 +11,7 @@ enum InventoryType: String, Codable {
     case sugar
     case strawberry
     case milk
-    case cup
+    case yogurt
     case ice
     case hotDog
     case beef
