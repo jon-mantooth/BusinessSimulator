@@ -15,6 +15,25 @@ struct CalendarView: View {
     private let gold = Color(red: 0.82, green: 0.54, blue: 0.20)
     private let weekdaySymbols = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+    private var backgroundImageName: String {
+        let monthNames = [
+            "january",
+            "february",
+            "march",
+            "april",
+            "may",
+            "june",
+            "july",
+            "august",
+            "september",
+            "october",
+            "november",
+            "december"
+        ]
+        let month = calendar.component(.month, from: currentDate)
+        return monthNames[month - 1]
+    }
+
     private var monthDates: [Date?] {
         guard
             let monthInterval = calendar.dateInterval(
@@ -46,75 +65,88 @@ struct CalendarView: View {
     }
 
     var body: some View {
-        VStack(spacing: 18) {
-            HStack {
-                Text(
-                    currentDate.formatted(
-                        .dateTime.month(.wide).year()
-                    )
-                )
-                .font(.system(.title, design: .serif))
-                .fontWeight(.bold)
-                .foregroundStyle(darkBrown)
+        GeometryReader { geometry in
+            let calendarWidth = geometry.size.width
+            let calendarHeight = calendarWidth * 1.5
 
-                Spacer()
+            ZStack(alignment: .topTrailing) {
+                Image(backgroundImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(
+                        width: calendarWidth,
+                        height: calendarHeight
+                    )
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(
+                        currentDate.formatted(
+                            .dateTime.month(.wide).year()
+                        )
+                    )
+                    .font(
+                        .system(
+                            size: calendarWidth * 0.075,
+                            weight: .bold,
+                            design: .serif
+                        )
+                    )
+                    .foregroundStyle(darkBrown)
+
+                    LazyVGrid(
+                        columns: Array(
+                            repeating: GridItem(.flexible(), spacing: 4),
+                            count: 7
+                        ),
+                        spacing: 5
+                    ) {
+                        ForEach(weekdaySymbols, id: \.self) { symbol in
+                            Text(symbol)
+                                .font(.system(size: 13, weight: .semibold, design: .serif))
+                                .foregroundStyle(darkBrown.opacity(0.58))
+                                .frame(maxWidth: .infinity)
+                        }
+
+                        ForEach(
+                            Array(monthDates.enumerated()),
+                            id: \.offset
+                        ) { _, date in
+                            if let date {
+                                dayCell(for: date)
+                            } else {
+                                Color.clear
+                                    .frame(height: 32)
+                            }
+                        }
+                    }
+                }
+                .frame(
+                    width: calendarWidth * 0.84,
+                    alignment: .topLeading
+                )
+                .padding(.top, calendarHeight * 0.51)
+                .padding(.horizontal, calendarWidth * 0.08)
 
                 Button {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(darkBrown.opacity(0.65))
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.55), radius: 3, y: 1)
                 }
+                .buttonStyle(.plain)
+                .padding(20)
                 .accessibilityLabel("Close calendar")
             }
-
-            LazyVGrid(
-                columns: Array(
-                    repeating: GridItem(.flexible(), spacing: 6),
-                    count: 7
-                ),
-                spacing: 10
-            ) {
-                ForEach(weekdaySymbols, id: \.self) { symbol in
-                    Text(symbol)
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(darkBrown.opacity(0.6))
-                        .frame(maxWidth: .infinity)
-                }
-
-                ForEach(Array(monthDates.enumerated()), id: \.offset) { _, date in
-                    if let date {
-                        dayCell(for: date)
-                    } else {
-                        Color.clear
-                            .aspectRatio(1, contentMode: .fit)
-                    }
-                }
-            }
-
-            // Reserved for a future special-events key.
-            Color.clear
-                .frame(height: 18)
-        }
-        .padding(20)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 1.0, green: 0.98, blue: 0.92),
-                    Color(red: 1.0, green: 0.93, blue: 0.78)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+            .frame(width: calendarWidth, height: calendarHeight)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .top
             )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .overlay {
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(gold.opacity(0.85), lineWidth: 2)
         }
-        .padding(16)
+        .ignoresSafeArea()
     }
 
     private func dayCell(for date: Date) -> some View {
@@ -122,7 +154,7 @@ struct CalendarView: View {
         let isWeekend = calendar.isDateInWeekend(date)
 
         return Text(calendar.component(.day, from: date).formatted())
-            .font(.body)
+            .font(.system(size: 17, design: .serif))
             .fontWeight(isCurrentDate ? .bold : .regular)
             .foregroundStyle(
                 isWeekend
@@ -130,7 +162,7 @@ struct CalendarView: View {
                     : darkBrown
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .aspectRatio(1, contentMode: .fit)
+            .frame(height: 32)
             .background(isCurrentDate ? gold.opacity(0.18) : .clear)
             .clipShape(Circle())
             .overlay {
