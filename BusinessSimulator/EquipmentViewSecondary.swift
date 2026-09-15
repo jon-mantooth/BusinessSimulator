@@ -12,7 +12,7 @@ struct EquipmentViewSecondary: View {
 
     var body: some View {
         ScrollView {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
                 equipmentColumn(
                     title: "Owned Equipment",
                     equipment: ownedEquipment.equipment,
@@ -25,7 +25,8 @@ struct EquipmentViewSecondary: View {
                     isOwned: false
                 )
             }
-            .padding(12)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
         }
         .scrollIndicators(.hidden)
     }
@@ -35,14 +36,20 @@ struct EquipmentViewSecondary: View {
         equipment: [Equipment],
         isOwned: Bool
     ) -> some View {
-        VStack(spacing: 10) {
-            Text(title.uppercased())
-                .font(.caption.weight(.black))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(green)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+        VStack(spacing: 3) {
+            ZStack {
+                Image("equipment_section_placard")
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Text(title.uppercased())
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .padding(.horizontal, 16)
+            }
+            .frame(height: 46)
 
             summaryCard(
                 capacity: equipment.reduce(0) { $0 + $1.capacity },
@@ -51,21 +58,35 @@ struct EquipmentViewSecondary: View {
 
             if equipment.isEmpty {
                 Text(isOwned ? "No prep equipment owned yet." : "No equipment available.")
-                    .font(.caption)
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(ink.opacity(0.7))
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .background(paper.opacity(0.75))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .frame(minHeight: 88)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .padding(5)
+                    .background {
+                        Image("equipment_card")
+                            .resizable()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    .padding(.horizontal, 2)
+                    .padding(.top, 10)
             }
 
-            ForEach(equipment) { item in
-                Button {
-                    onEquipmentTapped(item)
-                } label: {
-                    equipmentCard(item, isOwned: isOwned)
+            if !equipment.isEmpty {
+                VStack(spacing: 3) {
+                    ForEach(equipment) { item in
+                        Button {
+                            onEquipmentTapped(item)
+                        } label: {
+                            equipmentCard(item, isOwned: isOwned)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 2)
+                    }
                 }
-                .buttonStyle(.plain)
+                .padding(.top, 10)
             }
         }
         .frame(maxWidth: .infinity, alignment: .top)
@@ -75,66 +96,105 @@ struct EquipmentViewSecondary: View {
         capacity: Int,
         demand: Int
     ) -> some View {
-        VStack(spacing: 7) {
-            Text("TOTAL CAPACITY")
-                .font(.caption2.weight(.black))
-            Text("+\(capacity) / day")
-                .font(.headline.weight(.black))
-                .foregroundStyle(green)
+        ZStack {
+            Image("equipment_card")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            HStack(spacing: 1) {
-                ForEach(1...5, id: \.self) { star in
-                    Image(systemName: star <= demand ? "star.fill" : "star")
-                        .font(.caption2)
-                        .foregroundStyle(star <= demand ? .orange : .brown)
+            HStack(spacing: 8) {
+                VStack(spacing: 5) {
+                    Text("TOTAL CAPACITY")
+                        .font(.system(size: 7, weight: .black))
+                        .foregroundStyle(ink)
+
+                    Text("+\(capacity) / day")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundStyle(green)
                 }
+                .frame(maxWidth: .infinity)
+
+                Divider()
+                    .frame(height: 52)
+
+                VStack(spacing: 7) {
+                    Text("DEMAND")
+                        .font(.system(size: 8, weight: .black))
+                        .foregroundStyle(ink)
+
+                    HStack(spacing: 1) {
+                        ForEach(1...5, id: \.self) { star in
+                            Image(
+                                systemName: star <= demand
+                                    ? "star.fill"
+                                    : "star"
+                            )
+                            .font(.system(size: 9))
+                            .foregroundStyle(
+                                star <= demand ? .orange : .brown
+                            )
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 12)
         }
-        .foregroundStyle(ink)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(paper.opacity(0.9))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .frame(height: 92)
+        .padding(.horizontal, 2)
     }
 
     private func equipmentCard(
         _ equipment: Equipment,
         isOwned: Bool
     ) -> some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 7) {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.brown.opacity(0.10))
 
-                GameIconView(icon: equipment.smallIcon, size: 36)
+                GameIconView(icon: equipment.smallIcon, size: 48)
             }
-            .frame(height: 78)
+            .frame(width: 68, height: 62)
 
-            Text(equipment.name)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(ink)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(equipment.name)
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundStyle(ink)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
 
-            HStack(spacing: 4) {
                 if isOwned {
-                    Image(systemName: "checkmark.circle.fill")
                     Text("Owned")
-                } else {
-                    Text("View")
-                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(green)
                 }
             }
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(green)
+
+            Spacer(minLength: 0)
+
+            Image(
+                systemName: isOwned
+                    ? "checkmark.circle.fill"
+                    : "chevron.right"
+            )
+            .font(.system(size: isOwned ? 22 : 18, weight: .black))
+            .foregroundStyle(isOwned ? green : ink)
         }
         .frame(maxWidth: .infinity)
-        .padding(9)
-        .background(
-            selectedEquipmentID == equipment.id
-                ? Color.green.opacity(0.16)
-                : paper.opacity(0.9)
-        )
+        .frame(minHeight: 76)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background {
+            Image("equipment_card")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if selectedEquipmentID == equipment.id {
+                Color.green.opacity(0.12)
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay {
             RoundedRectangle(cornerRadius: 14)
@@ -303,7 +363,7 @@ struct SecondaryEquipmentDetailCard: View {
             RoundedRectangle(cornerRadius: 18)
                 .fill(Color.brown.opacity(0.10))
 
-            GameIconView(icon: equipment.smallIcon, size: 64)
+            GameIconView(icon: equipment.smallIcon, size: 108)
         }
         .frame(height: 145)
     }

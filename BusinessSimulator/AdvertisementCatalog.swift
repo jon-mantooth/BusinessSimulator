@@ -60,7 +60,7 @@ struct AdvertisementCatalog {
         let noAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "none"),
             name: "No Advertisement",
-            smallIcon: .system("speaker.slash.fill"),
+            smallIcon: .asset("no_advertisement"),
             description: "Your business currently relies on word of mouth.",
             price: 0,
             paymentSchedule: .oneTime,
@@ -72,7 +72,7 @@ struct AdvertisementCatalog {
         canvassing = Advertisement(
             id: AdvertisementID(rawValue: "canvassing"),
             name: "Door-to-Door Canvassing",
-            smallIcon: .system("door.left.hand.open"),
+            smallIcon: .asset("canvassing"),
             description: "Spend time introducing your business to the neighborhood.",
             paymentSchedule: .oneTime,
             demandLevel: 2,
@@ -83,7 +83,7 @@ struct AdvertisementCatalog {
         neighborhoodFlyers = Advertisement(
             id: AdvertisementID(rawValue: "neighborhood-flyers"),
             name: "Neighborhood Flyers",
-            smallIcon: .system("doc.text.image.fill"),
+            smallIcon: .asset("neighborhood_flyer"),
             description: "Hang flyers around the neighborhood to promote your business.",
             paymentSchedule: .oneTime,
             demandLevel: 1,
@@ -93,7 +93,7 @@ struct AdvertisementCatalog {
         clubhouseAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "clubhouse-advertisement"),
             name: "Neighborhood Clubhouse Ad",
-            smallIcon: .system("building.2.fill"),
+            smallIcon: .asset("clubhouse_advertisement"),
             description: "Pay for weekly advertising space in the neighborhood clubhouse.",
             paymentSchedule: .weekly,
             demandLevel: 1,
@@ -103,7 +103,7 @@ struct AdvertisementCatalog {
         blockPartySponsorship = Advertisement(
             id: AdvertisementID(rawValue: "block-party-sponsorship"),
             name: "Sponsor the Neighborhood Block Party",
-            smallIcon: .system("party.popper.fill"),
+            smallIcon: .asset("block_party_sponsorship"),
             description: "Sponsor the neighborhood block party and introduce your business to the community.",
             paymentSchedule: .oneTime,
             demandLevel: 3,
@@ -113,7 +113,7 @@ struct AdvertisementCatalog {
         neighborhoodGazetteAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "neighborhood-gazette-advertisement"),
             name: "Neighborhood Gazette Ad",
-            smallIcon: .system("newspaper.fill"),
+            smallIcon: .asset("neighborhood_gazette_advertisement"),
             description: "Run a weekly advertisement in the Neighborhood Gazette.",
             paymentSchedule: .weekly,
             demandLevel: 2,
@@ -123,7 +123,7 @@ struct AdvertisementCatalog {
         townNewspaperAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "town-newspaper-advertisement"),
             name: "Town Newspaper Ad",
-            smallIcon: .system("newspaper.fill"),
+            smallIcon: .asset("town_newspaper_advertisement"),
             description: "Run a weekly advertisement in the town newspaper.",
             paymentSchedule: .weekly,
             demandLevel: 3,
@@ -133,7 +133,7 @@ struct AdvertisementCatalog {
         socialMediaAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "social-media-advertisement"),
             name: "Social Media Ads",
-            smallIcon: .system("megaphone.fill"),
+            smallIcon: .asset("social_media_advertisement"),
             description: "Run targeted social media ads throughout the local community.",
             paymentSchedule: .weekly,
             demandLevel: 4,
@@ -143,7 +143,7 @@ struct AdvertisementCatalog {
         beachVolleyballSponsorship = Advertisement(
             id: AdvertisementID(rawValue: "beach-volleyball-sponsorship"),
             name: "Sponsor a Beach Volleyball Team",
-            smallIcon: .system("volleyball.fill"),
+            smallIcon: .asset("beach_volleyball_sponsorship"),
             description: "Sponsor a local beach volleyball team to promote your smoothies.",
             paymentSchedule: .weekly,
             demandLevel: 4,
@@ -153,7 +153,7 @@ struct AdvertisementCatalog {
         youthBaseballSponsorship = Advertisement(
             id: AdvertisementID(rawValue: "youth-baseball-sponsorship"),
             name: "Sponsor a Youth Baseball Team",
-            smallIcon: .system("baseball.fill"),
+            smallIcon: .asset("youth_baseball_sponsorship"),
             description: "Sponsor a local youth baseball team to promote your hot dogs.",
             paymentSchedule: .weekly,
             demandLevel: 4,
@@ -163,7 +163,7 @@ struct AdvertisementCatalog {
         harvestEventSponsorship = Advertisement(
             id: AdvertisementID(rawValue: "harvest-event-sponsorship"),
             name: "Sponsor a Harvest Event",
-            smallIcon: .system("basket.fill"),
+            smallIcon: .asset("harvest_event_sponsorship"),
             description: "Sponsor a local harvest event to promote your pies.",
             paymentSchedule: .weekly,
             demandLevel: 4,
@@ -173,7 +173,7 @@ struct AdvertisementCatalog {
         sportsPodcastPartnership = Advertisement(
             id: AdvertisementID(rawValue: "sports-podcast-partnership"),
             name: "Partner with a Sports Podcast",
-            smallIcon: .system("mic.fill"),
+            smallIcon: .asset("sports_podcast_partnership"),
             description: "Team up with a local sports podcast to promote your hot dogs.",
             paymentSchedule: .weekly,
             demandLevel: 5,
@@ -183,7 +183,7 @@ struct AdvertisementCatalog {
         fitnessInfluencerPartnership = Advertisement(
             id: AdvertisementID(rawValue: "fitness-influencer-partnership"),
             name: "Partner with a Fitness Influencer",
-            smallIcon: .system("figure.run"),
+            smallIcon: .asset("fitness_influencer_partnership"),
             description: "Team up with a local health and fitness influencer to promote your smoothies.",
             paymentSchedule: .weekly,
             demandLevel: 5,
@@ -193,7 +193,7 @@ struct AdvertisementCatalog {
         gardeningPodcastPartnership = Advertisement(
             id: AdvertisementID(rawValue: "gardening-podcast-partnership"),
             name: "Partner with a Gardening Podcast",
-            smallIcon: .system("leaf.circle.fill"),
+            smallIcon: .asset("gardening_podcast_partnership"),
             description: "Team up with a local gardening podcast to promote your pies.",
             paymentSchedule: .weekly,
             demandLevel: 5,
@@ -203,7 +203,7 @@ struct AdvertisementCatalog {
         billboardAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "billboard-advertisement"),
             name: "Billboard Advertising",
-            smallIcon: .system("signpost.right.fill"),
+            smallIcon: .asset("billboard_advertisement"),
             description: "Place billboards around town to keep your business visible.",
             paymentSchedule: .weekly,
             demandLevel: 4,
@@ -213,7 +213,7 @@ struct AdvertisementCatalog {
         radioAdvertisement = Advertisement(
             id: AdvertisementID(rawValue: "radio-advertisement"),
             name: "Radio Advertising",
-            smallIcon: .system("radio.fill"),
+            smallIcon: .asset("radio_advertisement"),
             description: "Run recurring radio ads to reach customers throughout the local area.",
             paymentSchedule: .weekly,
             demandLevel: 5,

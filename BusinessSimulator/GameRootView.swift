@@ -39,6 +39,10 @@ struct GameRootView: View {
         )
     }
 
+    private var calendarSheetHeight: CGFloat {
+        UIScreen.main.bounds.width * 1.5
+    }
+
     init(
         saveRepository: any GameSaveRepository
     ) {
@@ -369,7 +373,7 @@ struct GameRootView: View {
         }
         .sheet(isPresented: $showingCalendar) {
             CalendarView(currentDate: gameState.calendar.currentDate)
-                .presentationDetents([.medium])
+                .presentationDetents([.height(calendarSheetHeight)])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(28)
         }

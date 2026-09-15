@@ -26,7 +26,7 @@ struct ProductCatalog {
     
     init(){
         let smoothieInstructions = [
-            "Combine strawberries, milk, ice, and sugar in a blender.",
+            "Combine strawberries, milk, yogurt, ice, and sugar in a blender.",
             "Blend until smooth.",
             "Pour into cup and serve."
         ]
@@ -52,7 +52,8 @@ struct ProductCatalog {
         let sugar = Inventory(
             type: .sugar,
             name: "Sugar",
-            smallIcon: .system("cube.fill"),
+            smallIcon: .asset("sugar_small"),
+            largeIcon: .asset("sugar_large"),
             pricePerUnit: 4.50,
             amount: 9,
             unit: "c.",
@@ -63,6 +64,7 @@ struct ProductCatalog {
             type: .strawberry,
             name: "Strawberries",
             smallIcon: .emoji("🍓"),
+            largeIcon: .asset("strawberry_large"),
             pricePerUnit: 12.00,
             amount: 64,
             unit: "oz",
@@ -73,25 +75,29 @@ struct ProductCatalog {
             type: .milk,
             name: "Milk",
             smallIcon: .emoji("🥛"),
+            largeIcon: .asset("milk_large"),
             pricePerUnit: 4.00,
             amount: 128,
             unit: "fl oz",
             lifespan: 7
         )
         
-        let cup = Inventory(
-            type: .cup,
-            name: "Cups",
-            smallIcon: .emoji("🥤"),
-            pricePerUnit: 5.00,
-            amount: 50,
-            lifespan: 3650
+        let yogurt = Inventory(
+            type: .yogurt,
+            name: "Yogurt",
+            smallIcon: .asset("yogurt_small"),
+            largeIcon: .asset("yogurt_large"),
+            pricePerUnit: 3.20,
+            amount: 32,
+            unit: "oz",
+            lifespan: 14
         )
         
         let ice = Inventory(
             type: .ice,
             name: "Ice",
             smallIcon: .emoji("🧊"),
+            largeIcon: .asset("ice_large"),
             pricePerUnit: 8.00,
             amount: 40,
             unit: "c",
@@ -101,7 +107,8 @@ struct ProductCatalog {
         let hotDog = Inventory(
             type: .hotDog,
             name: "Hot Dog",
-            smallIcon: .emoji("🌭"),
+            smallIcon: .asset("hotdog_small"),
+            largeIcon: .asset("hotdog_large"),
             pricePerUnit: 37.50,
             amount: 50,
             lifespan: 10
@@ -111,6 +118,7 @@ struct ProductCatalog {
             type: .beef,
             name: "Beef",
             smallIcon: .emoji("🥩"),
+            largeIcon: .asset("beef_large"),
             pricePerUnit: 30.00,
             amount: 10,
             unit: "lbs",
@@ -120,7 +128,8 @@ struct ProductCatalog {
         let spices = Inventory(
             type: .spices,
             name: "Spices",
-            smallIcon: .emoji("🧂"),
+            smallIcon: .asset("spices_small"),
+            largeIcon: .asset("spices_large"),
             pricePerUnit: 6.00,
             amount: 8,
             unit: "oz",
@@ -130,7 +139,8 @@ struct ProductCatalog {
         let bun = Inventory(
             type: .bun,
             name: "Bun",
-            smallIcon: .emoji("🥖"),
+            smallIcon: .asset("bun_small"),
+            largeIcon: .asset("bun_large"),
             pricePerUnit: 17.50,
             amount: 48,
             lifespan: 5
@@ -139,7 +149,8 @@ struct ProductCatalog {
         let yeast = Inventory(
             type: .yeast,
             name: "Yeast",
-            smallIcon: .system("microbe.fill"),
+            smallIcon: .asset("yeast_small"),
+            largeIcon: .asset("yeast_large"),
             pricePerUnit: 6.00,
             amount: 4,
             unit: "oz",
@@ -149,7 +160,8 @@ struct ProductCatalog {
         let condiments = Inventory(
             type: .condiments,
             name: "Condiments",
-            smallIcon: .emoji("🧴"),
+            smallIcon: .asset("condiment_small"),
+            largeIcon: .asset("condiment_large"),
             pricePerUnit: 6.25,
             amount: 48,
             unit: "tbsp",
@@ -159,7 +171,8 @@ struct ProductCatalog {
         let onion = Inventory(
             type: .onion,
             name: "Onion",
-            smallIcon: .emoji("🧅"),
+            smallIcon: .asset("onion_small"),
+            largeIcon: .asset("onion_large"),
             pricePerUnit: 8.00,
             amount: 10,
             lifespan: 14
@@ -168,7 +181,8 @@ struct ProductCatalog {
         let flour = Inventory(
             type: .flour,
             name: "Flour",
-            smallIcon: .emoji("🌾"),
+            smallIcon: .asset("flour_small"),
+            largeIcon: .asset("flour_large"),
             pricePerUnit: 7.50,
             amount: 25,
             unit: "c",
@@ -179,6 +193,7 @@ struct ProductCatalog {
             type: .butter,
             name: "Butter",
             smallIcon: .emoji("🧈"),
+            largeIcon: .asset("butter_large"),
             pricePerUnit: 8.00,
             amount: 4,
             unit: "lb",
@@ -189,6 +204,7 @@ struct ProductCatalog {
             type: .apple,
             name: "Apples",
             smallIcon: .emoji("🍎"),
+            largeIcon: .asset("apple_large"),
             pricePerUnit: 60.00,
             amount: 100,
             lifespan: 7
@@ -197,7 +213,8 @@ struct ProductCatalog {
         let cinnamon = Inventory(
             type: .cinnamon,
             name: "Cinnamon",
-            smallIcon: .emoji("🪵"),
+            smallIcon: .asset("cinnamon_small"),
+            largeIcon: .asset("cinnamon_large"),
             pricePerUnit: 3.00,
             amount: 30,
             unit: "tbsp",
@@ -272,13 +289,13 @@ struct ProductCatalog {
                         inventory: strawberry,
                         amount: 4,
                         unit: "oz",
-                        freshnessCoefficient: 0.6
+                        freshnessCoefficient: 0.5
                     ),
                     ProductInventory(
                         inventory: milk,
                         amount: 8,
                         unit: "fl oz",
-                        freshnessCoefficient: 0.4
+                        freshnessCoefficient: 0.3
                     ),
                     ProductInventory(
                         inventory: ice,
@@ -293,9 +310,10 @@ struct ProductCatalog {
                         freshnessCoefficient: 0
                     ),
                     ProductInventory(
-                        inventory: cup,
+                        inventory: yogurt,
                         amount: 1,
-                        freshnessCoefficient: 0
+                        unit: "oz",
+                        freshnessCoefficient: 0.2
                     ),
                 ],
                 upgradeProductInventories: [],

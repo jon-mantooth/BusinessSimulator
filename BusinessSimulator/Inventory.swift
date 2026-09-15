@@ -11,7 +11,7 @@ enum InventoryType: String, Codable {
     case sugar
     case strawberry
     case milk
-    case cup
+    case yogurt
     case ice
     case hotDog
     case beef
@@ -32,6 +32,7 @@ struct Inventory: Identifiable, Equatable {
     let type: InventoryType
     let name: String
     let smallIcon: GameIcon
+    let largeIcon: GameIcon
     let pricePerUnit: Double
     let purchaseAmount: Int
     let purchaseUnit: String?
@@ -46,6 +47,7 @@ struct Inventory: Identifiable, Equatable {
         type: InventoryType,
         name: String,
         smallIcon: GameIcon,
+        largeIcon: GameIcon? = nil,
         pricePerUnit: Double,
         amount: Int,
         unit: String? = nil,
@@ -55,6 +57,7 @@ struct Inventory: Identifiable, Equatable {
         self.type = type
         self.name = name
         self.smallIcon = smallIcon
+        self.largeIcon = largeIcon ?? smallIcon
         self.pricePerUnit = pricePerUnit
         self.purchaseAmount = amount
         self.purchaseUnit = unit

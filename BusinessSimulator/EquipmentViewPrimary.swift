@@ -12,7 +12,7 @@ struct EquipmentViewPrimary: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
+            VStack(spacing: 14) {
                 equipmentSection(
                     title: "Active Equipment",
                     tier: activeTier,
@@ -35,7 +35,9 @@ struct EquipmentViewPrimary: View {
                         .clipShape(RoundedRectangle(cornerRadius: 18))
                 }
             }
-            .padding(14)
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 34)
         }
         .scrollIndicators(.hidden)
     }
@@ -45,14 +47,23 @@ struct EquipmentViewPrimary: View {
         tier: EquipmentTier,
         isActive: Bool
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title.uppercased())
-                .font(.headline.weight(.black))
-                .foregroundStyle(.white)
-                .padding(.vertical, 9)
-                .padding(.horizontal, 18)
-                .background(green)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+        VStack(alignment: .leading, spacing: -8) {
+            ZStack {
+                Image("equipment_section_placard")
+                    .resizable()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Text(title.uppercased())
+                    .font(.system(size: 15, weight: .black))
+                    .foregroundStyle(paper)
+                    .shadow(color: .black.opacity(0.65), radius: 1, y: 1)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .padding(.horizontal, 28)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 64)
+            .zIndex(1)
 
             ForEach(tier.equipment) { equipment in
                 equipmentCard(
@@ -69,75 +80,108 @@ struct EquipmentViewPrimary: View {
         tierLevel: Int,
         isActive: Bool
     ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
                 equipmentPlaceholder(equipment)
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
+                ZStack(alignment: .topTrailing) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(equipment.name)
-                            .font(.title3.weight(.black))
+                            .font(.system(size: 15, weight: .black))
                             .foregroundStyle(ink)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.68)
+                            .allowsTightening(true)
+                            .frame(
+                                maxWidth: .infinity,
+                                minHeight: 36,
+                                maxHeight: 36,
+                                alignment: .topLeading
+                            )
+                            .padding(.trailing, 54)
 
-                        Spacer()
+                        Text(equipment.description)
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(ink.opacity(0.75))
+                            .lineLimit(3)
+                            .minimumScaleFactor(0.85)
+                            .frame(
+                                maxWidth: .infinity,
+                                minHeight: 44,
+                                maxHeight: 44,
+                                alignment: .topLeading
+                            )
 
-                        Text("Level \(tierLevel)")
-                            .font(.caption.weight(.bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(Color.brown.opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        Divider()
+                            .padding(.bottom, 5)
+
+                        ratingRow(
+                            title: "Demand",
+                            level: equipment.demandLevel,
+                            totalLevels: equipment.totalLevels
+                        )
+                        .frame(height: 18)
+
+                        metricRow(
+                            title: "Production Capacity",
+                            value: "\(equipment.capacity) / day"
+                        )
+                        .frame(height: 24)
+
+                        metricRow(
+                            title: "Cost (One-Time)",
+                            value: isActive
+                                ? "\(formattedPrice(equipment.price)) (Owned)"
+                                : formattedPrice(equipment.price)
+                        )
+                        .frame(height: 24)
                     }
 
-                    Text(equipment.description)
-                        .font(.caption)
-                        .foregroundStyle(ink.opacity(0.75))
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Divider()
-
-                    ratingRow(
-                        title: "Demand",
-                        level: equipment.demandLevel,
-                        totalLevels: equipment.totalLevels
-                    )
-
-                    metricRow(
-                        title: "Production Capacity",
-                        value: "\(equipment.capacity) / day"
-                    )
-                    metricRow(
-                        title: "Cost (One-Time)",
-                        value: isActive
-                            ? "\(formattedPrice(equipment.price)) (Owned)"
-                            : formattedPrice(equipment.price)
-                    )
+                    Text("Level \(tierLevel)")
+                        .font(.system(size: 10, weight: .bold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.brown.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+                .frame(height: 152, alignment: .top)
             }
+            .frame(height: 152, alignment: .top)
 
             if !isActive {
                 Button {
                     onPurchase(equipment)
                 } label: {
-                    Text(purchaseButtonTitle(for: equipment))
-                        .font(.headline.weight(.black))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(purchaseButtonColor(for: equipment))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    ZStack {
+                        Image("equipment_button")
+                            .resizable()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .saturation(
+                                purchaseButtonSaturation(for: equipment)
+                            )
+
+                        Text(purchaseButtonTitle(for: equipment))
+                            .font(.system(size: 14, weight: .black))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .padding(.horizontal, 18)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                .frame(height: 40)
+                .padding(.horizontal, 28)
             }
         }
-        .padding(14)
-        .background(paper.opacity(0.92))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.brown.opacity(0.25), lineWidth: 1.5)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 28)
+        .background {
+            Image("equipment_card")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 
     private func purchaseButtonTitle(
@@ -153,14 +197,14 @@ struct EquipmentViewPrimary: View {
         }
     }
 
-    private func purchaseButtonColor(
+    private func purchaseButtonSaturation(
         for equipment: Equipment
-    ) -> Color {
+    ) -> Double {
         switch purchaseAvailability(equipment) {
         case .available:
-            return green
+            return 1
         case .insufficientFunds, .operatingReserveRequired:
-            return .gray
+            return 0
         }
     }
 
@@ -174,9 +218,9 @@ struct EquipmentViewPrimary: View {
                 endPoint: .bottomTrailing
             )
 
-            GameIconView(icon: equipment.smallIcon, size: 46)
+            GameIconView(icon: equipment.smallIcon, size: 100)
         }
-        .frame(width: 105, height: 125)
+        .frame(width: 118, height: 142)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
@@ -187,13 +231,14 @@ struct EquipmentViewPrimary: View {
     ) -> some View {
         HStack {
             Text(title.uppercased())
-                .font(.caption.weight(.black))
+                .font(.system(size: 9.5, weight: .black))
 
             Spacer()
 
             HStack(spacing: 2) {
                 ForEach(1...totalLevels, id: \.self) { star in
                     Image(systemName: star <= level ? "star.fill" : "star")
+                        .font(.system(size: 13))
                         .foregroundStyle(star <= level ? .orange : .brown)
                 }
             }
@@ -207,14 +252,17 @@ struct EquipmentViewPrimary: View {
     ) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title.uppercased())
-                .font(.caption2.weight(.black))
+                .font(.system(size: 8.5, weight: .black))
                 .foregroundStyle(ink)
 
             Spacer()
 
             Text(value)
-                .font(.subheadline.weight(.black))
+                .font(.system(size: 12, weight: .black))
                 .foregroundStyle(green)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .multilineTextAlignment(.trailing)
         }
     }
 
