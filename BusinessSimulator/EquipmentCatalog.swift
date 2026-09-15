@@ -390,7 +390,7 @@ struct EquipmentCatalog {
         handMixer = Equipment(
             id: EquipmentID(rawValue: "hand-mixer"),
             name: "Hand Mixer",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier0_blender"),
             description: "A simple handheld mixer with enough output to get your smoothie business started.",
             category: .primary,
             demandLevel: 0,
@@ -400,7 +400,7 @@ struct EquipmentCatalog {
         basicBlender = Equipment(
             id: EquipmentID(rawValue: "basic-blender"),
             name: "Basic Blender",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier1_blender"),
             description: "A dependable countertop blender that improves speed and smoothie consistency.",
             category: .primary,
             demandLevel: 1,
@@ -410,7 +410,7 @@ struct EquipmentCatalog {
         highPowerBlender = Equipment(
             id: EquipmentID(rawValue: "high-power-blender"),
             name: "High-Power Blender",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier2_blender"),
             description: "A powerful blender that handles tougher ingredients and larger workloads with ease.",
             category: .primary,
             demandLevel: 1,
@@ -420,7 +420,7 @@ struct EquipmentCatalog {
         professionalBlender = Equipment(
             id: EquipmentID(rawValue: "professional-blender"),
             name: "Professional Blender",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier3_blender"),
             description: "A professional-grade blender delivering smoother texture and dependable performance.",
             category: .primary,
             demandLevel: 2,
@@ -430,7 +430,7 @@ struct EquipmentCatalog {
         commercialBlendingStation = Equipment(
             id: EquipmentID(rawValue: "commercial-blending-station"),
             name: "Commercial Blending Station",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier4_blender"),
             description: "A commercial workstation designed for fast, consistent, high-volume smoothie production.",
             category: .primary,
             demandLevel: 3,
@@ -442,7 +442,7 @@ struct EquipmentCatalog {
                 rawValue: "high-capacity-commercial-blending-station"
             ),
             name: "High-Capacity Commercial Blending Station",
-            smallIcon: .system("dial.medium.fill"),
+            smallIcon: .asset("tier5_blender"),
             description: "A multi-blender commercial station built to serve the largest crowds without slowing down.",
             category: .primary,
             demandLevel: 3,
@@ -452,7 +452,7 @@ struct EquipmentCatalog {
         vacuumSealer = Equipment(
             id: EquipmentID(rawValue: "vacuum-sealer"),
             name: "Vacuum Sealer",
-            smallIcon: .system("shippingbox.fill"),
+            smallIcon: .asset("vacuum_sealer"),
             description: "Seal prepared ingredients against air to preserve their quality and freshness longer.",
             price: 349,
             category: .secondary(
@@ -469,7 +469,7 @@ struct EquipmentCatalog {
         iceCrusher = Equipment(
             id: EquipmentID(rawValue: "ice-crusher"),
             name: "Ice Crusher",
-            smallIcon: .system("snowflake"),
+            smallIcon: .asset("ice_crusher"),
             description: "Crush ice quickly and consistently for smoother drinks and faster preparation.",
             price: 499,
             category: .secondary(
@@ -481,7 +481,7 @@ struct EquipmentCatalog {
         produceCooler = Equipment(
             id: EquipmentID(rawValue: "produce-cooler"),
             name: "Produce Cooler",
-            smallIcon: .system("refrigerator.fill"),
+            smallIcon: .asset("produce_cooler"),
             description: "Keep fruit and other perishable ingredients chilled, organized, and ready for service.",
             price: 699,
             category: .secondary(
