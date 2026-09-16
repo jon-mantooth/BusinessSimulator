@@ -13,6 +13,7 @@ enum GameStateRestoreError: Error {
     case invalidInventoryData
     case invalidAdvertisementData
     case invalidEquipmentData
+    case invalidLaborData
 }
 
 @Observable
@@ -27,6 +28,7 @@ final class GameState {
     var reputation: BusinessReputationState?
     var advertisementState: AdvertisementState?
     var equipmentState: EquipmentState?
+    var laborState: LaborState?
     var businessHours: BusinessHours?
     var production: Production?
     var marketing: MarketingDepartment?
@@ -308,6 +310,24 @@ final class GameState {
             secondaryEquipmentCatalog: secondaryEquipmentCatalog,
             activePrimaryEquipment: savedActiveEquipment,
             ownedSecondaryEquipment: savedOwnedEquipment
+        )
+
+        let laborCatalog = LaborCollection(
+            labor: LaborCatalog().labor(for: product)
+        )
+        let savedOwnedLabor = gameSave.laborState.ownedLabor
+        let laborCatalogIDs = Set(laborCatalog.labor.map(\.id))
+        let ownedLaborIDs = savedOwnedLabor.labor.map(\.id)
+        guard Set(ownedLaborIDs).count == ownedLaborIDs.count,
+              ownedLaborIDs.allSatisfy({ laborCatalogIDs.contains($0) })
+        else {
+            throw GameStateRestoreError.invalidLaborData
+        }
+
+        laborState = LaborState(
+            laborCatalog: laborCatalog,
+            baseIdealUnitsSold: product.idealUnitsSold,
+            ownedLabor: savedOwnedLabor
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
