@@ -187,6 +187,9 @@ struct BusinessDimensions {
                 ),
                 EquipmentDimension(
                     equipmentState: gameState.equipmentState!
+                ),
+                LaborDimension(
+                    laborState: gameState.laborState!
                 )
             ],
             marketing: [
