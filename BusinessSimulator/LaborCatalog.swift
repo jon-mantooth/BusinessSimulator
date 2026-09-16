@@ -2,7 +2,6 @@ import Foundation
 
 struct LaborCatalog {
     static let demandWeight = 0.18
-    static let wageProfitShare = 1.20
 
     let grillMaster: Labor
     let baker: Labor
@@ -120,15 +119,18 @@ struct LaborCatalog {
         for labor: Labor,
         product: Product
     ) -> Double {
-        UpgradePricing.setCumulativePrice(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            baseIdealPrice: product.baseIdealPrice,
-            addedCapacity: labor.capacity,
-            demandLevel: labor.demandLevel,
-            totalLevels: labor.totalLevels,
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            demandEffectScore: labor.demandEffectScore,
             demandWeight: Self.demandWeight,
+            capacityEffect: .additive(labor.capacity)
+        )
+
+        return UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
             paymentSchedule: labor.paymentSchedule,
-            scheduledProfitShare: Self.wageProfitShare
+            tierLevel: 1
         ).rounded()
     }
 }
