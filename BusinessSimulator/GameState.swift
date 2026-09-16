@@ -111,7 +111,7 @@ final class GameState {
             closingTime: BusinessTime(hour: 17, minute: 0)
         )
 
-        let advertisementCatalog = AdvertisementCatalog()
+        let advertisementCatalog = AdvertisementCatalog(product: product)
         self.advertisementState = AdvertisementState(
             tiers: advertisementCatalog.tiersByProduct[product.id]!,
             activeAdvertisement: ActiveAdvertisement(
@@ -248,7 +248,7 @@ final class GameState {
             closingTime: BusinessTime(hour: 17, minute: 0)
         )
 
-        let advertisementCatalog = AdvertisementCatalog()
+        let advertisementCatalog = AdvertisementCatalog(product: product)
         let advertisementTiers =
             advertisementCatalog.tiersByProduct[product.id]!
         let activeAdvertisement =
