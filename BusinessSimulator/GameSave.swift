@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 6
+    static let currentSchemaVersion = 7
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -12,6 +12,7 @@ struct GameSave: Codable {
     let reputation: ReputationSave
     let advertisementState: AdvertisementStateSave
     let equipmentState: EquipmentStateSave
+    let laborState: LaborStateSave
     let pendingBusinessEvents: [BusinessEvent]
     let pendingUpgrades: [PendingUpgrade]
     let upgradeTracker: UpgradeTrackerSave
@@ -68,6 +69,10 @@ struct EquipmentStateSave: Codable {
     let ownedSecondaryEquipment: SecondaryEquipmentCollection
 }
 
+struct LaborStateSave: Codable {
+    let ownedLabor: LaborCollection
+}
+
 struct UpgradeTrackerSave: Codable {
     let lastUpgradeDays: [PurchaseCategory: Int]
 }
@@ -107,7 +112,8 @@ extension GameSave {
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
             let activeAdvertisement = advertisementState.activeAdvertisement,
-            let equipmentState = gameState.equipmentState
+            let equipmentState = gameState.equipmentState,
+            let laborState = gameState.laborState
         else {
             preconditionFailure(
                 "A business must be initialized before it can be saved."
@@ -175,6 +181,10 @@ extension GameSave {
                 equipmentState.activePrimaryEquipment,
             ownedSecondaryEquipment:
                 equipmentState.ownedSecondaryEquipment
+        )
+
+        self.laborState = LaborStateSave(
+            ownedLabor: laborState.ownedLabor
         )
 
         pendingBusinessEvents = gameState.pendingBusinessEvents
