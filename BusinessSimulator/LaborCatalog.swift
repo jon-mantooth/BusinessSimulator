@@ -1,8 +1,6 @@
 import Foundation
 
 struct LaborCatalog {
-    static let demandWeight = 0.18
-
     let grillMaster: Labor
     let baker: Labor
     let mixologist: Labor
@@ -123,7 +121,7 @@ struct LaborCatalog {
             tierLevel: 1,
             product: product,
             demandEffectScore: labor.demandEffectScore,
-            demandWeight: Self.demandWeight,
+            demandWeight: LaborDimension.demandWeight,
             capacityEffect: .additive(labor.capacity)
         )
 
