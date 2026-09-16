@@ -461,28 +461,28 @@ extension EquipmentTests {
     }
 
     @Test
-    func primaryEquipmentCombinesCapacityAndDemandPriceBeforeCleaning() throws {
+    func primaryEquipmentUsesUnifiedDailyBenefitBeforeCleaning() throws {
         let product = try #require(
             ProductCatalog().products.first { $0.id == .pies }
         )
         let tier = EquipmentCatalog().primaryTiers(for: product)[2]
         let equipment = try #require(tier.equipment.first)
-        let capacityPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            upgradedCapacity: equipment.capacity,
-            baseIdealPrice: product.baseIdealPrice
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: tier.level,
+            product: product,
+            demandEffectScore: equipment.demandEffectScore,
+            demandWeight: EquipmentDimension.primaryDemandWeight,
+            capacityEffect: .replacement(equipment.capacity)
         )
-        let demandPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            baseIdealPrice: product.baseIdealPrice,
-            demandLevel: equipment.demandLevel,
-            totalLevels: equipment.totalLevels,
-            demandWeight: EquipmentDimension.primaryDemandWeight
+        let calculatedPrice = UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: equipment.paymentSchedule,
+            tierLevel: tier.level
         )
 
         #expect(
             equipment.price
-                == Equipment.cleanPrice(capacityPrice + demandPrice)
+                == Equipment.cleanPrice(calculatedPrice)
         )
     }
 }
