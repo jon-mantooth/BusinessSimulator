@@ -217,3 +217,76 @@ final class LaborState: PurchasableState {
         ownedLabor = state.ownedLabor
     }
 }
+
+final class LaborDimension: Dimension {
+    static let demandWeight = 0.18
+
+    private let laborState: LaborState
+
+    init(
+        laborState: LaborState
+    ) {
+        self.laborState = laborState
+    }
+
+    func calculateDemand() -> Double {
+        SimulationBalance.demand.multiplier(
+            weight: Self.demandWeight,
+            effectScore: laborState.totalDemandEffectScore
+        )
+    }
+
+    func applySalesLimits(
+        sales: Int,
+        summary: DaySummary
+    ) -> Int {
+        let limitedSales = min(sales, laborState.totalCapacity)
+
+        if limitedSales < sales {
+            summary.addNote(
+                sectionName: "Production",
+                note: "Sales were limited by labor capacity."
+            )
+        }
+
+        return limitedSales
+    }
+
+    func calculateDailyCosts(
+        sales: Int,
+        summary: DaySummary
+    ) -> Double {
+        recordCost(
+            for: .daily,
+            summary: summary
+        )
+    }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
+        recordCost(
+            for: .weekly,
+            summary: summary
+        )
+    }
+
+    private func recordCost(
+        for paymentSchedule: PaymentSchedule,
+        summary: DaySummary
+    ) -> Double {
+        let totalCost = laborState
+            .totalCosts[paymentSchedule, default: 0]
+
+        if totalCost > 0 {
+            summary.cashFlowCosts.append(
+                Cost(
+                    name: "Labor",
+                    amount: totalCost
+                )
+            )
+        }
+
+        return totalCost
+    }
+}
