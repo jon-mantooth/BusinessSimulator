@@ -126,6 +126,14 @@ final class GameState {
             secondaryEquipmentCatalog:
                 equipmentCatalog.secondaryEquipment(for: product)
         )
+
+        let laborCatalog = LaborCatalog()
+        self.laborState = LaborState(
+            laborCatalog: LaborCollection(
+                labor: laborCatalog.labor(for: product)
+            ),
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
         
         let dimensions = BusinessDimensions.create(
             gameState: self
