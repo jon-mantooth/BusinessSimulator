@@ -9,6 +9,7 @@ struct ProductionView: View {
     @State private var showingEquipment = false
     @State private var showingLabor = false
     @State private var showingEquipmentUpgradeLimit = false
+    @State private var showingLaborUpgradeLimit = false
     @State private var selectedEquipmentTab: EquipmentViewTab = .primary
     @State private var selectedSecondaryEquipment: Equipment?
     @State private var equipmentPendingConfirmation: Equipment?
@@ -63,7 +64,13 @@ struct ProductionView: View {
                     systemImage: "person.2.fill",
                     scale: scale,
                     action: {
-                        showingLabor = true
+                        if purchaseWorkflow.validateUpgradeAvailability(
+                            category: .labor
+                        ) {
+                            showingLabor = true
+                        } else {
+                            showingLaborUpgradeLimit = true
+                        }
                     }
                 )
                 .position(
@@ -88,7 +95,10 @@ struct ProductionView: View {
                 .presentationCornerRadius(28)
         }
         .sheet(isPresented: $showingLabor) {
-            LaborView(laborState: laborState) {
+            LaborView(
+                laborState: laborState,
+                purchaseWorkflow: purchaseWorkflow
+            ) {
                 showingLabor = false
             }
             .presentationDetents([.fraction(0.9)])
@@ -102,6 +112,16 @@ struct ProductionView: View {
                     onConfirm: {},
                     onDismiss: {
                         showingEquipmentUpgradeLimit = false
+                    }
+                )
+            }
+
+            if showingLaborUpgradeLimit {
+                GamePopupView(
+                    type: .upgradeLimitReached(upgradeName: "labor"),
+                    onConfirm: {},
+                    onDismiss: {
+                        showingLaborUpgradeLimit = false
                     }
                 )
             }

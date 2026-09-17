@@ -2,7 +2,11 @@ import SwiftUI
 
 struct LaborView: View {
     let laborState: LaborState
+    let purchaseWorkflow: PurchaseWorkflow
     let onClose: () -> Void
+
+    @State private var laborPendingConfirmation: Labor?
+    @State private var purchaseWarning: GamePopupType?
 
     private let ink = Color(red: 0.20, green: 0.12, blue: 0.06)
     private let green = Color(red: 0.06, green: 0.36, blue: 0.18)
@@ -55,6 +59,31 @@ struct LaborView: View {
             .padding(.top, 10)
             .padding(.trailing, 12)
             .accessibilityLabel("Close labor")
+
+            if let laborPendingConfirmation {
+                GamePopupView(
+                    type: .upgradeConfirmation(
+                        itemName: laborPendingConfirmation.name,
+                        icon: laborPendingConfirmation.smallIcon
+                    ),
+                    onConfirm: {
+                        confirmPurchase(laborPendingConfirmation)
+                    },
+                    onDismiss: {
+                        self.laborPendingConfirmation = nil
+                    }
+                )
+            }
+
+            if let purchaseWarning {
+                GamePopupView(
+                    type: purchaseWarning,
+                    onConfirm: {},
+                    onDismiss: {
+                        self.purchaseWarning = nil
+                    }
+                )
+            }
         }
     }
 
@@ -177,7 +206,9 @@ struct LaborView: View {
 
                         Spacer(minLength: 0)
 
-                        Button("HIRE") {}
+                        Button("HIRE") {
+                            attemptPurchase(employee)
+                        }
                             .font(.system(size: 10, weight: .black))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 10)
@@ -205,6 +236,35 @@ struct LaborView: View {
             $0 + Int($1.value)
         }
         return cardAssets[characterTotal % cardAssets.count]
+    }
+
+    private func attemptPurchase(_ labor: Labor) {
+        switch purchaseWorkflow.validateFinancialAvailability(
+            price: labor.price
+        ) {
+        case .available:
+            laborPendingConfirmation = labor
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
+        }
+    }
+
+    private func confirmPurchase(_ labor: Labor) {
+        let result = purchaseWorkflow.completePurchase(
+            state: laborState,
+            item: labor
+        )
+
+        laborPendingConfirmation = nil
+
+        switch result {
+        case .completed:
+            onClose()
+        case .saveFailed:
+            purchaseWarning = .purchaseSaveFailed
+        }
     }
 
     private func demandStars(level: Int) -> some View {
