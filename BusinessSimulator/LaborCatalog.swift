@@ -12,7 +12,7 @@ struct LaborCatalog {
         grillMaster = Labor(
             id: LaborID(rawValue: "grill-master"),
             name: "Grill Master",
-            smallIcon: .system("flame.fill"),
+            smallIcon: .asset("grill_master"),
             description: "An experienced grill cook who keeps hot dogs moving quickly and consistently.",
             demandLevel: 2
         )
@@ -20,7 +20,7 @@ struct LaborCatalog {
         baker = Labor(
             id: LaborID(rawValue: "baker"),
             name: "Baker",
-            smallIcon: .system("birthday.cake.fill"),
+            smallIcon: .asset("head_baker"),
             description: "A skilled baker who produces dependable pies while managing the ovens efficiently.",
             demandLevel: 2
         )
@@ -28,7 +28,7 @@ struct LaborCatalog {
         mixologist = Labor(
             id: LaborID(rawValue: "mixologist"),
             name: "Mixologist",
-            smallIcon: .system("takeoutbag.and.cup.and.straw.fill"),
+            smallIcon: .asset("mixologist"),
             description: "A smoothie specialist who blends drinks quickly and delivers consistent quality.",
             demandLevel: 2
         )
@@ -36,7 +36,7 @@ struct LaborCatalog {
         prepCook = Labor(
             id: LaborID(rawValue: "prep-cook"),
             name: "Prep Cook",
-            smallIcon: .system("fork.knife"),
+            smallIcon: .asset("prep_specialist"),
             description: "Prepares ingredients ahead of service so production can continue without interruption.",
             demandLevel: 1
         )
@@ -44,7 +44,7 @@ struct LaborCatalog {
         lineCook = Labor(
             id: LaborID(rawValue: "line-cook"),
             name: "Line Cook",
-            smallIcon: .system("frying.pan.fill"),
+            smallIcon: .asset("line_cook"),
             description: "Supports daily production wherever extra hands are needed during busy service periods.",
             demandLevel: 1
         )
@@ -52,7 +52,7 @@ struct LaborCatalog {
         cleanupWorker = Labor(
             id: LaborID(rawValue: "cleanup-worker"),
             name: "Cleanup Worker",
-            smallIcon: .system("sparkles"),
+            smallIcon: .asset("clean_up_specialist"),
             description: "Keeps work areas clean and organized so the rest of the team can stay productive.",
             demandLevel: 1
         )
