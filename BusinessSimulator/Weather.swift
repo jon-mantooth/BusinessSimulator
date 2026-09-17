@@ -259,7 +259,7 @@ final class WeatherDimension: Dimension {
 
     //this is the weight this dimension has on total demand. All dimension weights
     //must add up to 1.0
-    static let demandWeight = 0.11
+    static let demandWeight = 0.12
 
     private let weatherState: WeatherState
     private let product: Product
