@@ -7,18 +7,21 @@ struct DemandTests {}
 
 // MARK: - Total Demand Allocation
 
-// TODO: Enable once every demand dimension has been implemented.
-// @Test
-// func demandDimensionWeightsAddUpToOne() {
-//     let totalDemandWeight =
-//         WeatherDimension.demandWeight
-//         + EquipmentDimension.demandWeight
-//         + LaborDimension.demandWeight
-//         + AdvertisingDimension.demandWeight
-//         + ReputationDimension.demandWeight
-//
-//     #expect(abs(totalDemandWeight - 1.0) < 0.000_001)
-// }
+extension DemandTests {
+
+    @Test
+    func demandDimensionWeightsAddUpToOne() {
+        let totalDemandWeight =
+            WeatherDimension.demandWeight
+            + EquipmentDimension.primaryDemandWeight
+            + EquipmentDimension.secondaryDemandWeight
+            + LaborDimension.demandWeight
+            + AdvertisementDimension.demandWeight
+            + BusinessReputationDimension.demandWeight
+
+        #expect(abs(totalDemandWeight - 1.0) < 0.000_001)
+    }
+}
 
 // MARK: - Inventory Demand
 
@@ -273,6 +276,84 @@ private func makeEquipmentDemandContext(
             ownedSecondaryEquipment: ownedSecondaryEquipment
         )
     )
+}
+
+// MARK: - Labor Demand
+
+extension DemandTests {
+
+    @MainActor
+    @Test
+    func laborWithoutHiredWorkersHasNeutralDemand() {
+        let dimension = makeLaborDimensionForDemand()
+
+        #expect(abs(dimension.calculateDemand() - 1.0) < 0.000_001)
+    }
+
+    @MainActor
+    @Test
+    func hiredLaborUsesCumulativeEffectScoreAndLaborWeight() {
+        let context = makeLaborDemandContext(ownedWorkerCount: 2)
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: LaborDimension.demandWeight,
+            effectScore: context.state.totalDemandEffectScore
+        )
+
+        let demand = LaborDimension(
+            laborState: context.state
+        ).calculateDemand()
+
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+
+    @MainActor
+    @Test
+    func fullyStaffedLaborUsesCompleteDemandAllocation() {
+        let context = makeLaborDemandContext(ownedWorkerCount: 4)
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: LaborDimension.demandWeight,
+            effectScore: 1.0
+        )
+
+        let demand = LaborDimension(
+            laborState: context.state
+        ).calculateDemand()
+
+        #expect(
+            abs(context.state.totalDemandEffectScore - 1.0)
+                < 0.000_001
+        )
+        #expect(abs(demand - expectedDemand) < 0.000_001)
+    }
+}
+
+private struct LaborDemandContext {
+    let state: LaborState
+}
+
+@MainActor
+private func makeLaborDimensionForDemand() -> LaborDimension {
+    LaborDimension(
+        laborState: makeLaborDemandContext().state
+    )
+}
+
+@MainActor
+private func makeLaborDemandContext(
+    ownedWorkerCount: Int = 0
+) -> LaborDemandContext {
+    let product = ProductCatalog().product(for: .pies)
+    let catalogLabor = LaborCatalog().labor(for: product)
+    let state = LaborState(
+        laborCatalog: LaborCollection(labor: catalogLabor),
+        baseIdealUnitsSold: product.idealUnitsSold
+    )
+
+    for worker in catalogLabor.prefix(ownedWorkerCount) {
+        state.applyUpgrade(worker)
+    }
+
+    return LaborDemandContext(state: state)
 }
 
 // MARK: - Advertisements
