@@ -234,6 +234,64 @@ extension LaborTests {
     }
 }
 
+// MARK: - Labor Purchase Integration
+
+extension LaborTests {
+
+    @Test
+    func laborPurchaseUsesSharedPurchaseWorkflow() throws {
+        let product = ProductCatalog().product(for: .smoothies)
+        let gameState = GameState()
+        gameState.initializeBusiness(product: product)
+        let repository = LaborTestGameSaveRepository()
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+        let laborState = try #require(gameState.laborState)
+        let worker = try #require(laborState.availableLabor.labor.first)
+        let startingActualBalance = gameState.finance.actualBalance
+        let startingDisplayedBalance = gameState.finance.displayedBalance
+
+        let result = workflow.completePurchase(
+            state: laborState,
+            item: worker
+        )
+
+        guard case .completed = result else {
+            Issue.record("Expected the labor purchase to complete.")
+            return
+        }
+
+        #expect(laborState.ownedLabor.contains(worker))
+        #expect(!laborState.availableLabor.contains(worker))
+        #expect(gameState.finance.actualBalance == startingActualBalance)
+        #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
+        #expect(
+            !gameState.upgradeTracker.canUpgrade(
+                .labor,
+                on: gameState.calendar.simulationDay
+            )
+        )
+
+        let event = try #require(gameState.pendingBusinessEvents.last)
+        #expect(event.title == worker.name)
+        #expect(event.details == worker.description)
+        #expect(event.financialTransaction == nil)
+
+        guard case let .purchase(purchaseEvent) = event.type else {
+            Issue.record("Expected a labor purchase event.")
+            return
+        }
+        #expect(purchaseEvent.category == .labor)
+        #expect(purchaseEvent.itemID == worker.purchaseItemID)
+
+        let savedGame = try #require(repository.savedGame)
+        #expect(savedGame.laborState.ownedLabor.contains(worker))
+        #expect(savedGame.pendingBusinessEvents.count == 1)
+    }
+}
+
 // MARK: - Labor Capacity Calculations
 
 extension LaborTests {
@@ -755,4 +813,24 @@ private func makeLaborStateContext(
             baseIdealUnitsSold: product.idealUnitsSold
         )
     )
+}
+
+private final class LaborTestGameSaveRepository: GameSaveRepository {
+    private(set) var savedGame: GameSave?
+
+    func save(_ gameSave: GameSave) throws {
+        savedGame = gameSave
+    }
+
+    func load() throws -> GameSave? {
+        savedGame
+    }
+
+    func hasSave() -> Bool {
+        savedGame != nil
+    }
+
+    func deleteSave() throws {
+        savedGame = nil
+    }
 }
