@@ -3,9 +3,11 @@ import SwiftUI
 struct ProductionView: View {
     let product: Product
     let equipmentState: EquipmentState
+    let laborState: LaborState
     let purchaseWorkflow: PurchaseWorkflow
 
     @State private var showingEquipment = false
+    @State private var showingLabor = false
     @State private var showingEquipmentUpgradeLimit = false
     @State private var selectedEquipmentTab: EquipmentViewTab = .primary
     @State private var selectedSecondaryEquipment: Equipment?
@@ -60,7 +62,9 @@ struct ProductionView: View {
                     title: "Labor",
                     systemImage: "person.2.fill",
                     scale: scale,
-                    action: {}
+                    action: {
+                        showingLabor = true
+                    }
                 )
                 .position(
                     x: 555 * scale,
@@ -82,6 +86,14 @@ struct ProductionView: View {
                 .presentationDetents([.fraction(0.9)])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(28)
+        }
+        .sheet(isPresented: $showingLabor) {
+            LaborView(laborState: laborState) {
+                showingLabor = false
+            }
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
         }
         .overlay {
             if showingEquipmentUpgradeLimit {

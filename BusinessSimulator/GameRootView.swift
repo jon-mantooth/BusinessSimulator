@@ -265,10 +265,12 @@ struct GameRootView: View {
 
             if selectedArea == .production,
                 let product = gameState.productState?.product,
-                let equipmentState = gameState.equipmentState {
+                let equipmentState = gameState.equipmentState,
+                let laborState = gameState.laborState {
                 ProductionView(
                     product: product,
                     equipmentState: equipmentState,
+                    laborState: laborState,
                     purchaseWorkflow: purchaseWorkflow
                 )
                     .ignoresSafeArea()
