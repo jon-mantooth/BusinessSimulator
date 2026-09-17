@@ -490,8 +490,132 @@ extension LaborTests {
     }
 }
 
+// MARK: - Labor Collection
+
+extension LaborTests {
+
+    @Test
+    func emptyLaborCollectionHasZeroAggregates() {
+        let collection = LaborCollection()
+
+        #expect(collection.labor.isEmpty)
+        #expect(collection.totalDemandLevel == 0)
+        #expect(collection.totalDemandEffectScore == 0)
+        #expect(collection.totalCapacity == 0)
+        #expect(collection.totalCosts.isEmpty)
+    }
+
+    @Test
+    func collectionAddsDemandLevelsAndNormalizedEffectScores() throws {
+        let labor = try makeConfiguredLabor()
+        let selectedLabor = Array(labor.prefix(3))
+        let collection = LaborCollection(labor: selectedLabor)
+        let expectedDemandLevel = selectedLabor.reduce(0) {
+            $0 + $1.demandLevel
+        }
+        let expectedEffectScore = selectedLabor.reduce(0.0) {
+            $0 + Double($1.demandLevel) / Double($1.totalLevels)
+        }
+
+        #expect(collection.totalDemandLevel == expectedDemandLevel)
+        #expect(
+            abs(collection.totalDemandEffectScore - expectedEffectScore)
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func collectionAddsCapacityAndDailyWages() throws {
+        let labor = try makeConfiguredLabor()
+        let collection = LaborCollection(labor: labor)
+        let expectedCapacity = labor.reduce(0) { $0 + $1.capacity }
+        let expectedDailyCost = labor.reduce(0.0) { $0 + $1.price }
+
+        #expect(collection.totalCapacity == expectedCapacity)
+        #expect(collection.totalCosts[.daily] == expectedDailyCost)
+        #expect(collection.totalCosts[.oneTime] == nil)
+        #expect(collection.totalCosts[.weekly] == nil)
+    }
+
+    @Test
+    func containsIdentifiesWorkerByID() throws {
+        let labor = try makeConfiguredLabor()
+        let ownedWorker = try #require(labor.first)
+        var matchingWorker = ownedWorker
+        matchingWorker.price += 1
+        let unownedWorker = try #require(labor.dropFirst().first)
+        let collection = LaborCollection(labor: [ownedWorker])
+
+        #expect(collection.contains(ownedWorker))
+        #expect(collection.contains(matchingWorker))
+        #expect(!collection.contains(unownedWorker))
+    }
+
+    @Test
+    func addingWorkerUpdatesEveryAggregate() throws {
+        let labor = try makeConfiguredLabor()
+        let firstWorker = try #require(labor.first)
+        let secondWorker = try #require(labor.dropFirst().first)
+        var collection = LaborCollection(labor: [firstWorker])
+
+        collection.add(secondWorker)
+
+        #expect(collection.labor.map(\.id) == [
+            firstWorker.id,
+            secondWorker.id
+        ])
+        #expect(
+            collection.totalDemandLevel
+                == firstWorker.demandLevel + secondWorker.demandLevel
+        )
+        #expect(
+            abs(
+                collection.totalDemandEffectScore
+                    - firstWorker.demandEffectScore
+                    - secondWorker.demandEffectScore
+            ) < 0.000_001
+        )
+        #expect(
+            collection.totalCapacity
+                == firstWorker.capacity + secondWorker.capacity
+        )
+        #expect(
+            collection.totalCosts[.daily]
+                == firstWorker.price + secondWorker.price
+        )
+    }
+
+    @Test
+    func hiredWorkerIsExcludedFromAvailableCollection() throws {
+        let product = ProductCatalog().product(for: .pies)
+        let labor = LaborCatalog().labor(for: product)
+        let hiredWorker = try #require(labor.first)
+        let state = LaborState(
+            laborCatalog: LaborCollection(labor: labor),
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+
+        state.applyUpgrade(hiredWorker)
+
+        #expect(state.ownedLabor.contains(hiredWorker))
+        #expect(!state.availableLabor.contains(hiredWorker))
+        #expect(
+            state.ownedLabor.labor.count
+                + state.availableLabor.labor.count == labor.count
+        )
+    }
+}
+
 private let laborProductIDs: [ProductID] = [
     .pies,
     .hotDogs,
     .smoothies
 ]
+
+@MainActor
+private func makeConfiguredLabor(
+    productID: ProductID = .pies
+) throws -> [Labor] {
+    let product = ProductCatalog().product(for: productID)
+    return LaborCatalog().labor(for: product)
+}
