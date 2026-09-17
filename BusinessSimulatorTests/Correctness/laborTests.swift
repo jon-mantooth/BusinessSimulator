@@ -234,6 +234,143 @@ extension LaborTests {
     }
 }
 
+// MARK: - Labor Capacity Calculations
+
+extension LaborTests {
+
+    @Test(arguments: laborProductIDs)
+    func capacityCalculatesAndRoundsProductPercentages(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let ratios = [
+            LaborCapacityBalance.playerBaselineRatio,
+            LaborCapacityBalance.specialistRatio,
+            LaborCapacityBalance.sharedWorkerRatio
+        ]
+
+        for ratio in ratios {
+            let expectedCapacity = Int(
+                (Double(product.idealUnitsSold) * ratio).rounded()
+            )
+
+            #expect(
+                LaborCapacityBalance.capacity(
+                    ratio: ratio,
+                    baseIdealUnitsSold: product.idealUnitsSold
+                ) == expectedCapacity
+            )
+        }
+    }
+
+    @Test(arguments: laborProductIDs)
+    func playerBaselineCapacityUsesConfiguredRatio(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let expectedCapacity = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.playerBaselineRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+
+        #expect(
+            LaborCapacityBalance.playerBaselineCapacity(
+                baseIdealUnitsSold: product.idealUnitsSold
+            ) == expectedCapacity
+        )
+    }
+
+    @Test(arguments: laborProductIDs)
+    func catalogWorkersUseSpecialistAndSharedCapacityRatios(
+        productID: ProductID
+    ) throws {
+        let product = ProductCatalog().product(for: productID)
+        let labor = LaborCatalog().labor(for: product)
+        let specialist = try #require(labor.first)
+        let sharedWorkers = labor.dropFirst()
+        let expectedSpecialistCapacity = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.specialistRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let expectedSharedCapacity = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.sharedWorkerRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+
+        #expect(specialist.capacity == expectedSpecialistCapacity)
+        #expect(
+            sharedWorkers.allSatisfy {
+                $0.capacity == expectedSharedCapacity
+            }
+        )
+    }
+
+    @Test(arguments: laborProductIDs)
+    func totalCapacityIncludesBaselineAndEveryHiredWorker(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let catalogLabor = LaborCatalog().labor(for: product)
+        let state = LaborState(
+            laborCatalog: LaborCollection(labor: catalogLabor),
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let baseline = LaborCapacityBalance.playerBaselineCapacity(
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+
+        for worker in catalogLabor {
+            state.applyUpgrade(worker)
+        }
+
+        #expect(
+            state.totalCapacity
+                == baseline + catalogLabor.reduce(0) {
+                    $0 + $1.capacity
+                }
+        )
+    }
+
+    @Test(arguments: laborProductIDs)
+    func hiringProgressesThroughIntendedCapacityCurve(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let catalogLabor = LaborCatalog().labor(for: product)
+        let state = LaborState(
+            laborCatalog: LaborCollection(labor: catalogLabor),
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let baseline = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.playerBaselineRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let specialistIncrease = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.specialistRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let sharedIncrease = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.sharedWorkerRatio,
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let expectedProgression = [
+            baseline,
+            baseline + specialistIncrease,
+            baseline + specialistIncrease + sharedIncrease,
+            baseline + specialistIncrease + 2 * sharedIncrease,
+            baseline + specialistIncrease + 3 * sharedIncrease
+        ]
+        var actualProgression = [state.totalCapacity]
+
+        for worker in catalogLabor {
+            state.applyUpgrade(worker)
+            actualProgression.append(state.totalCapacity)
+        }
+
+        #expect(actualProgression == expectedProgression)
+    }
+}
+
 private let laborProductIDs: [ProductID] = [
     .pies,
     .hotDogs,
