@@ -606,6 +606,121 @@ extension LaborTests {
     }
 }
 
+// MARK: - Labor State
+
+extension LaborTests {
+
+    @Test(arguments: laborProductIDs)
+    func newStateStartsEmptyWithFourAvailableWorkers(
+        productID: ProductID
+    ) {
+        let context = makeLaborStateContext(productID: productID)
+
+        #expect(context.state.ownedLabor.labor.isEmpty)
+        #expect(context.state.availableLabor.labor.count == 4)
+        #expect(
+            Set(context.state.availableLabor.labor.map(\.id))
+                == Set(context.catalogLabor.map(\.id))
+        )
+    }
+
+    @Test
+    func hiringMovesWorkerFromAvailableToOwned() throws {
+        let context = makeLaborStateContext()
+        let worker = try #require(context.catalogLabor.first)
+
+        context.state.applyUpgrade(worker)
+
+        #expect(context.state.ownedLabor.contains(worker))
+        #expect(!context.state.availableLabor.contains(worker))
+        #expect(context.state.ownedLabor.labor.count == 1)
+        #expect(context.state.availableLabor.labor.count == 3)
+    }
+
+    @Test
+    func hiringAdditionalWorkerPreservesEarlierHire() throws {
+        let context = makeLaborStateContext()
+        let firstWorker = try #require(context.catalogLabor.first)
+        let secondWorker = try #require(
+            context.catalogLabor.dropFirst().first
+        )
+
+        context.state.applyUpgrade(firstWorker)
+        context.state.applyUpgrade(secondWorker)
+
+        #expect(context.state.ownedLabor.contains(firstWorker))
+        #expect(context.state.ownedLabor.contains(secondWorker))
+        #expect(
+            context.state.ownedLabor.labor.map(\.id)
+                == [firstWorker.id, secondWorker.id]
+        )
+    }
+
+    @Test(arguments: laborProductIDs)
+    func fullyStaffedDemandEffectScoreIsOne(
+        productID: ProductID
+    ) {
+        let context = makeLaborStateContext(productID: productID)
+
+        for worker in context.catalogLabor {
+            context.state.applyUpgrade(worker)
+        }
+
+        #expect(
+            abs(context.state.totalDemandEffectScore - 1.0)
+                < 0.000_001
+        )
+    }
+
+    @Test(arguments: laborProductIDs)
+    func fullyStaffedDailyCostsIncludeEveryWorker(
+        productID: ProductID
+    ) {
+        let context = makeLaborStateContext(productID: productID)
+        let expectedDailyCost = context.catalogLabor.reduce(0.0) {
+            $0 + $1.price
+        }
+
+        for worker in context.catalogLabor {
+            context.state.applyUpgrade(worker)
+        }
+
+        #expect(
+            context.state.totalCosts[.daily] == expectedDailyCost
+        )
+        #expect(context.state.totalCosts[.weekly] == nil)
+        #expect(context.state.totalCosts[.oneTime] == nil)
+    }
+
+    @Test
+    func rollbackRestoresOwnedAndAvailableLabor() throws {
+        let context = makeLaborStateContext()
+        let firstWorker = try #require(context.catalogLabor.first)
+        let secondWorker = try #require(
+            context.catalogLabor.dropFirst().first
+        )
+        context.state.applyUpgrade(firstWorker)
+        let rollbackState = context.state.captureRollbackState()
+        let expectedAvailableIDs = context.state.availableLabor.labor.map(\.id)
+
+        context.state.applyUpgrade(secondWorker)
+        context.state.revertUpgrade(to: rollbackState)
+
+        #expect(context.state.ownedLabor.labor.map(\.id) == [firstWorker.id])
+        #expect(
+            context.state.availableLabor.labor.map(\.id)
+                == expectedAvailableIDs
+        )
+    }
+
+    @Test
+    func laborStateUsesLaborDimensionID() {
+        let context = makeLaborStateContext()
+
+        #expect(context.state.dimensionID == .labor)
+    }
+}
+
 private let laborProductIDs: [ProductID] = [
     .pies,
     .hotDogs,
@@ -618,4 +733,26 @@ private func makeConfiguredLabor(
 ) throws -> [Labor] {
     let product = ProductCatalog().product(for: productID)
     return LaborCatalog().labor(for: product)
+}
+
+@MainActor
+private struct LaborStateTestContext {
+    let catalogLabor: [Labor]
+    let state: LaborState
+}
+
+@MainActor
+private func makeLaborStateContext(
+    productID: ProductID = .pies
+) -> LaborStateTestContext {
+    let product = ProductCatalog().product(for: productID)
+    let catalogLabor = LaborCatalog().labor(for: product)
+
+    return LaborStateTestContext(
+        catalogLabor: catalogLabor,
+        state: LaborState(
+            laborCatalog: LaborCollection(labor: catalogLabor),
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+    )
 }
