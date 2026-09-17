@@ -371,6 +371,125 @@ extension LaborTests {
     }
 }
 
+// MARK: - Labor Catalog
+
+extension LaborTests {
+
+    @Test
+    func eachProductReceivesItsCorrectSpecialist() throws {
+        let productCatalog = ProductCatalog()
+        let laborCatalog = LaborCatalog()
+        let expectedSpecialists: [ProductID: LaborID] = [
+            .pies: laborCatalog.baker.id,
+            .hotDogs: laborCatalog.grillMaster.id,
+            .smoothies: laborCatalog.mixologist.id
+        ]
+
+        for product in productCatalog.products {
+            let labor = laborCatalog.labor(for: product)
+            let specialist = try #require(labor.first)
+
+            #expect(specialist.id == expectedSpecialists[product.id])
+        }
+    }
+
+    @Test(arguments: laborProductIDs)
+    func everyProductReceivesAllSharedWorkers(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let laborCatalog = LaborCatalog()
+        let laborIDs = Set(
+            laborCatalog.labor(for: product).map(\.id)
+        )
+        let expectedSharedIDs: Set<LaborID> = [
+            laborCatalog.prepCook.id,
+            laborCatalog.lineCook.id,
+            laborCatalog.cleanupWorker.id
+        ]
+
+        #expect(expectedSharedIDs.isSubset(of: laborIDs))
+    }
+
+    @Test(arguments: laborProductIDs)
+    func productsDoNotReceiveAnotherProductsSpecialist(
+        productID: ProductID
+    ) throws {
+        let product = ProductCatalog().product(for: productID)
+        let laborCatalog = LaborCatalog()
+        let labor = laborCatalog.labor(for: product)
+        let specialist = try #require(labor.first)
+        let allSpecialistIDs: Set<LaborID> = [
+            laborCatalog.baker.id,
+            laborCatalog.grillMaster.id,
+            laborCatalog.mixologist.id
+        ]
+
+        #expect(labor.count == 4)
+        #expect(
+            Set(labor.map(\.id)).intersection(allSpecialistIDs)
+                == [specialist.id]
+        )
+    }
+
+    @Test
+    func laborCatalogIDsAreUnique() {
+        let catalog = LaborCatalog()
+        let labor = [
+            catalog.grillMaster,
+            catalog.baker,
+            catalog.mixologist,
+            catalog.prepCook,
+            catalog.lineCook,
+            catalog.cleanupWorker
+        ]
+
+        #expect(Set(labor.map(\.id)).count == labor.count)
+    }
+
+    @Test
+    func everyLaborOptionUsesDailyPaymentSchedule() {
+        let catalog = LaborCatalog()
+        let labor = [
+            catalog.grillMaster,
+            catalog.baker,
+            catalog.mixologist,
+            catalog.prepCook,
+            catalog.lineCook,
+            catalog.cleanupWorker
+        ]
+
+        #expect(
+            labor.allSatisfy { $0.paymentSchedule == .daily }
+        )
+    }
+
+    @Test
+    func laborOptionsUseIntendedPortraitAssets() {
+        let catalog = LaborCatalog()
+        let labor = [
+            catalog.grillMaster,
+            catalog.baker,
+            catalog.mixologist,
+            catalog.prepCook,
+            catalog.lineCook,
+            catalog.cleanupWorker
+        ]
+        let expectedIcons: [LaborID: GameIcon] = [
+            catalog.grillMaster.id: .asset("grill_master"),
+            catalog.baker.id: .asset("head_baker"),
+            catalog.mixologist.id: .asset("mixologist"),
+            catalog.prepCook.id: .asset("prep_specialist"),
+            catalog.lineCook.id: .asset("line_cook"),
+            catalog.cleanupWorker.id: .asset("clean_up_specialist")
+        ]
+
+        for worker in labor {
+            #expect(worker.smallIcon == expectedIcons[worker.id])
+        }
+    }
+}
+
 private let laborProductIDs: [ProductID] = [
     .pies,
     .hotDogs,
