@@ -779,6 +779,67 @@ extension LaborTests {
     }
 }
 
+// MARK: - End-of-Day Labor Integration
+
+extension LaborTests {
+
+    @Test
+    func laborWageReducesEndingBalance() throws {
+        let context = makeLaborStateContext()
+        let worker = try #require(context.catalogLabor.first)
+        context.state.applyUpgrade(worker)
+        let dimension = LaborDimension(laborState: context.state)
+        let summary = DaySummary(day: 1, startingBalance: 500)
+        summary.revenue = 200
+
+        let laborCost = dimension.calculateDailyCosts(
+            sales: 100,
+            summary: summary
+        )
+
+        #expect(summary.balance == 500 + 200 - laborCost)
+    }
+
+    @Test
+    func laborPurchaseEventMovesToSummaryAndClearsPending() throws {
+        let product = ProductCatalog().product(for: .pies)
+        let gameState = GameState()
+        gameState.initializeBusiness(product: product)
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: LaborTestGameSaveRepository()
+        )
+        let laborState = try #require(gameState.laborState)
+        let worker = try #require(laborState.availableLabor.labor.first)
+        let summary = DaySummary(
+            day: gameState.calendar.simulationDay,
+            startingBalance: gameState.finance.actualBalance
+        )
+
+        let result = workflow.completePurchase(
+            state: laborState,
+            item: worker
+        )
+        guard case .completed = result else {
+            Issue.record("Expected the labor purchase to complete.")
+            return
+        }
+
+        gameState.movePendingBusinessEvents(to: summary)
+
+        #expect(gameState.pendingBusinessEvents.isEmpty)
+        #expect(summary.businessEvents.count == 1)
+        let event = try #require(summary.businessEvents.first)
+        guard case let .purchase(purchaseEvent) = event.type else {
+            Issue.record("Expected a labor purchase event in the summary.")
+            return
+        }
+        #expect(purchaseEvent.category == .labor)
+        #expect(purchaseEvent.itemID == worker.purchaseItemID)
+        #expect(event.financialTransaction == nil)
+    }
+}
+
 private let laborProductIDs: [ProductID] = [
     .pies,
     .hotDogs,
