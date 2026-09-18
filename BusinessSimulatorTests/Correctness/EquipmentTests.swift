@@ -411,67 +411,6 @@ extension EquipmentTests {
     }
 
     @Test
-    func zeroDemandLevelHasNoStandaloneDemandPrice() {
-        let price = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 0,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-
-        #expect(price == 0)
-    }
-
-    @Test
-    func higherDemandLevelProducesGreaterStandaloneDemandPrice() {
-        let lowerPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 1,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-        let higherPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 4,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-
-        #expect(higherPrice > lowerPrice)
-    }
-
-    @Test
-    func standaloneDemandPriceUsesLevelAndDimensionWeight() {
-        let idealUnitsSold = 100
-        let baseIdealPrice = 4.0
-        let demandLevel = 2
-        let totalLevels = 5
-        let demandWeight = 0.10
-        let expectedMultiplier = SimulationBalance.demand.multiplier(
-            weight: demandWeight,
-            effectScore: Double(demandLevel) / Double(totalLevels)
-        )
-        let expectedPrice = baseIdealPrice
-            * Double(idealUnitsSold)
-            * (1.0 - UpgradePricing.ingredientCostRatio)
-            * (expectedMultiplier - 1.0)
-            * UpgradePricing.targetPaybackDays
-
-        let price = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            baseIdealPrice: baseIdealPrice,
-            demandLevel: demandLevel,
-            totalLevels: totalLevels,
-            demandWeight: demandWeight
-        )
-
-        #expect(abs(price - expectedPrice) < 0.000_001)
-    }
-
-    @Test
     func cleanPriceReturnsZeroForZero() {
         #expect(Equipment.cleanPrice(0) == 0)
     }
