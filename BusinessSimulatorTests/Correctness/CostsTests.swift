@@ -102,7 +102,7 @@ extension CostsTests {
 
     @Test
     func freeCanvassingDoesNotCreateScheduledCost() {
-        let catalog = AdvertisementCatalog()
+        let catalog = AdvertisementCatalog(productID: .pies)
         let advertisementDimension = makeAdvertisementDimensionForCosts(
             advertisement: catalog.canvassing
         )
@@ -119,6 +119,61 @@ extension CostsTests {
         #expect(catalog.canvassing.price == 0)
         #expect(dailyCost == 0)
         #expect(weeklyCost == 0)
+        #expect(summary.cashFlowCosts.isEmpty)
+    }
+}
+
+// MARK: - Labor
+
+extension CostsTests {
+
+    @MainActor
+    @Test
+    func dailyLaborCostIsRecordedInCashFlowCosts() throws {
+        let context = makeLaborDimensionForCosts(ownedWorkerCount: 2)
+        let summary = DaySummary(day: 1, startingBalance: 500)
+        let expectedCost = try #require(
+            context.state.totalCosts[.daily]
+        )
+
+        let cost = context.dimension.calculateDailyCosts(
+            sales: 100,
+            summary: summary
+        )
+
+        #expect(cost == expectedCost)
+        let cashFlowCost = try #require(summary.cashFlowCosts.first)
+        #expect(summary.cashFlowCosts.count == 1)
+        #expect(cashFlowCost.name == "Labor")
+        #expect(cashFlowCost.amount == expectedCost)
+    }
+
+    @MainActor
+    @Test
+    func noHiredLaborDoesNotCreateCashFlowCost() {
+        let context = makeLaborDimensionForCosts()
+        let summary = DaySummary(day: 1, startingBalance: 500)
+
+        let cost = context.dimension.calculateDailyCosts(
+            sales: 100,
+            summary: summary
+        )
+
+        #expect(cost == 0)
+        #expect(summary.cashFlowCosts.isEmpty)
+    }
+
+    @MainActor
+    @Test
+    func dailyLaborDoesNotCreateWeeklyCost() {
+        let context = makeLaborDimensionForCosts(ownedWorkerCount: 4)
+        let summary = DaySummary(day: 5, startingBalance: 500)
+
+        let cost = context.dimension.calculateWeeklyCosts(
+            summary: summary
+        )
+
+        #expect(cost == 0)
         #expect(summary.cashFlowCosts.isEmpty)
     }
 }
@@ -177,13 +232,40 @@ private func makeAdvertisementDimensionForCosts(
     )
 }
 
+private struct LaborCostContext {
+    let state: LaborState
+    let dimension: LaborDimension
+}
+
+@MainActor
+private func makeLaborDimensionForCosts(
+    ownedWorkerCount: Int = 0
+) -> LaborCostContext {
+    let product = ProductCatalog().product(for: .pies)
+    let labor = LaborCatalog().labor(for: product)
+    let state = LaborState(
+        laborCatalog: LaborCollection(labor: labor),
+        baseIdealUnitsSold: product.idealUnitsSold
+    )
+
+    for worker in labor.prefix(ownedWorkerCount) {
+        state.applyUpgrade(worker)
+    }
+
+    return LaborCostContext(
+        state: state,
+        dimension: LaborDimension(laborState: state)
+    )
+}
+
 private func makeAdvertisementDimensionForCosts(
     advertisement: Advertisement
 ) -> AdvertisementDimension {
     let tier = AdvertisementTier(
         id: AdvertisementTierID(rawValue: "cost-test-tier"),
         level: 0,
-        advertisements: [advertisement]
+        advertisements: [advertisement],
+        product: ProductCatalog().product(for: .pies)
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],

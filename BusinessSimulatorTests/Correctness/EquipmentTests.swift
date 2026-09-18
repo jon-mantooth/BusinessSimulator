@@ -310,142 +310,104 @@ extension EquipmentTests {
 extension EquipmentTests {
 
     @Test
-    func baselineCapacityHasNoCapacityPrice() {
-        let idealUnitsSold = 100
-        let baselineCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: idealUnitsSold
+    func baselineCapacityHasNoCapacityPrice() throws {
+        let product = try #require(
+            ProductCatalog().products.first { $0.id == .pies }
         )
-
-        let price = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: baselineCapacity,
-            baseIdealPrice: 4
+        let baselineCapacity = ProductionCapacityBalance.baseCapacity(
+            baseIdealUnitsSold: product.idealUnitsSold
+        )
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            capacityEffect: .replacement(baselineCapacity)
+        )
+        let price = UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: .oneTime,
+            tierLevel: 1
         )
 
         #expect(price == 0)
     }
 
     @Test
-    func capacityPriceUsesOnlyCapacityAboveBaseline() {
-        let idealUnitsSold = 100
-        let baseIdealPrice = 4.0
+    func capacityPriceUsesOnlyCapacityAboveBaseline() throws {
+        let product = try #require(
+            ProductCatalog().products.first { $0.id == .pies }
+        )
         let addedCapacity = 10
         let baselineCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: idealUnitsSold
+            baseIdealUnitsSold: product.idealUnitsSold
         )
         let expectedPrice = Double(addedCapacity)
-            * baseIdealPrice
+            * product.baseIdealPrice
             * (1.0 - UpgradePricing.ingredientCostRatio)
             * UpgradePricing.targetPaybackDays
-
-        let price = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: baselineCapacity + addedCapacity,
-            baseIdealPrice: baseIdealPrice
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            capacityEffect: .replacement(
+                baselineCapacity + addedCapacity
+            )
+        )
+        let price = UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: .oneTime,
+            tierLevel: 1
         )
 
         #expect(abs(price - expectedPrice) < 0.000_001)
     }
 
     @Test
-    func greaterCapacityProducesGreaterCapacityPrice() {
-        let idealUnitsSold = 100
+    func greaterCapacityProducesGreaterCapacityPrice() throws {
+        let product = try #require(
+            ProductCatalog().products.first { $0.id == .pies }
+        )
         let baselineCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: idealUnitsSold
+            baseIdealUnitsSold: product.idealUnitsSold
         )
-        let smallerPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: baselineCapacity + 5,
-            baseIdealPrice: 4
+        let smallerBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            capacityEffect: .replacement(baselineCapacity + 5)
         )
-        let largerPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: baselineCapacity + 10,
-            baseIdealPrice: 4
+        let largerBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            capacityEffect: .replacement(baselineCapacity + 10)
+        )
+        let smallerPrice = UpgradePricing.calculatePrice(
+            dailyBenefit: smallerBenefit,
+            paymentSchedule: .oneTime,
+            tierLevel: 1
+        )
+        let largerPrice = UpgradePricing.calculatePrice(
+            dailyBenefit: largerBenefit,
+            paymentSchedule: .oneTime,
+            tierLevel: 1
         )
 
         #expect(largerPrice > smallerPrice)
     }
 
-    @Test
-    func capacityPriceScalesWithIdealPrice() {
-        let idealUnitsSold = 100
-        let upgradedCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: idealUnitsSold
-        ) + 10
-        let lowerPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: upgradedCapacity,
-            baseIdealPrice: 4
+    @Test(arguments: equipmentProductIDs)
+    func capacityPriceUsesProductIdealPrice(productID: ProductID) throws {
+        let product = try #require(
+            ProductCatalog().products.first { $0.id == productID }
         )
-        let higherPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            upgradedCapacity: upgradedCapacity,
-            baseIdealPrice: 8
-        )
-
-        #expect(abs(higherPrice - lowerPrice * 2) < 0.000_001)
-    }
-
-    @Test
-    func zeroDemandLevelHasNoStandaloneDemandPrice() {
-        let price = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 0,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-
-        #expect(price == 0)
-    }
-
-    @Test
-    func higherDemandLevelProducesGreaterStandaloneDemandPrice() {
-        let lowerPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 1,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-        let higherPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: 100,
-            baseIdealPrice: 4,
-            demandLevel: 4,
-            totalLevels: 5,
-            demandWeight: EquipmentDimension.primaryDemandWeight
-        )
-
-        #expect(higherPrice > lowerPrice)
-    }
-
-    @Test
-    func standaloneDemandPriceUsesLevelAndDimensionWeight() {
-        let idealUnitsSold = 100
-        let baseIdealPrice = 4.0
-        let demandLevel = 2
-        let totalLevels = 5
-        let demandWeight = 0.10
-        let expectedMultiplier = SimulationBalance.demand.multiplier(
-            weight: demandWeight,
-            effectScore: Double(demandLevel) / Double(totalLevels)
-        )
-        let expectedPrice = baseIdealPrice
-            * Double(idealUnitsSold)
+        let addedCapacity = 10
+        let expectedDailyBenefit = Double(addedCapacity)
+            * product.baseIdealPrice
             * (1.0 - UpgradePricing.ingredientCostRatio)
-            * (expectedMultiplier - 1.0)
-            * UpgradePricing.targetPaybackDays
-
-        let price = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: idealUnitsSold,
-            baseIdealPrice: baseIdealPrice,
-            demandLevel: demandLevel,
-            totalLevels: totalLevels,
-            demandWeight: demandWeight
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            capacityEffect: .additive(addedCapacity)
         )
 
-        #expect(abs(price - expectedPrice) < 0.000_001)
+        #expect(abs(dailyBenefit - expectedDailyBenefit) < 0.000_001)
     }
 
     @Test
@@ -461,28 +423,28 @@ extension EquipmentTests {
     }
 
     @Test
-    func primaryEquipmentCombinesCapacityAndDemandPriceBeforeCleaning() throws {
+    func primaryEquipmentUsesUnifiedDailyBenefitBeforeCleaning() throws {
         let product = try #require(
             ProductCatalog().products.first { $0.id == .pies }
         )
         let tier = EquipmentCatalog().primaryTiers(for: product)[2]
         let equipment = try #require(tier.equipment.first)
-        let capacityPrice = UpgradePricing.setCapacityPrice(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            upgradedCapacity: equipment.capacity,
-            baseIdealPrice: product.baseIdealPrice
+        let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: tier.level,
+            product: product,
+            demandEffectScore: equipment.demandEffectScore,
+            demandWeight: EquipmentDimension.primaryDemandWeight,
+            capacityEffect: .replacement(equipment.capacity)
         )
-        let demandPrice = UpgradePricing.setStandaloneDemandPrice(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            baseIdealPrice: product.baseIdealPrice,
-            demandLevel: equipment.demandLevel,
-            totalLevels: equipment.totalLevels,
-            demandWeight: EquipmentDimension.primaryDemandWeight
+        let calculatedPrice = UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: equipment.paymentSchedule,
+            tierLevel: tier.level
         )
 
         #expect(
             equipment.price
-                == Equipment.cleanPrice(capacityPrice + demandPrice)
+                == Equipment.cleanPrice(calculatedPrice)
         )
     }
 }
@@ -492,6 +454,12 @@ private struct EquipmentTestContext {
     let secondaryCatalog: SecondaryEquipmentCollection
     let state: EquipmentState
 }
+
+private let equipmentProductIDs: [ProductID] = [
+    .pies,
+    .hotDogs,
+    .smoothies
+]
 
 @MainActor
 private func makeEquipmentTestContext(

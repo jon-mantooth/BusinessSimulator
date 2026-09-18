@@ -301,20 +301,23 @@ struct EquipmentTier: Identifiable, Equatable {
                 return configuredEquipment
             }
 
-            let capacityPrice = UpgradePricing.setCapacityPrice(
-                baseIdealUnitsSold: product.idealUnitsSold,
-                upgradedCapacity: configuredEquipment.capacity,
-                baseIdealPrice: product.baseIdealPrice
+            let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+                tierLevel: level,
+                product: product,
+                demandEffectScore:
+                    configuredEquipment.demandEffectScore,
+                demandWeight: EquipmentDimension.primaryDemandWeight,
+                capacityEffect: .replacement(
+                    configuredEquipment.capacity
+                )
             )
-            let demandPrice = UpgradePricing.setStandaloneDemandPrice(
-                baseIdealUnitsSold: product.idealUnitsSold,
-                baseIdealPrice: product.baseIdealPrice,
-                demandLevel: configuredEquipment.demandLevel,
-                totalLevels: configuredEquipment.totalLevels,
-                demandWeight: EquipmentDimension.primaryDemandWeight
+            let price = UpgradePricing.calculatePrice(
+                dailyBenefit: dailyBenefit,
+                paymentSchedule: configuredEquipment.paymentSchedule,
+                tierLevel: level
             )
             configuredEquipment.price = Equipment.cleanPrice(
-                capacityPrice + demandPrice
+                price
             )
             return configuredEquipment
         }

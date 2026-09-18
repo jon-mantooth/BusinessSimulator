@@ -115,8 +115,6 @@ struct ActiveAdvertisement: Identifiable, Equatable, Codable {
 }
 
 struct AdvertisementTier: Identifiable, Equatable {
-    private static let totalTiers = 5
-
     let id: AdvertisementTierID
     let level: Int
     let advertisements: [Advertisement]
@@ -124,7 +122,8 @@ struct AdvertisementTier: Identifiable, Equatable {
     init(
         id: AdvertisementTierID,
         level: Int,
-        advertisements: [Advertisement]
+        advertisements: [Advertisement],
+        product: Product
     ) {
         assert(level >= 0, "Advertisement tier level cannot be negative.")
         assert(
@@ -144,13 +143,15 @@ struct AdvertisementTier: Identifiable, Equatable {
             ? advertisements
             : Self.setPrices(
                 advertisements,
-                tierLevel: level
+                tierLevel: level,
+                product: product
             )
     }
 
     private static func setPrices(
         _ advertisements: [Advertisement],
-        tierLevel: Int
+        tierLevel: Int,
+        product: Product
     ) -> [Advertisement] {
         advertisements.map { advertisement in
             var pricedAdvertisement = advertisement
@@ -163,25 +164,27 @@ struct AdvertisementTier: Identifiable, Equatable {
             let isOneTime = advertisement.paymentSchedule == .oneTime
             let precedingLevel = tierLevel - 1
 
-            let paymentPrice = UpgradePricing.setPrice(
+            let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: tierLevel,
-                totalTiers: Self.totalTiers,
-                precedingDemandWeight: isOneTime
-                    ? 1.0
-                    : 1.0 - AdvertisementDimension.demandWeight,
-                precedingMarketSizeWeight: isOneTime
-                    ? 1.0
-                    : 1.0 - AdvertisementDimension.marketSizeWeight,
-                demandLevelChange: isOneTime
-                    ? advertisement.demandLevel - precedingLevel
-                    : advertisement.demandLevel,
-                marketSizeLevelChange: isOneTime
-                    ? advertisement.marketSizeLevel - precedingLevel
-                    : advertisement.marketSizeLevel,
-                totalLevels: advertisement.totalLevels,
+                product: product,
+                demandEffectScore: Double(
+                    isOneTime
+                        ? advertisement.demandLevel - precedingLevel
+                        : advertisement.demandLevel
+                ) / Double(advertisement.totalLevels),
                 demandWeight: AdvertisementDimension.demandWeight,
+                marketSizeEffectScore: Double(
+                    isOneTime
+                        ? advertisement.marketSizeLevel - precedingLevel
+                        : advertisement.marketSizeLevel
+                ) / Double(advertisement.totalLevels),
                 marketSizeWeight: AdvertisementDimension.marketSizeWeight,
-                paymentSchedule: advertisement.paymentSchedule
+                capacityEffect: .none
+            )
+            let paymentPrice = UpgradePricing.calculatePrice(
+                dailyBenefit: dailyBenefit,
+                paymentSchedule: advertisement.paymentSchedule,
+                tierLevel: tierLevel
             )
             pricedAdvertisement.price = Advertisement.cleanPrice(
                 paymentPrice

@@ -13,6 +13,7 @@ enum GameStateRestoreError: Error {
     case invalidInventoryData
     case invalidAdvertisementData
     case invalidEquipmentData
+    case invalidLaborData
 }
 
 @Observable
@@ -27,6 +28,7 @@ final class GameState {
     var reputation: BusinessReputationState?
     var advertisementState: AdvertisementState?
     var equipmentState: EquipmentState?
+    var laborState: LaborState?
     var businessHours: BusinessHours?
     var production: Production?
     var marketing: MarketingDepartment?
@@ -111,7 +113,7 @@ final class GameState {
             closingTime: BusinessTime(hour: 17, minute: 0)
         )
 
-        let advertisementCatalog = AdvertisementCatalog()
+        let advertisementCatalog = AdvertisementCatalog(product: product)
         self.advertisementState = AdvertisementState(
             tiers: advertisementCatalog.tiersByProduct[product.id]!,
             activeAdvertisement: ActiveAdvertisement(
@@ -125,6 +127,14 @@ final class GameState {
             primaryTiers: equipmentCatalog.primaryTiers(for: product),
             secondaryEquipmentCatalog:
                 equipmentCatalog.secondaryEquipment(for: product)
+        )
+
+        let laborCatalog = LaborCatalog()
+        self.laborState = LaborState(
+            laborCatalog: LaborCollection(
+                labor: laborCatalog.labor(for: product)
+            ),
+            baseIdealUnitsSold: product.idealUnitsSold
         )
         
         let dimensions = BusinessDimensions.create(
@@ -248,7 +258,7 @@ final class GameState {
             closingTime: BusinessTime(hour: 17, minute: 0)
         )
 
-        let advertisementCatalog = AdvertisementCatalog()
+        let advertisementCatalog = AdvertisementCatalog(product: product)
         let advertisementTiers =
             advertisementCatalog.tiersByProduct[product.id]!
         let activeAdvertisement =
@@ -300,6 +310,24 @@ final class GameState {
             secondaryEquipmentCatalog: secondaryEquipmentCatalog,
             activePrimaryEquipment: savedActiveEquipment,
             ownedSecondaryEquipment: savedOwnedEquipment
+        )
+
+        let laborCatalog = LaborCollection(
+            labor: LaborCatalog().labor(for: product)
+        )
+        let savedOwnedLabor = gameSave.laborState.ownedLabor
+        let laborCatalogIDs = Set(laborCatalog.labor.map(\.id))
+        let ownedLaborIDs = savedOwnedLabor.labor.map(\.id)
+        guard Set(ownedLaborIDs).count == ownedLaborIDs.count,
+              ownedLaborIDs.allSatisfy({ laborCatalogIDs.contains($0) })
+        else {
+            throw GameStateRestoreError.invalidLaborData
+        }
+
+        laborState = LaborState(
+            laborCatalog: laborCatalog,
+            baseIdealUnitsSold: product.idealUnitsSold,
+            ownedLabor: savedOwnedLabor
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents
