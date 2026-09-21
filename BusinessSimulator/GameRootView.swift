@@ -172,7 +172,8 @@ struct GameRootView: View {
 
             currentSummary = summary
             hasSavedGame = true
-            currentScreen = .summary
+            currentScreen = .playback
+            dayPlaybackState.start()
         } catch {
             do {
                 try gameState.restoreBusiness(from: stateBeforeDay)
