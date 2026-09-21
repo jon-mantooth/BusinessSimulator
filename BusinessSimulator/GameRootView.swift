@@ -20,6 +20,7 @@ struct GameRootView: View {
 
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
+    @State private var dayPlaybackState = DayPlaybackState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
