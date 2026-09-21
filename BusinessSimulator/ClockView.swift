@@ -14,8 +14,6 @@ struct ClockView: View {
                 geometry.size.width,
                 geometry.size.height
             )
-            let tickLength = size * 0.08
-            let tickWidth = size * 0.018
             let clampedProgress = min(max(progress, 0.0), 1.0)
             let openingHour = 9.0
             let businessDayLength = 8.0
@@ -25,25 +23,10 @@ struct ClockView: View {
             let minuteHandAngle = displayedHour * 360.0
 
             ZStack {
-                Circle()
-                    .fill(Color(red: 0.94, green: 0.88, blue: 0.72))
-
-                Circle()
-                    .stroke(
-                        Color(red: 0.25, green: 0.14, blue: 0.08),
-                        lineWidth: size * 0.055
-                    )
-
-                ForEach(0..<12, id: \.self) { hour in
-                    Capsule()
-                        .fill(Color(red: 0.25, green: 0.14, blue: 0.08))
-                        .frame(
-                            width: tickWidth,
-                            height: tickLength
-                        )
-                        .offset(y: -(size * 0.39))
-                        .rotationEffect(.degrees(Double(hour) * 30))
-                }
+                Image("clock_face")
+                    .resizable()
+                    .scaledToFit()
+                    .clipShape(Circle())
 
                 Capsule()
                     .fill(Color(red: 0.25, green: 0.14, blue: 0.08))
