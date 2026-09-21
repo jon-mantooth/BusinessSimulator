@@ -45,8 +45,7 @@ final class DayPlaybackState {
                 progress = min(elapsedTime / duration, 1.0)
 
                 if progress >= 1.0 {
-                    phase = .completed
-                    playbackTask = nil
+                    complete()
                     return
                 }
 
@@ -60,10 +59,10 @@ final class DayPlaybackState {
     }
 
     func skip() {
+        guard phase != .completed else { return }
+
         playbackTask?.cancel()
-        playbackTask = nil
-        progress = 1.0
-        phase = .completed
+        complete()
     }
 
     func reset() {
@@ -71,5 +70,13 @@ final class DayPlaybackState {
         playbackTask = nil
         progress = 0.0
         phase = .idle
+    }
+
+    private func complete() {
+        guard phase != .completed else { return }
+
+        playbackTask = nil
+        progress = 1.0
+        phase = .completed
     }
 }
