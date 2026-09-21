@@ -15,15 +15,9 @@ struct ClockView: View {
                 geometry.size.width,
                 geometry.size.height
             )
-            let clampedProgress = min(max(progress, 0.0), 1.0)
-            let openingMinutes = Double(
-                businessHours.openingTime.totalMinutes
+            let displayedMinutes = businessHours.playbackMinutes(
+                at: progress
             )
-            let closingMinutes = Double(
-                businessHours.closingTime.totalMinutes
-            )
-            let displayedMinutes = openingMinutes
-                + (closingMinutes - openingMinutes) * clampedProgress
             let displayedHour = displayedMinutes / 60.0
             let hourHandAngle = displayedHour * 30.0
             let minuteHandAngle = displayedHour * 360.0
