@@ -7,6 +7,7 @@ import SwiftUI
 
 struct PlaybackView: View {
     let progress: Double
+    let businessHours: BusinessHours
     let onSkip: () -> Void
 
     var body: some View {
@@ -14,7 +15,10 @@ struct PlaybackView: View {
             let clockSize = min(geometry.size.width * 0.34, 180)
 
             ZStack {
-                ClockView(progress: progress)
+                ClockView(
+                    progress: progress,
+                    businessHours: businessHours
+                )
                     .frame(width: clockSize, height: clockSize)
                     .position(
                         x: geometry.size.width * 0.5,

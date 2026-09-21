@@ -7,6 +7,7 @@ import SwiftUI
 
 struct ClockView: View {
     let progress: Double
+    let businessHours: BusinessHours
 
     var body: some View {
         GeometryReader { geometry in
@@ -15,10 +16,15 @@ struct ClockView: View {
                 geometry.size.height
             )
             let clampedProgress = min(max(progress, 0.0), 1.0)
-            let openingHour = 9.0
-            let businessDayLength = 8.0
-            let displayedHour = openingHour
-                + businessDayLength * clampedProgress
+            let openingMinutes = Double(
+                businessHours.openingTime.totalMinutes
+            )
+            let closingMinutes = Double(
+                businessHours.closingTime.totalMinutes
+            )
+            let displayedMinutes = openingMinutes
+                + (closingMinutes - openingMinutes) * clampedProgress
+            let displayedHour = displayedMinutes / 60.0
             let hourHandAngle = displayedHour * 30.0
             let minuteHandAngle = displayedHour * 360.0
 
