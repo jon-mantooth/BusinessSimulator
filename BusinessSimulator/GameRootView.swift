@@ -82,6 +82,7 @@ struct GameRootView: View {
     }
     
     private func onNextDay() {
+        dayPlaybackState.reset()
         currentScreen = .prep
     }
     
