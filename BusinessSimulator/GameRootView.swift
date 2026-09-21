@@ -11,6 +11,7 @@ enum Screen {
     case home
     case productSelection
     case prep
+    case playback
     case summary
 }
 
@@ -19,6 +20,7 @@ struct GameRootView: View {
 
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
+    @State private var dayPlaybackState = DayPlaybackState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
@@ -80,6 +82,7 @@ struct GameRootView: View {
     }
     
     private func onNextDay() {
+        dayPlaybackState.reset()
         currentScreen = .prep
     }
     
@@ -169,7 +172,8 @@ struct GameRootView: View {
 
             currentSummary = summary
             hasSavedGame = true
-            currentScreen = .summary
+            currentScreen = .playback
+            dayPlaybackState.start()
         } catch {
             do {
                 try gameState.restoreBusiness(from: stateBeforeDay)
@@ -291,7 +295,9 @@ struct GameRootView: View {
             }
 
             VStack(spacing: 0) {
-                if currentScreen != .home && currentScreen != .productSelection {
+                if currentScreen != .home
+                    && currentScreen != .productSelection
+                    && currentScreen != .playback {
                     HeaderView(
                         gameState: gameState,
                         onCalendarTapped: {
@@ -341,6 +347,13 @@ struct GameRootView: View {
                                 )
                             }
 
+                        case .playback:
+                            PlaybackView(
+                                progress: dayPlaybackState.progress,
+                                businessHours: gameState.businessHours!,
+                                onSkip: dayPlaybackState.skip
+                            )
+
                         case .summary:
                             SummaryView(
                                 summary: currentSummary!,
@@ -352,6 +365,7 @@ struct GameRootView: View {
 
                 if currentScreen != .home
                     && currentScreen != .productSelection
+                    && currentScreen != .playback
                     && !isEditingPrice {
                     FooterView(
                         selectedArea: selectedArea,
@@ -389,6 +403,11 @@ struct GameRootView: View {
         }
         .onAppear {
             hasSavedGame = saveRepository.hasSave()
+        }
+        .onChange(of: dayPlaybackState.phase) { _, newPhase in
+            if newPhase == .completed {
+                currentScreen = .summary
+            }
         }
         .alert(
             "Unable to Continue",

@@ -30,6 +30,15 @@ struct BusinessHours {
     let openingTime: BusinessTime
     let closingTime: BusinessTime
 
+    func playbackMinutes(at progress: Double) -> Double {
+        let clampedProgress = min(max(progress, 0.0), 1.0)
+        let openingMinutes = Double(openingTime.totalMinutes)
+        let closingMinutes = Double(closingTime.totalMinutes)
+
+        return openingMinutes
+            + (closingMinutes - openingMinutes) * clampedProgress
+    }
+
     func calculateSelloutTime(
         demandFulfillmentRate: Double
     ) -> BusinessTime {
