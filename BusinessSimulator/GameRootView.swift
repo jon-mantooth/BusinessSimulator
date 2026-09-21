@@ -341,6 +341,9 @@ struct GameRootView: View {
                                 )
                             }
 
+                        case .playback:
+                            PlaybackView(progress: 0.0)
+
                         case .summary:
                             SummaryView(
                                 summary: currentSummary!,
