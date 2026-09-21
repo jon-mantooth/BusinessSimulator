@@ -402,6 +402,11 @@ struct GameRootView: View {
         .onAppear {
             hasSavedGame = saveRepository.hasSave()
         }
+        .onChange(of: dayPlaybackState.phase) { _, newPhase in
+            if newPhase == .completed {
+                currentScreen = .summary
+            }
+        }
         .alert(
             "Unable to Continue",
             isPresented: $showingLoadError
