@@ -346,7 +346,10 @@ struct GameRootView: View {
                             }
 
                         case .playback:
-                            PlaybackView(progress: 0.0)
+                            PlaybackView(
+                                progress: dayPlaybackState.progress,
+                                onSkip: dayPlaybackState.skip
+                            )
 
                         case .summary:
                             SummaryView(
