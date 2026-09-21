@@ -11,6 +11,7 @@ enum Screen {
     case home
     case productSelection
     case prep
+    case playback
     case summary
 }
 
