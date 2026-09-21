@@ -68,10 +68,3 @@ struct ClockView: View {
         .accessibilityLabel("Business day clock")
     }
 }
-
-#Preview {
-    ClockView(progress: 0.5)
-        .frame(width: 180, height: 180)
-        .padding()
-        .background(Color(red: 0.45, green: 0.68, blue: 0.85))
-}
