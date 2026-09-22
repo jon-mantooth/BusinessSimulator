@@ -15,6 +15,27 @@ struct PlaybackView: View {
             let clockSize = min(geometry.size.width * 0.34, 180)
 
             ZStack {
+                Image("animation_background")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .clipped()
+
+                // Future customers belong between the background and stand
+                // so the counter naturally masks their lower bodies.
+
+                Image("stand")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .clipped()
+
                 ClockView(
                     progress: progress,
                     businessHours: businessHours
