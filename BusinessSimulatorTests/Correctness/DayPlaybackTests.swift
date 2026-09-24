@@ -15,6 +15,7 @@ extension DayPlaybackTests {
 
         #expect(playback.phase == .idle)
         #expect(playback.progress == 0.0)
+        #expect(playback.elapsedTime == 0.0)
     }
 
     @Test
@@ -26,6 +27,8 @@ extension DayPlaybackTests {
         #expect(playback.phase == .playing)
         #expect(playback.progress >= 0.0)
         #expect(playback.progress <= 1.0)
+        #expect(playback.elapsedTime >= 0.0)
+        #expect(playback.elapsedTime <= playback.duration)
 
         playback.reset()
     }
@@ -39,11 +42,15 @@ extension DayPlaybackTests {
         while playback.phase == .playing {
             #expect(playback.progress >= 0.0)
             #expect(playback.progress <= 1.0)
+            #expect(playback.elapsedTime >= 0.0)
+            #expect(playback.elapsedTime <= playback.duration)
             await Task.yield()
         }
 
         #expect(playback.progress >= 0.0)
         #expect(playback.progress <= 1.0)
+        #expect(playback.elapsedTime >= 0.0)
+        #expect(playback.elapsedTime <= playback.duration)
     }
 
     @Test
@@ -55,6 +62,7 @@ extension DayPlaybackTests {
 
         #expect(playback.phase == .completed)
         #expect(playback.progress == 1.0)
+        #expect(playback.elapsedTime == playback.duration)
     }
 
     @Test
@@ -66,6 +74,7 @@ extension DayPlaybackTests {
 
         #expect(playback.phase == .completed)
         #expect(playback.progress == 1.0)
+        #expect(playback.elapsedTime == playback.duration)
     }
 
     @Test
@@ -78,6 +87,7 @@ extension DayPlaybackTests {
 
         #expect(playback.phase == .idle)
         #expect(playback.progress == 0.0)
+        #expect(playback.elapsedTime == 0.0)
     }
 
     @Test
@@ -91,6 +101,7 @@ extension DayPlaybackTests {
 
         #expect(playback.phase == .completed)
         #expect(playback.progress == 1.0)
+        #expect(playback.elapsedTime == playback.duration)
     }
 }
 

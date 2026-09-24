@@ -17,6 +17,7 @@ enum DayPlaybackPhase: Equatable {
 final class DayPlaybackState {
     private(set) var phase: DayPlaybackPhase
     private(set) var progress: Double
+    private(set) var elapsedTime: TimeInterval
     let duration: TimeInterval
 
     @ObservationIgnored
@@ -27,6 +28,7 @@ final class DayPlaybackState {
 
         self.phase = .idle
         self.progress = 0.0
+        self.elapsedTime = 0.0
         self.duration = duration
     }
 
@@ -34,6 +36,7 @@ final class DayPlaybackState {
         playbackTask?.cancel()
         phase = .playing
         progress = 0.0
+        elapsedTime = 0.0
 
         let startTime = Date()
 
@@ -41,8 +44,11 @@ final class DayPlaybackState {
             guard let self else { return }
 
             while !Task.isCancelled {
-                let elapsedTime = Date().timeIntervalSince(startTime)
-                progress = min(elapsedTime / duration, 1.0)
+                elapsedTime = min(
+                    Date().timeIntervalSince(startTime),
+                    duration
+                )
+                progress = elapsedTime / duration
 
                 if progress >= 1.0 {
                     complete()
@@ -69,6 +75,7 @@ final class DayPlaybackState {
         playbackTask?.cancel()
         playbackTask = nil
         progress = 0.0
+        elapsedTime = 0.0
         phase = .idle
     }
 
@@ -77,6 +84,7 @@ final class DayPlaybackState {
 
         playbackTask = nil
         progress = 1.0
+        elapsedTime = duration
         phase = .completed
     }
 }

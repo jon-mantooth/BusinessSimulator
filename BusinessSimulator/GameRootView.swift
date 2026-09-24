@@ -350,6 +350,7 @@ struct GameRootView: View {
                         case .playback:
                             PlaybackView(
                                 progress: dayPlaybackState.progress,
+                                elapsedTime: dayPlaybackState.elapsedTime,
                                 businessHours: gameState.businessHours!,
                                 onSkip: dayPlaybackState.skip
                             )
