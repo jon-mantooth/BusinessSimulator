@@ -13,6 +13,9 @@ struct PlaybackView: View {
     var body: some View {
         GeometryReader { geometry in
             let clockSize = min(geometry.size.width * 0.34, 180)
+            let activeCustomer = CustomerVisitSchedule.prototype.activeVisit(
+                at: elapsedTime
+            )
 
             ZStack {
                 Image("animation_background")
