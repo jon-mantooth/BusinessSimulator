@@ -50,30 +50,26 @@ struct LocationCatalog {
 
         tierOne = LocationTier(
             id: LocationTierID(rawValue: "tier-one"),
-            level: 1,
-            locations: [home],
-            demandMultiplier: 1.0
+            level: .tierOne,
+            locations: [home]
         )
 
         hotDogTierTwo = LocationTier(
             id: LocationTierID(rawValue: "hot-dog-tier-two"),
-            level: 2,
-            locations: [ballpark],
-            demandMultiplier: 1.3
+            level: .tierTwo,
+            locations: [ballpark]
         )
 
         pieTierTwo = LocationTier(
             id: LocationTierID(rawValue: "pie-tier-two"),
-            level: 2,
-            locations: [farmersMarket],
-            demandMultiplier: 1.3
+            level: .tierTwo,
+            locations: [farmersMarket]
         )
 
         smoothieTierTwo = LocationTier(
             id: LocationTierID(rawValue: "smoothie-tier-two"),
-            level: 2,
-            locations: [beach],
-            demandMultiplier: 1.3
+            level: .tierTwo,
+            locations: [beach]
         )
     }
 }

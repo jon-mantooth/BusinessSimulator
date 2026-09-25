@@ -9,6 +9,27 @@ struct LocationTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
+enum LocationTierLevel: Int, Codable, Comparable {
+    case tierOne = 1
+    case tierTwo = 2
+
+    static func < (
+        lhs: LocationTierLevel,
+        rhs: LocationTierLevel
+    ) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+
+    var demandMultiplier: Double {
+        switch self {
+        case .tierOne:
+            return 1.0
+        case .tierTwo:
+            return 1.3
+        }
+    }
+}
+
 /// Static catalog data describing one place where the business can operate.
 struct Location: Identifiable, Equatable {
     let id: LocationID
@@ -28,25 +49,21 @@ struct Location: Identifiable, Equatable {
 
 struct LocationTier: Identifiable, Equatable {
     let id: LocationTierID
-    let level: Int
+    let level: LocationTierLevel
     let locations: [Location]
 
     /// The immediate demand adjustment shared by every location in this tier.
     /// Market-size growth is provided by the upgrades unlocked at the tier,
     /// rather than by the locations themselves.
-    let demandMultiplier: Double
+    var demandMultiplier: Double {
+        level.demandMultiplier
+    }
 
     init(
         id: LocationTierID,
-        level: Int,
-        locations: [Location],
-        demandMultiplier: Double
+        level: LocationTierLevel,
+        locations: [Location]
     ) {
-        assert(level >= 0, "A location tier level cannot be negative.")
-        assert(
-            demandMultiplier > 0,
-            "A location tier demand multiplier must be positive."
-        )
         assert(
             !locations.isEmpty,
             "A location tier must contain at least one location."
@@ -61,7 +78,6 @@ struct LocationTier: Identifiable, Equatable {
         self.id = id
         self.level = level
         self.locations = locations
-        self.demandMultiplier = demandMultiplier
     }
 }
 
