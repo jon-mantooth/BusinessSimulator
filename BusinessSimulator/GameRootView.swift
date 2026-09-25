@@ -397,6 +397,7 @@ struct GameRootView: View {
                                 progress: dayPlaybackState.progress,
                                 elapsedTime: dayPlaybackState.elapsedTime,
                                 businessHours: gameState.businessHours!,
+                                productID: gameState.productState!.product.id,
                                 onSkip: dayPlaybackState.skip
                             )
                             .opacity(dayTransitionState.playbackSceneOpacity)

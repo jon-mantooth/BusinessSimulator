@@ -9,6 +9,7 @@ struct PlaybackView: View {
     let progress: Double
     let elapsedTime: TimeInterval
     let businessHours: BusinessHours
+    let productID: ProductID
     let onSkip: () -> Void
 
     var body: some View {
@@ -47,7 +48,7 @@ struct PlaybackView: View {
                         )
                 }
 
-                Image("stand")
+                Image(standImageName)
                     .resizable()
                     .scaledToFill()
                     .frame(
@@ -83,6 +84,17 @@ struct PlaybackView: View {
             .clipped()
         }
         .ignoresSafeArea()
+    }
+
+    private var standImageName: String {
+        switch productID {
+        case .pies:
+            return "pies"
+        case .smoothies:
+            return "smoothies"
+        case .hotDogs:
+            return "hotdogs"
+        }
     }
 
     private func customerXPosition(
