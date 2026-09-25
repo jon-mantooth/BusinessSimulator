@@ -10,6 +10,7 @@ import SwiftUI
 enum Screen {
     case home
     case productSelection
+    case neighborhood
     case prep
     case playback
     case summary
@@ -18,9 +19,11 @@ enum Screen {
 struct GameRootView: View {
     private let saveRepository: any GameSaveRepository
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var currentScreen: Screen = .home
     @State private var gameState = GameState()
     @State private var dayPlaybackState = DayPlaybackState()
+    @State private var dayTransitionState = DayTransitionState()
     @State private var currentSummary: DaySummary?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
@@ -83,7 +86,11 @@ struct GameRootView: View {
     
     private func onNextDay() {
         dayPlaybackState.reset()
-        currentScreen = .prep
+        currentScreen = .neighborhood
+        dayTransitionState.beginSunrise(
+            date: gameState.calendar.currentDate,
+            reduceMotion: reduceMotion
+        )
     }
     
     private func updateDisplayedBalance(projectedCost: Double) {
@@ -100,7 +107,13 @@ struct GameRootView: View {
 
     private func selectGameArea(_ area: GameArea) {
         switch area {
-        case .gameMode, .production, .marketing:
+        case .gameMode:
+            selectedArea = area
+
+            if currentScreen == .neighborhood {
+                currentScreen = .prep
+            }
+        case .production, .marketing:
             selectedArea = area
         case .distribution, .finance:
             // These areas will be enabled when their views are implemented.
@@ -173,7 +186,13 @@ struct GameRootView: View {
             currentSummary = summary
             hasSavedGame = true
             currentScreen = .playback
-            dayPlaybackState.start()
+            dayTransitionState.beginOpening(
+                reduceMotion: reduceMotion,
+                onPlaybackReady: {
+                    guard currentScreen == .playback else { return }
+                    dayPlaybackState.start()
+                }
+            )
         } catch {
             do {
                 try gameState.restoreBusiness(from: stateBeforeDay)
@@ -191,9 +210,20 @@ struct GameRootView: View {
     private var gameBackground: some View {
         GeometryReader { geometry in
             ZStack {
+                Image("neighborhood_night")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height
+                    )
+                    .clipped()
+                    .opacity(dayTransitionState.nightSceneOpacity)
+
                 Image("neighborhood_background")
                     .resizable()
                     .scaledToFill()
+                    .opacity(dayTransitionState.daylightSceneOpacity)
 
                 Image("default_house")
                     .resizable()
@@ -203,6 +233,7 @@ struct GameRootView: View {
                         x: geometry.size.width * 0.71,
                         y: geometry.size.height * 0.535
                     )
+                    .opacity(dayTransitionState.daylightSceneOpacity)
 
                 if let standImageName {
                     Image(standImageName)
@@ -217,6 +248,7 @@ struct GameRootView: View {
                             x: geometry.size.width * 1.13,
                             y: geometry.size.height * 0.64
                         )
+                        .opacity(dayTransitionState.daylightSceneOpacity)
                 }
 
                 // Seasonal and holiday layers will be added here as transparent
@@ -229,6 +261,16 @@ struct GameRootView: View {
             .clipped()
         }
         .ignoresSafeArea()
+    }
+
+    private func transitionFromPlaybackToSummary() {
+        dayTransitionState.beginClosing(
+            reduceMotion: reduceMotion,
+            onNightReady: {
+                guard currentScreen == .playback else { return }
+                currentScreen = .summary
+            }
+        )
     }
 
     private var displayedProduct: Product? {
@@ -330,6 +372,9 @@ struct GameRootView: View {
                                 onContinue: onContinue
                             )
 
+                        case .neighborhood:
+                            EmptyView()
+
                         case .prep:
                             if let productState = gameState.productState {
                                 PrepView(
@@ -354,6 +399,10 @@ struct GameRootView: View {
                                 businessHours: gameState.businessHours!,
                                 onSkip: dayPlaybackState.skip
                             )
+                            .opacity(dayTransitionState.playbackSceneOpacity)
+                            .allowsHitTesting(
+                                dayTransitionState.playbackIsInteractive
+                            )
 
                         case .summary:
                             SummaryView(
@@ -362,6 +411,7 @@ struct GameRootView: View {
                             )
                         }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
 
                 if currentScreen != .home
@@ -374,6 +424,8 @@ struct GameRootView: View {
                     )
                 }
             }
+
+            DayTransitionOverlay(message: dayTransitionState.message)
 
             if showingNewJourneyConfirmation {
                 GamePopupView(
@@ -407,7 +459,7 @@ struct GameRootView: View {
         }
         .onChange(of: dayPlaybackState.phase) { _, newPhase in
             if newPhase == .completed {
-                currentScreen = .summary
+                transitionFromPlaybackToSummary()
             }
         }
         .alert(
