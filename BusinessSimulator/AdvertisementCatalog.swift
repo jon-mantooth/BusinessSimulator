@@ -232,7 +232,8 @@ struct AdvertisementCatalog {
             id: AdvertisementTierID(rawValue: "tier-zero"),
             level: 0,
             advertisements: [noAdvertisement],
-            product: product
+            product: product,
+            requiredLocationTier: .tierOne
         )
 
         tierOne = AdvertisementTier(
@@ -243,7 +244,8 @@ struct AdvertisementCatalog {
                 neighborhoodFlyers,
                 clubhouseAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierOne
         )
 
         tierTwo = AdvertisementTier(
@@ -253,7 +255,8 @@ struct AdvertisementCatalog {
                 blockPartySponsorship,
                 neighborhoodGazetteAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierOne
         )
 
         tierThree = AdvertisementTier(
@@ -263,7 +266,8 @@ struct AdvertisementCatalog {
                 townNewspaperAdvertisement,
                 socialMediaAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierTwo
         )
 
         smoothieTierFour = AdvertisementTier(
@@ -274,7 +278,8 @@ struct AdvertisementCatalog {
                 fitnessInfluencerPartnership,
                 billboardAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierTwo
         )
 
         hotDogTierFour = AdvertisementTier(
@@ -285,7 +290,8 @@ struct AdvertisementCatalog {
                 sportsPodcastPartnership,
                 billboardAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierTwo
         )
 
         pieTierFour = AdvertisementTier(
@@ -296,14 +302,16 @@ struct AdvertisementCatalog {
                 gardeningPodcastPartnership,
                 billboardAdvertisement
             ],
-            product: product
+            product: product,
+            requiredLocationTier: .tierTwo
         )
 
         tierFive = AdvertisementTier(
             id: AdvertisementTierID(rawValue: "tier-five"),
             level: 5,
             advertisements: [radioAdvertisement],
-            product: product
+            product: product,
+            requiredLocationTier: .tierTwo
         )
     }
 }

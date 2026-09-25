@@ -117,13 +117,15 @@ struct ActiveAdvertisement: Identifiable, Equatable, Codable {
 struct AdvertisementTier: Identifiable, Equatable {
     let id: AdvertisementTierID
     let level: Int
+    let requiredLocationTier: LocationTierLevel
     let advertisements: [Advertisement]
 
     init(
         id: AdvertisementTierID,
         level: Int,
         advertisements: [Advertisement],
-        product: Product
+        product: Product,
+        requiredLocationTier: LocationTierLevel
     ) {
         assert(level >= 0, "Advertisement tier level cannot be negative.")
         assert(
@@ -139,19 +141,23 @@ struct AdvertisementTier: Identifiable, Equatable {
 
         self.id = id
         self.level = level
+        self.requiredLocationTier = requiredLocationTier
         self.advertisements = level == 0
             ? advertisements
             : Self.setPrices(
                 advertisements,
                 tierLevel: level,
-                product: product
+                product: product,
+                locationDemandMultiplier:
+                    requiredLocationTier.demandMultiplier
             )
     }
 
     private static func setPrices(
         _ advertisements: [Advertisement],
         tierLevel: Int,
-        product: Product
+        product: Product,
+        locationDemandMultiplier: Double
     ) -> [Advertisement] {
         advertisements.map { advertisement in
             var pricedAdvertisement = advertisement
@@ -167,6 +173,8 @@ struct AdvertisementTier: Identifiable, Equatable {
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: tierLevel,
                 product: product,
+                locationDemandMultiplier:
+                    locationDemandMultiplier,
                 demandEffectScore: Double(
                     isOneTime
                         ? advertisement.demandLevel - precedingLevel
