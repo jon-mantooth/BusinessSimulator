@@ -128,7 +128,9 @@ struct EquipmentCatalog {
                 ),
                 level: level,
                 equipment: [equipment],
-                product: product
+                product: product,
+                requiredLocationTier:
+                    level <= 3 ? .tierOne : .tierTwo
             )
         }
     }

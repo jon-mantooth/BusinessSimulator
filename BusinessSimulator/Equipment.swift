@@ -257,13 +257,15 @@ struct SecondaryEquipmentCollection: Equatable, Codable {
 struct EquipmentTier: Identifiable, Equatable {
     let id: EquipmentTierID
     let level: Int
+    let requiredLocationTier: LocationTierLevel
     let equipment: [Equipment]
 
     init(
         id: EquipmentTierID,
         level: Int,
         equipment: [Equipment],
-        product: Product
+        product: Product,
+        requiredLocationTier: LocationTierLevel
     ) {
         assert(level >= 0, "Equipment tier level cannot be negative.")
         assert(
@@ -283,6 +285,7 @@ struct EquipmentTier: Identifiable, Equatable {
 
         self.id = id
         self.level = level
+        self.requiredLocationTier = requiredLocationTier
         self.equipment = equipment.map { equipment in
             var configuredEquipment = equipment
             let baseCapacity = ProductionCapacityBalance.baseCapacity(
@@ -304,6 +307,8 @@ struct EquipmentTier: Identifiable, Equatable {
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: level,
                 product: product,
+                locationDemandMultiplier:
+                    requiredLocationTier.demandMultiplier,
                 demandEffectScore:
                     configuredEquipment.demandEffectScore,
                 demandWeight: EquipmentDimension.primaryDemandWeight,
