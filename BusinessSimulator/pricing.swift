@@ -25,16 +25,17 @@ enum UpgradePricing {
     static let maximumRecurringBenefitMultiplier = 1.20
     static let minimumRecurringBenefitMultiplier = 0.60
 
-    // TODO: Adjust tier pricing for the demand and market-size multipliers
-    // associated with the location active when the upgrade becomes available.
-
     /// Calculates an upgrade's expected daily benefit by applying each of its
     /// effects independently to the representative business state at the start
     /// of the supplied tier. The individual profit changes are added so one
-    /// dimension's upgrade does not increase the priced value of another.
+    /// dimension's upgrade does not increase the priced value of another. The
+    /// expected location multiplier establishes the demand environment in
+    /// which the upgrade becomes available, without pricing the location's
+    /// existing benefit as part of the upgrade.
     static func calculateDailyBenefit(
         tierLevel: Int,
         product: Product,
+        locationDemandMultiplier: Double = 1.0,
         demandEffectScore: Double = 0,
         demandWeight: Double = 0,
         marketSizeEffectScore: Double = 0,
@@ -45,6 +46,7 @@ enum UpgradePricing {
             (1...totalUpgradeTiers).contains(tierLevel),
             "Pricing tier must be tier 1 through 5."
         )
+        assert(locationDemandMultiplier > 0)
         assert((0.0...1.0).contains(demandEffectScore))
         assert((0.0...1.0).contains(demandWeight))
         assert((0.0...1.0).contains(marketSizeEffectScore))
@@ -58,6 +60,7 @@ enum UpgradePricing {
                 weight: 1.0,
                 effectScore: tierProgress
             )
+            * locationDemandMultiplier
         let initialMarketSizeMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: 1.0,
