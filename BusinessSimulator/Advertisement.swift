@@ -36,10 +36,6 @@ struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
         Double(demandLevel) / Double(totalLevels)
     }
 
-    var marketSizeEffectScore: Double {
-        Double(marketSizeLevel) / Double(totalLevels)
-    }
-
     var marketSizeTargetMultiplier: Double {
         Self.marketSizeTargetMultiplier(
             for: marketSizeLevel
@@ -195,6 +191,11 @@ struct AdvertisementTier: Identifiable, Equatable {
 
             let isOneTime = advertisement.paymentSchedule == .oneTime
             let precedingLevel = tierLevel - 1
+            let marketSizeStartingTargetMultiplier = isOneTime
+                ? Advertisement.marketSizeTargetMultiplier(
+                    for: precedingLevel
+                )
+                : 1.0
 
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: tierLevel,
@@ -207,11 +208,10 @@ struct AdvertisementTier: Identifiable, Equatable {
                         : advertisement.demandLevel
                 ) / Double(advertisement.totalLevels),
                 demandWeight: AdvertisementDimension.demandWeight,
-                marketSizeEffectScore: Double(
-                    isOneTime
-                        ? advertisement.marketSizeLevel - precedingLevel
-                        : advertisement.marketSizeLevel
-                ) / Double(advertisement.totalLevels),
+                marketSizeStartingTargetMultiplier:
+                    marketSizeStartingTargetMultiplier,
+                marketSizeEndingTargetMultiplier:
+                    advertisement.marketSizeTargetMultiplier,
                 marketSizeWeight: AdvertisementDimension.marketSizeWeight,
                 capacityEffect: .none
             )

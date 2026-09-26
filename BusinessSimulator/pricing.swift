@@ -38,7 +38,8 @@ enum UpgradePricing {
         locationDemandMultiplier: Double = 1.0,
         demandEffectScore: Double = 0,
         demandWeight: Double = 0,
-        marketSizeEffectScore: Double = 0,
+        marketSizeStartingTargetMultiplier: Double = 1.0,
+        marketSizeEndingTargetMultiplier: Double = 1.0,
         marketSizeWeight: Double = 0,
         capacityEffect: CapacityPricingEffect = .none
     ) -> Double {
@@ -49,7 +50,11 @@ enum UpgradePricing {
         assert(locationDemandMultiplier > 0)
         assert((0.0...1.0).contains(demandEffectScore))
         assert((0.0...1.0).contains(demandWeight))
-        assert((0.0...1.0).contains(marketSizeEffectScore))
+        assert(marketSizeStartingTargetMultiplier > 0)
+        assert(
+            marketSizeEndingTargetMultiplier
+                >= marketSizeStartingTargetMultiplier
+        )
         assert((0.0...1.0).contains(marketSizeWeight))
 
         let precedingLevel = tierLevel - 1
@@ -85,10 +90,14 @@ enum UpgradePricing {
         )
         let demandBenefit = max(0, demandProfit - initialProfit)
 
+        let marketSizeUpgradeTargetMultiplier =
+            marketSizeEndingTargetMultiplier
+            / marketSizeStartingTargetMultiplier
         let purchasedMarketSizeMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: marketSizeWeight,
-                effectScore: marketSizeEffectScore
+                targetMultiplier:
+                    marketSizeUpgradeTargetMultiplier
             )
         let marketSizeProfit = expectedDailyProfit(
             product: product,
