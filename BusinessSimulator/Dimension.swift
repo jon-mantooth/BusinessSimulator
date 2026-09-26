@@ -212,6 +212,88 @@ struct BusinessDimensions {
     }
 }
 
+struct MarketSizeLevelAllocation: Equatable {
+    let locationTier: LocationTierLevel
+    let totalStars: Int
+
+    init(
+        locationTier: LocationTierLevel,
+        totalStars: Int
+    ) {
+        assert(
+            totalStars >= 0,
+            "Market-size stars cannot be negative."
+        )
+
+        self.locationTier = locationTier
+        self.totalStars = totalStars
+    }
+}
+
+enum MarketSizeProgression {
+
+    /// Calculates the target market-size multiplier represented by an
+    /// upgrade's cumulative stars. Each location tier has a target of one
+    /// additional base market. Any growth not earned in a tier with no stars
+    /// carries forward and is divided evenly among the next tier's stars.
+    static func targetMultiplier(
+        marketSizeStars: Int,
+        allocations: [MarketSizeLevelAllocation]
+    ) -> Double {
+        assert(marketSizeStars >= 0)
+        assert(
+            !allocations.isEmpty,
+            "Market-size progression requires at least one location tier."
+        )
+
+        let locationTiers = allocations.map(\.locationTier)
+        assert(
+            Set(locationTiers).count == locationTiers.count,
+            "Market-size progression cannot repeat a location tier."
+        )
+
+        let orderedAllocations = allocations.sorted {
+            $0.locationTier < $1.locationTier
+        }
+        let totalAvailableStars = orderedAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+        assert(
+            marketSizeStars <= totalAvailableStars,
+            "Market-size stars cannot exceed the configured progression."
+        )
+
+        var remainingStars = marketSizeStars
+        var targetMultiplier = 1.0
+
+        for allocation in orderedAllocations {
+            guard allocation.totalStars > 0 else {
+                continue
+            }
+
+            let starsUsed = min(
+                remainingStars,
+                allocation.totalStars
+            )
+            let locationTargetMultiplier = Double(
+                allocation.locationTier.rawValue + 1
+            )
+            let growthPerStar = (
+                locationTargetMultiplier - targetMultiplier
+            ) / Double(allocation.totalStars)
+
+            targetMultiplier += Double(starsUsed) * growthPerStar
+            remainingStars -= starsUsed
+
+            if remainingStars == 0 {
+                break
+            }
+        }
+
+        return targetMultiplier
+    }
+}
+
 ///To calculate the growth affect of any dimension we need to first determine
 ///the total growth affect and the portion of each dimension on that affect.
 ///The weights of individual dimensions will be determined inside those dimensions
@@ -235,6 +317,20 @@ struct GrowthBalance {
         pow(
             totalGrowthFactor,
             weight * effectScore
+        )
+    }
+
+    /// Applies a dimension's weight to a target multiplier that has already
+    /// been calculated by a non-uniform progression.
+    func multiplier(
+        weight: Double,
+        targetMultiplier: Double
+    ) -> Double {
+        assert(targetMultiplier > 0)
+
+        return pow(
+            targetMultiplier / startingMultiplier,
+            weight
         )
     }
 }
