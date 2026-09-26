@@ -10,6 +10,17 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
 }
 
 struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
+    static let marketSizeLevelAllocations = [
+        MarketSizeLevelAllocation(
+            locationTier: .tierOne,
+            totalStars: 3
+        ),
+        MarketSizeLevelAllocation(
+            locationTier: .tierTwo,
+            totalStars: 2
+        )
+    ]
+
     let id: AdvertisementID
     let name: String
     let smallIcon: GameIcon
@@ -27,6 +38,21 @@ struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
 
     var marketSizeEffectScore: Double {
         Double(marketSizeLevel) / Double(totalLevels)
+    }
+
+    var marketSizeTargetMultiplier: Double {
+        Self.marketSizeTargetMultiplier(
+            for: marketSizeLevel
+        )
+    }
+
+    static func marketSizeTargetMultiplier(
+        for stars: Int
+    ) -> Double {
+        MarketSizeProgression.targetMultiplier(
+            marketSizeStars: stars,
+            allocations: marketSizeLevelAllocations
+        )
     }
 
     var purchaseItemID: String {
@@ -233,10 +259,11 @@ final class AdvertisementDimension: Dimension {
     func calculateMarketSize() -> Double {
         let activeAdvertisement =
             advertisementState.activeAdvertisement?.advertisement
-        let effectScore = activeAdvertisement?.marketSizeEffectScore ?? 0.0
+        let targetMultiplier = activeAdvertisement?
+            .marketSizeTargetMultiplier ?? 1.0
         let advertisementMultiplier = SimulationBalance.marketSize.multiplier(
             weight: Self.marketSizeWeight,
-            effectScore: effectScore
+            targetMultiplier: targetMultiplier
         )
 
         // Time spent advertising is time the player cannot spend selling, so reduce
