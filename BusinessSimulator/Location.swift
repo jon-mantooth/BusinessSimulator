@@ -28,6 +28,18 @@ enum LocationTierLevel: Int, Codable, Comparable {
             return 1.3
         }
     }
+
+    /// Representative market size used to price upgrades that become
+    /// available in this location tier. This is a balancing estimate, not the
+    /// player's actual market-size multiplier.
+    var pricingMarketSizeMultiplier: Double {
+        switch self {
+        case .tierOne:
+            return 1.0
+        case .tierTwo:
+            return 1.5
+        }
+    }
 }
 
 /// Static catalog data describing one place where the business can operate.

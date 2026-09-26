@@ -231,7 +231,6 @@ struct MarketSizeLevelAllocation: Equatable {
 }
 
 enum MarketSizeProgression {
-
     /// Calculates the target market-size multiplier represented by an
     /// upgrade's cumulative stars. Each location tier has a target of one
     /// additional base market. Any growth not earned in a tier with no stars

@@ -171,7 +171,9 @@ struct AdvertisementTier: Identifiable, Equatable {
                 tierLevel: level,
                 product: product,
                 locationDemandMultiplier:
-                    requiredLocationTier.demandMultiplier
+                    requiredLocationTier.demandMultiplier,
+                pricingMarketSizeMultiplier:
+                    requiredLocationTier.pricingMarketSizeMultiplier
             )
     }
 
@@ -179,7 +181,8 @@ struct AdvertisementTier: Identifiable, Equatable {
         _ advertisements: [Advertisement],
         tierLevel: Int,
         product: Product,
-        locationDemandMultiplier: Double
+        locationDemandMultiplier: Double,
+        pricingMarketSizeMultiplier: Double
     ) -> [Advertisement] {
         advertisements.map { advertisement in
             var pricedAdvertisement = advertisement
@@ -202,6 +205,8 @@ struct AdvertisementTier: Identifiable, Equatable {
                 product: product,
                 locationDemandMultiplier:
                     locationDemandMultiplier,
+                representativeMarketSizeMultiplier:
+                    pricingMarketSizeMultiplier,
                 demandEffectScore: Double(
                     isOneTime
                         ? advertisement.demandLevel - precedingLevel

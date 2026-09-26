@@ -309,6 +309,8 @@ struct EquipmentTier: Identifiable, Equatable {
                 product: product,
                 locationDemandMultiplier:
                     requiredLocationTier.demandMultiplier,
+                representativeMarketSizeMultiplier:
+                    requiredLocationTier.pricingMarketSizeMultiplier,
                 demandEffectScore:
                     configuredEquipment.demandEffectScore,
                 demandWeight: EquipmentDimension.primaryDemandWeight,
