@@ -8,6 +8,7 @@ enum GamePopupType {
     )
     case insufficientFunds
     case operatingReserveRequired
+    case locationLocked(requiredLevel: Int)
     case upgradeLimitReached(upgradeName: String)
     case purchaseSaveFailed
 
@@ -19,6 +20,7 @@ enum GamePopupType {
             return "CONFIRM UPGRADE"
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached:
             return "PURCHASE UNAVAILABLE"
         case .purchaseSaveFailed:
@@ -36,6 +38,8 @@ enum GamePopupType {
             return "You do not have enough money for this purchase."
         case .operatingReserveRequired:
             return "You must have enough money remaining to purchase ingredients."
+        case let .locationLocked(requiredLevel):
+            return "This upgrade is available at Level \(requiredLevel)."
         case let .upgradeLimitReached(upgradeName):
             return "You can only upgrade \(upgradeName) once per business day."
         case .purchaseSaveFailed:
@@ -53,6 +57,8 @@ enum GamePopupType {
             return .system("dollarsign.circle.fill")
         case .operatingReserveRequired:
             return .system("basket.fill")
+        case .locationLocked:
+            return .system("lock.fill")
         case .upgradeLimitReached:
             return .system("clock.fill")
         case .purchaseSaveFailed:
@@ -68,6 +74,7 @@ enum GamePopupType {
             return "CONFIRM"
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached,
              .purchaseSaveFailed:
             return "OK"
@@ -81,6 +88,7 @@ enum GamePopupType {
             return true
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached,
              .purchaseSaveFailed:
             return false

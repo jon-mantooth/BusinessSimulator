@@ -14,6 +14,7 @@ enum CashFlowDirection: String, Codable {
 
 enum PurchaseAvailability {
     case available
+    case locationLocked(requiredTier: LocationTierLevel)
     case insufficientFunds
     case operatingReserveRequired
 }
