@@ -68,6 +68,21 @@ struct PurchaseWorkflow {
         gameState.finance!.purchaseAvailability(for: price)
     }
 
+    /// Location eligibility is checked before finances so the player is not
+    /// encouraged to save for an upgrade that is unavailable at this level.
+    func validatePurchaseAvailability(
+        price: Double,
+        requiredLocationTier: LocationTierLevel
+    ) -> PurchaseAvailability {
+        let activeLocationTier = gameState.locationState!.activeTier.level
+
+        guard activeLocationTier >= requiredLocationTier else {
+            return .locationLocked(requiredTier: requiredLocationTier)
+        }
+
+        return validateFinancialAvailability(price: price)
+    }
+
     // MARK: - Purchase Transaction
 
     func completePurchase<State: PurchasableState>(
