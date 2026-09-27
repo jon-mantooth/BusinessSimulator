@@ -198,6 +198,9 @@ struct BusinessDimensions {
                 )
             ],
             environment: [
+                LocationDimension(
+                    locationState: gameState.locationState!
+                ),
                 WeatherDimension(
                     weatherState: gameState.weather,
                     product: gameState.productState!.product,
