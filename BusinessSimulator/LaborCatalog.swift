@@ -1,6 +1,8 @@
 import Foundation
 
 struct LaborCatalog {
+    let capacitySchedule: CapacitySchedule
+
     let grillMaster: Labor
     let baker: Labor
     let mixologist: Labor
@@ -9,6 +11,23 @@ struct LaborCatalog {
     let cleanupWorker: Labor
 
     init() {
+        capacitySchedule = CapacitySchedule(
+            upgrades: [
+                CapacityUpgrade(
+                    upgradeID: .laborBaseline,
+                    scheduledCapacity: 1.20
+                ),
+                CapacityUpgrade(
+                    upgradeID: .laborSpecialist,
+                    scheduledCapacity: 0.90
+                ),
+                CapacityUpgrade(
+                    upgradeID: .sharedLabor,
+                    scheduledCapacity: 0.40
+                )
+            ]
+        )
+
         grillMaster = Labor(
             id: LaborID(rawValue: "grill-master"),
             name: "Grill Master",
@@ -74,24 +93,25 @@ struct LaborCatalog {
             primaryLabor = mixologist
         }
 
-        primaryLabor.capacity = capacity(
-            ratio: LaborCapacityBalance.specialistRatio,
-            idealUnitsSold: product.idealUnitsSold
+        let sharedLabor = [
+            prepCook,
+            lineCook,
+            cleanupWorker
+        ]
+        primaryLabor.capacity = capacitySchedule.capacity(
+            for: .laborSpecialist,
+            product: product
         )
         primaryLabor.price = wage(
             for: primaryLabor,
             product: product
         )
 
-        let secondaryLabor = [
-            prepCook,
-            lineCook,
-            cleanupWorker
-        ].map { labor in
+        let secondaryLabor = sharedLabor.map { labor in
             var configuredLabor = labor
-            configuredLabor.capacity = capacity(
-                ratio: LaborCapacityBalance.sharedWorkerRatio,
-                idealUnitsSold: product.idealUnitsSold
+            configuredLabor.capacity = capacitySchedule.capacity(
+                for: .sharedLabor,
+                product: product
             )
             configuredLabor.price = wage(
                 for: configuredLabor,
@@ -101,16 +121,6 @@ struct LaborCatalog {
         }
 
         return [primaryLabor] + secondaryLabor
-    }
-
-    private func capacity(
-        ratio: Double,
-        idealUnitsSold: Int
-    ) -> Int {
-        LaborCapacityBalance.capacity(
-            ratio: ratio,
-            baseIdealUnitsSold: idealUnitsSold
-        )
     }
 
     private func wage(

@@ -31,40 +31,10 @@ struct IngredientUpgrade: Equatable, Codable {
     let description: String
 }
 
-enum SecondaryCapacityStrength: String, Equatable, Codable {
+enum SecondaryCapacityStrength: String, Equatable, Hashable, Codable {
     case low
     case medium
     case high
-
-    // Calculate capacity based on CapacityStrength. Low will be 3% of ideal units sold,
-    // medium 5% and high 7%
-    func capacity(
-        for idealUnitsSold: Int
-    ) -> Int {
-        assert(idealUnitsSold > 0)
-
-        let lowCapacity = max(
-            1,
-            Int((Double(idealUnitsSold) * 0.03).rounded())
-        )
-        let mediumCapacity = max(
-            lowCapacity + 1,
-            Int((Double(idealUnitsSold) * 0.05).rounded())
-        )
-        let highCapacity = max(
-            mediumCapacity + 1,
-            Int((Double(idealUnitsSold) * 0.07).rounded())
-        )
-
-        switch self {
-        case .low:
-            return lowCapacity
-        case .medium:
-            return mediumCapacity
-        case .high:
-            return highCapacity
-        }
-    }
 }
 
 enum EquipmentCategory: Equatable, Codable {
@@ -265,6 +235,7 @@ struct EquipmentTier: Identifiable, Equatable {
         level: Int,
         equipment: [Equipment],
         product: Product,
+        capacitySchedule: CapacitySchedule,
         requiredLocationTier: LocationTierLevel
     ) {
         assert(level >= 0, "Equipment tier level cannot be negative.")
@@ -287,17 +258,17 @@ struct EquipmentTier: Identifiable, Equatable {
         self.level = level
         self.requiredLocationTier = requiredLocationTier
         self.equipment = equipment.map { equipment in
-            var configuredEquipment = equipment
-            let baseCapacity = ProductionCapacityBalance.baseCapacity(
-                baseIdealUnitsSold: product.idealUnitsSold
-            )
-            let expectedCapacityIncrease = ProductionCapacityBalance
-                .expectedCapacityIncrease(
-                    baseIdealUnitsSold: product.idealUnitsSold,
-                    tierLevel: level
+            guard let upgradeTier = UpgradeTierLevel(rawValue: level) else {
+                preconditionFailure(
+                    "Equipment tier \(level) has no capacity schedule tier."
                 )
-            configuredEquipment.capacity =
-                baseCapacity + expectedCapacityIncrease
+            }
+
+            var configuredEquipment = equipment
+            configuredEquipment.capacity = capacitySchedule.capacity(
+                for: .tier(upgradeTier),
+                product: product
+            )
 
             guard level > 0 else {
                 configuredEquipment.price = 0

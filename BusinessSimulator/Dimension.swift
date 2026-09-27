@@ -13,28 +13,26 @@ enum PaymentSchedule: String, Codable, Hashable {
     case weekly
 }
 
-/// Defines the shared capacity progression for equipment, labor, storage, and
-/// other production constraints. Tier zero starts at 90% of ideal unit sales,
-/// and completing all five tiers reaches 200% of ideal unit sales.
+/// Defines primary equipment's capacity progression. Location Tier 1 equipment
+/// grows from 90% to 210% of ideal unit sales, while Location Tier 2 equipment
+/// extends capacity to 330%.
 enum ProductionCapacityBalance {
 
-    static let baselineRatio = 0.90
-    static let targetRatio = 2.00
-    static let totalTiers = 5
+    static let tierRatios =
+        ProductionCapacitySchedules.primaryEquipmentCapacities
+    static let baselineRatio = tierRatios[0]
+    static let totalTiers = tierRatios.count - 1
+    static let targetRatio = tierRatios[totalTiers]
 
     static func baseCapacity(
         baseIdealUnitsSold: Int
     ) -> Int {
-        assert(baseIdealUnitsSold > 0)
-
-        return Int(
-            (Double(baseIdealUnitsSold) * baselineRatio)
-                .rounded(.up)
-        )
+        schedule(baseIdealUnitsSold: baseIdealUnitsSold)
+            .capacity(for: "equipment-tier-0")
     }
 
-    /// Returns the cumulative capacity increase above the baseline expected
-    /// after reaching the supplied tier.
+    /// Returns the cumulative capacity increase above the 90% baseline after
+    /// reaching the supplied primary-equipment tier.
     static func expectedCapacityIncrease(
         baseIdealUnitsSold: Int,
         tierLevel: Int
@@ -42,19 +40,17 @@ enum ProductionCapacityBalance {
         assert(baseIdealUnitsSold > 0)
         assert((0...totalTiers).contains(tierLevel))
 
-        let baselineCapacity = baseCapacity(
-            baseIdealUnitsSold: baseIdealUnitsSold
-        )
-        let targetCapacity = Int(
-            (Double(baseIdealUnitsSold) * targetRatio)
-                .rounded()
-        )
-        let totalCapacityIncrease = targetCapacity - baselineCapacity
-        let tierProgress = Double(tierLevel) / Double(totalTiers)
+        let schedule = schedule(baseIdealUnitsSold: baseIdealUnitsSold)
+        return schedule.capacity(for: "equipment-tier-\(tierLevel)")
+            - schedule.capacity(for: "equipment-tier-0")
+    }
 
-        return Int(
-            (Double(totalCapacityIncrease) * tierProgress)
-                .rounded()
+    private static func schedule(
+        baseIdealUnitsSold: Int
+    ) -> CapacitySchedule {
+        ProductionCapacitySchedules.primaryEquipment(
+            idealUnitsSold: baseIdealUnitsSold,
+            upgradeIDs: (0...totalTiers).map { "equipment-tier-\($0)" }
         )
     }
 }

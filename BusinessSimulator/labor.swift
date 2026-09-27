@@ -59,8 +59,8 @@ struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
 
 enum LaborCapacityBalance {
     static let playerBaselineRatio = 1.20
-    static let specialistRatio = 0.50
-    static let sharedWorkerRatio = 0.20
+    static let specialistRatio = 0.90
+    static let sharedWorkerRatio = 0.40
 
     static func capacity(
         ratio: Double,
@@ -186,12 +186,16 @@ final class LaborState: PurchasableState {
             ownedLabor.labor.allSatisfy { catalogIDs.contains($0.id) },
             "Owned labor must belong to this state's catalog."
         )
+        assert(
+            !laborCatalog.labor.isEmpty,
+            "A labor state requires a capacity schedule."
+        )
 
         self.laborCatalog = laborCatalog
-        self.playerBaselineCapacity = LaborCapacityBalance
-            .playerBaselineCapacity(
-                baseIdealUnitsSold: baseIdealUnitsSold
-            )
+        self.playerBaselineCapacity = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.playerBaselineRatio,
+            baseIdealUnitsSold: baseIdealUnitsSold
+        )
         self.ownedLabor = ownedLabor
     }
 
