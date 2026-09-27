@@ -244,6 +244,10 @@ struct LaborView: View {
         ) {
         case .available:
             laborPendingConfirmation = labor
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:

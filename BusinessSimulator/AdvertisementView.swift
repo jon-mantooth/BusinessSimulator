@@ -177,8 +177,10 @@ struct AdvertisementView: View {
         let actionColor = actionColor(for: advertisement)
         let canSelectAdvertisement: Bool = {
             if case .available = purchaseWorkflow
-                .validateFinancialAvailability(
-                    price: advertisement.price
+                .validatePurchaseAvailability(
+                    price: advertisement.price,
+                    requiredLocationTier: advertisementState.nextTier!
+                        .requiredLocationTier
                 )
             {
                 return true
@@ -250,11 +252,17 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        switch purchaseWorkflow.validateFinancialAvailability(
-            price: advertisement.price
+        switch purchaseWorkflow.validatePurchaseAvailability(
+            price: advertisement.price,
+            requiredLocationTier: advertisementState.nextTier!
+                .requiredLocationTier
         ) {
         case .available:
             advertisementPendingConfirmation = advertisement
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:

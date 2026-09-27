@@ -153,8 +153,11 @@ struct ProductionView: View {
                             activeTier: equipmentState.activePrimaryTier,
                             availableTier: equipmentState.nextPrimaryTier,
                             purchaseAvailability: { equipment in
-                                purchaseWorkflow.validateFinancialAvailability(
-                                    price: equipment.price
+                                purchaseWorkflow.validatePurchaseAvailability(
+                                    price: equipment.price,
+                                    requiredLocationTier:
+                                        equipmentState.nextPrimaryTier!
+                                            .requiredLocationTier
                                 )
                             },
                             onPurchase: attemptPurchase
@@ -247,11 +250,27 @@ struct ProductionView: View {
     private func attemptPurchase(
         _ equipment: Equipment
     ) {
-        switch purchaseWorkflow.validateFinancialAvailability(
-            price: equipment.price
+        let availability: PurchaseAvailability
+        if let requiredLocationTier = equipmentState.requiredLocationTier(
+            for: equipment
         ) {
+            availability = purchaseWorkflow.validatePurchaseAvailability(
+                price: equipment.price,
+                requiredLocationTier: requiredLocationTier
+            )
+        } else {
+            availability = purchaseWorkflow.validateFinancialAvailability(
+                price: equipment.price
+            )
+        }
+
+        switch availability {
         case .available:
             equipmentPendingConfirmation = equipment
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:

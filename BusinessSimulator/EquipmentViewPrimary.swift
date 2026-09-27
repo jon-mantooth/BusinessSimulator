@@ -190,6 +190,8 @@ struct EquipmentViewPrimary: View {
         switch purchaseAvailability(equipment) {
         case .available:
             return "PURCHASE"
+        case let .locationLocked(requiredTier):
+            return "AVAILABLE AT LEVEL \(requiredTier.rawValue)"
         case .insufficientFunds:
             return "NOT ENOUGH MONEY"
         case .operatingReserveRequired:
@@ -203,7 +205,9 @@ struct EquipmentViewPrimary: View {
         switch purchaseAvailability(equipment) {
         case .available:
             return 1
-        case .insufficientFunds, .operatingReserveRequired:
+        case .locationLocked,
+             .insufficientFunds,
+             .operatingReserveRequired:
             return 0
         }
     }

@@ -403,6 +403,8 @@ struct SecondaryEquipmentDetailCard: View {
         switch purchaseAvailability {
         case .available:
             return "PURCHASE"
+        case let .locationLocked(requiredTier):
+            return "AVAILABLE AT LEVEL \(requiredTier.rawValue)"
         case .insufficientFunds:
             return "NOT ENOUGH MONEY"
         case .operatingReserveRequired:
@@ -414,7 +416,9 @@ struct SecondaryEquipmentDetailCard: View {
         switch purchaseAvailability {
         case .available:
             return green
-        case .insufficientFunds, .operatingReserveRequired:
+        case .locationLocked,
+             .insufficientFunds,
+             .operatingReserveRequired:
             return .gray
         }
     }
@@ -423,6 +427,10 @@ struct SecondaryEquipmentDetailCard: View {
         switch purchaseAvailability {
         case .available:
             onPurchase()
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:
