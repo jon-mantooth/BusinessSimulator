@@ -464,6 +464,24 @@ final class EquipmentState: PurchasableState {
         )
     }
 
+    func requiredLocationTier(
+        for equipment: Equipment
+    ) -> LocationTierLevel? {
+        guard equipment.category == .primary else {
+            return nil
+        }
+
+        guard let tier = primaryTiers.first(where: { tier in
+            tier.equipment.contains { $0.id == equipment.id }
+        }) else {
+            preconditionFailure(
+                "Primary equipment must belong to an equipment tier."
+            )
+        }
+
+        return tier.requiredLocationTier
+    }
+
     var totalCapacity: Int {
         activePrimaryEquipment.equipment.capacity
             + ownedSecondaryEquipment.totalCapacity
