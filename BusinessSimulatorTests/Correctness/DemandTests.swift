@@ -494,7 +494,8 @@ private func makeAdvertisementDimension(
         id: AdvertisementTierID(rawValue: "demand-test-tier"),
         level: 0,
         advertisements: [advertisement],
-        product: ProductCatalog().product(for: .pies)
+        product: ProductCatalog().product(for: .pies),
+        requiredLocationTier: .tierOne
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],

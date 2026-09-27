@@ -247,7 +247,7 @@ extension AdvertisementTests {
     }
 
     @Test
-    func advertisementEffectScoresUseLevelOverTotalLevels() {
+    func advertisementLevelsProduceDemandEffectAndMarketSizeTarget() {
         let advertisement = Advertisement(
             id: AdvertisementID(rawValue: "effect-score-test"),
             name: "Effect Score Test",
@@ -260,7 +260,10 @@ extension AdvertisementTests {
         )
 
         #expect(abs(advertisement.demandEffectScore - 0.4) < 0.000_001)
-        #expect(abs(advertisement.marketSizeEffectScore - 0.6) < 0.000_001)
+        #expect(
+            abs(advertisement.marketSizeTargetMultiplier - 2.0)
+                < 0.000_001
+        )
     }
 }
 

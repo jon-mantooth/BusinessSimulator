@@ -152,11 +152,6 @@ extension PricingTests {
             weight: 1.0,
             effectScore: tierProgress
         )
-        let initialMarketSizeMultiplier =
-            SimulationBalance.marketSize.multiplier(
-                weight: 1.0,
-                effectScore: tierProgress
-            )
         let demandEffectScore = 0.2
         let demandWeight = 0.18
         let purchasedDemandMultiplier =
@@ -165,7 +160,6 @@ extension PricingTests {
                 effectScore: demandEffectScore
             )
         let expectedSales = Double(product.idealUnitsSold)
-            * initialMarketSizeMultiplier
         let expectedBenefit = expectedSales
             * product.baseIdealPrice
             * initialDemandMultiplier
@@ -182,15 +176,45 @@ extension PricingTests {
     }
 
     @Test(arguments: pricingProductIDs)
-    func marketSizeOnlyDailyBenefitUsesMarketSizeEffect(
+    func demandBenefitUsesRepresentativeMarketSize(
         productID: ProductID
     ) {
         let product = ProductCatalog().product(for: productID)
-        let marketSizeEffectScore = 0.2
+        let representativeMarketSizeMultiplier = 1.5
+        let demandEffectScore = 0.2
+        let demandWeight = 0.18
+        let purchasedDemandMultiplier =
+            SimulationBalance.demand.multiplier(
+                weight: demandWeight,
+                effectScore: demandEffectScore
+            )
+        let expectedBenefit = Double(product.idealUnitsSold)
+            * representativeMarketSizeMultiplier
+            * product.baseIdealPrice
+            * (purchasedDemandMultiplier - 1.0)
+
+        let benefit = UpgradePricing.calculateDailyBenefit(
+            tierLevel: 1,
+            product: product,
+            representativeMarketSizeMultiplier:
+                representativeMarketSizeMultiplier,
+            demandEffectScore: demandEffectScore,
+            demandWeight: demandWeight
+        )
+
+        #expect(abs(benefit - expectedBenefit) < 0.000_001)
+    }
+
+    @Test(arguments: pricingProductIDs)
+    func marketSizeOnlyDailyBenefitUsesMarketSizeTarget(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let marketSizeTargetMultiplier = 1.2
         let marketSizeWeight = 0.25
         let marketSizeMultiplier = SimulationBalance.marketSize.multiplier(
             weight: marketSizeWeight,
-            effectScore: marketSizeEffectScore
+            targetMultiplier: marketSizeTargetMultiplier
         )
         let profitPerUnit = product.baseIdealPrice
             * (1.0 - UpgradePricing.ingredientCostRatio)
@@ -201,7 +225,8 @@ extension PricingTests {
         let benefit = UpgradePricing.calculateDailyBenefit(
             tierLevel: 1,
             product: product,
-            marketSizeEffectScore: marketSizeEffectScore,
+            marketSizeEndingTargetMultiplier:
+                marketSizeTargetMultiplier,
             marketSizeWeight: marketSizeWeight
         )
 
@@ -209,7 +234,7 @@ extension PricingTests {
     }
 
     @Test(arguments: pricingProductIDs)
-    func laterTierMarketSizeBenefitUsesExpectedTierState(
+    func laterTierMarketSizeBenefitUsesActualMarketSizeChange(
         productID: ProductID
     ) {
         let product = ProductCatalog().product(for: productID)
@@ -220,17 +245,12 @@ extension PricingTests {
             weight: 1.0,
             effectScore: tierProgress
         )
-        let initialMarketSizeMultiplier =
-            SimulationBalance.marketSize.multiplier(
-                weight: 1.0,
-                effectScore: tierProgress
-            )
-        let marketSizeEffectScore = 0.2
+        let marketSizeTargetMultiplier = 1.2
         let marketSizeWeight = 0.25
         let purchasedMarketSizeMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: marketSizeWeight,
-                effectScore: marketSizeEffectScore
+                targetMultiplier: marketSizeTargetMultiplier
             )
         let profitPerUnit = product.baseIdealPrice
             * (
@@ -238,14 +258,14 @@ extension PricingTests {
                     - UpgradePricing.ingredientCostRatio
             )
         let expectedBenefit = Double(product.idealUnitsSold)
-            * initialMarketSizeMultiplier
             * (purchasedMarketSizeMultiplier - 1.0)
             * profitPerUnit
 
         let benefit = UpgradePricing.calculateDailyBenefit(
             tierLevel: tierLevel,
             product: product,
-            marketSizeEffectScore: marketSizeEffectScore,
+            marketSizeEndingTargetMultiplier:
+                marketSizeTargetMultiplier,
             marketSizeWeight: marketSizeWeight
         )
 
@@ -315,7 +335,7 @@ extension PricingTests {
         let product = ProductCatalog().product(for: productID)
         let demandEffectScore = 0.2
         let demandWeight = 0.18
-        let marketSizeEffectScore = 0.2
+        let marketSizeTargetMultiplier = 1.2
         let marketSizeWeight = 0.25
         let addedCapacity = 10
         let demandBenefit = UpgradePricing.calculateDailyBenefit(
@@ -332,7 +352,8 @@ extension PricingTests {
         let marketSizeBenefit = UpgradePricing.calculateDailyBenefit(
             tierLevel: 1,
             product: product,
-            marketSizeEffectScore: marketSizeEffectScore,
+            marketSizeEndingTargetMultiplier:
+                marketSizeTargetMultiplier,
             marketSizeWeight: marketSizeWeight
         )
 
@@ -341,7 +362,8 @@ extension PricingTests {
             product: product,
             demandEffectScore: demandEffectScore,
             demandWeight: demandWeight,
-            marketSizeEffectScore: marketSizeEffectScore,
+            marketSizeEndingTargetMultiplier:
+                marketSizeTargetMultiplier,
             marketSizeWeight: marketSizeWeight,
             capacityEffect: .additive(addedCapacity)
         )

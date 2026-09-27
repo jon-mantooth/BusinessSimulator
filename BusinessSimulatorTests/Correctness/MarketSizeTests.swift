@@ -46,8 +46,10 @@ extension MarketSizeTests {
         )
         let expectedMarketSize = SimulationBalance.marketSize.multiplier(
             weight: AdvertisementDimension.marketSizeWeight,
-            effectScore: Double(testCase.marketSizeLevel)
-                / Double(totalLevels)
+            targetMultiplier:
+                Advertisement.marketSizeTargetMultiplier(
+                    for: testCase.marketSizeLevel
+                )
         )
 
         let marketSize = advertisementDimension.calculateMarketSize()
@@ -84,7 +86,8 @@ extension MarketSizeTests {
         let advertisementMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: AdvertisementDimension.marketSizeWeight,
-                effectScore: canvassing.marketSizeEffectScore
+                targetMultiplier:
+                    canvassing.marketSizeTargetMultiplier
             )
         let expectedSellingTimeMultiplier = 7.5 / 8.0
         let expectedMarketSize =
@@ -184,7 +187,8 @@ private func makeAdvertisementDimension(
         id: AdvertisementTierID(rawValue: "market-size-test-tier"),
         level: 0,
         advertisements: [advertisement],
-        product: ProductCatalog().product(for: .pies)
+        product: ProductCatalog().product(for: .pies),
+        requiredLocationTier: .tierOne
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],
