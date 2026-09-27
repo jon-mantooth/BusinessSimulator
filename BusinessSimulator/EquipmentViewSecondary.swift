@@ -271,7 +271,7 @@ struct SecondaryEquipmentDetailCard: View {
                 }
 
                 detailRow(title: "Capacity Increase") {
-                    Text("+\(equipment.capacity) / day")
+                    Text(equipment.capacityDisplayText)
                         .font(.headline.weight(.black))
                         .foregroundStyle(green)
                 }

@@ -1,5 +1,22 @@
 import Foundation
 
+enum CapacityType: Equatable {
+    case total
+    case additional
+}
+
+protocol CapacityProviding {
+    var capacity: Int { get }
+    var capacityType: CapacityType { get }
+}
+
+extension CapacityProviding {
+    var capacityDisplayText: String {
+        let prefix = capacityType == .additional ? "+" : ""
+        return "\(prefix)\(capacity) / day"
+    }
+}
+
 enum UpgradeTierLevel: Int, CaseIterable, Codable {
     case tierZero = 0
     case tierOne = 1

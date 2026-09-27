@@ -124,7 +124,7 @@ struct EquipmentViewPrimary: View {
 
                         metricRow(
                             title: "Production Capacity",
-                            value: "\(equipment.capacity) / day"
+                            value: equipment.capacityDisplayText
                         )
                         .frame(height: 24)
 

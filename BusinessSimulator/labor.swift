@@ -4,7 +4,8 @@ struct LaborID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
+struct Labor: Identifiable, Equatable, Codable, PurchasableItem,
+    CapacityProviding {
     let id: LaborID
     let name: String
     let smallIcon: GameIcon
@@ -25,6 +26,10 @@ struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
 
     var purchaseItemID: String {
         id.rawValue
+    }
+
+    var capacityType: CapacityType {
+        .additional
     }
 
     init(

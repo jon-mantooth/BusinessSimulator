@@ -44,7 +44,8 @@ enum EquipmentCategory: Equatable, Codable {
     )
 }
 
-struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
+struct Equipment: Identifiable, Equatable, Codable, PurchasableItem,
+    CapacityProviding {
     let id: EquipmentID
     let name: String
     let smallIcon: GameIcon
@@ -69,6 +70,15 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
 
     var purchaseItemID: String {
         id.rawValue
+    }
+
+    var capacityType: CapacityType {
+        switch category {
+        case .primary:
+            return .total
+        case .secondary:
+            return .additional
+        }
     }
 
     /// Rounds primary equipment to a retail-style price ending in 49 or 99.

@@ -176,7 +176,7 @@ struct LaborView: View {
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
 
-                        Text("+\(employee.capacity) capacity")
+                        Text(employee.capacityDisplayText)
                             .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(green)
 
