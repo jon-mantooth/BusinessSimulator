@@ -23,6 +23,7 @@ final class GameState {
     var finance: Finance!
     var calendar: GameCalendar!
     var weather: WeatherState!
+    var locationState: LocationState?
 
     var productState: ProductState?
     var reputation: BusinessReputationState?
@@ -95,6 +96,13 @@ final class GameState {
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
+
+        let locationCatalog = LocationCatalog()
+        let locationTiers = locationCatalog.tiersByProduct[product.id]!
+        self.locationState = LocationState(
+            tiers: locationTiers,
+            activeLocationID: locationTiers[0].locations[0].id
+        )
 
         let productState = ProductState(
             product: product,
@@ -191,6 +199,15 @@ final class GameState {
                     condition: $0.condition
                 )
             }
+        )
+
+        // TODO: Restore the persisted active location after location save
+        // support is added. Until then, restored games begin at Home.
+        let locationCatalog = LocationCatalog()
+        let locationTiers = locationCatalog.tiersByProduct[product.id]!
+        locationState = LocationState(
+            tiers: locationTiers,
+            activeLocationID: locationTiers[0].locations[0].id
         )
 
         let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
