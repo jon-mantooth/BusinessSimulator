@@ -120,25 +120,40 @@ struct PurchaseWorkflow {
         ) ? .available : .upgradeLimitReached
     }
 
-    func validateFinancialAvailability(
+    func itemAvailability(
+        for request: PurchaseRequest
+    ) -> PurchaseAvailability {
+        let locationAvailability = locationAvailability(
+            requiredTier: request.requiredLocationTier
+        )
+
+        guard case .available = locationAvailability else {
+            return locationAvailability
+        }
+
+        return financialAvailability(price: request.price)
+    }
+
+    func locationAvailability(
+        requiredTier: LocationTierLevel?
+    ) -> PurchaseAvailability {
+        guard let requiredTier else {
+            return .available
+        }
+
+        let activeLocationTier = gameState.locationState!.activeTier.level
+
+        guard activeLocationTier >= requiredTier else {
+            return .locationLocked(requiredTier: requiredTier)
+        }
+
+        return .available
+    }
+
+    func financialAvailability(
         price: Double
     ) -> PurchaseAvailability {
         gameState.finance!.purchaseAvailability(for: price)
-    }
-
-    /// Location eligibility is checked before finances so the player is not
-    /// encouraged to save for an upgrade that is unavailable at this level.
-    func validatePurchaseAvailability(
-        price: Double,
-        requiredLocationTier: LocationTierLevel
-    ) -> PurchaseAvailability {
-        let activeLocationTier = gameState.locationState!.activeTier.level
-
-        guard activeLocationTier >= requiredLocationTier else {
-            return .locationLocked(requiredTier: requiredLocationTier)
-        }
-
-        return validateFinancialAvailability(price: price)
     }
 
     // MARK: - Purchase Transaction
