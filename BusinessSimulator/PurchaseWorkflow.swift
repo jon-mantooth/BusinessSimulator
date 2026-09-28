@@ -34,6 +34,7 @@ protocol PurchasableState: AnyObject {
 
 enum PurchaseWorkflowResult {
     case completed
+    case unavailable(PurchaseAvailability)
     case saveFailed
 }
 
@@ -170,6 +171,23 @@ struct PurchaseWorkflow: Workflow {
         item: State.PurchaseItem,
         pendingUpgrade: PendingUpgrade? = nil
     ) -> PurchaseWorkflowResult {
+        complete(
+            PurchaseRequest(
+                state: state,
+                item: item,
+                pendingUpgrade: pendingUpgrade
+            )
+        )
+    }
+
+    func complete(
+        _ request: PurchaseRequest
+    ) -> PurchaseWorkflowResult {
+        let availability = itemAvailability(for: request)
+        guard case .available = availability else {
+            return .unavailable(availability)
+        }
+
         // 1. Capture a rollback snapshot before mutating GameState.
         let rollbackSnapshot = RollbackSnapshot(
             actualBalance: gameState.finance!.actualBalance,
@@ -179,32 +197,31 @@ struct PurchaseWorkflow: Workflow {
             pendingUpgrades: gameState.pendingUpgrades
         )
 
-        //Capture rollback state in case we need to revert. Upgrade state
-        let dimensionRollbackState = state.captureRollbackState()
-        state.applyUpgrade(item)
+        // Capture the concrete dimension's rollback operation before applying
+        // its type-erased upgrade.
+        let revertDimension = request.captureRollback()
+        request.applyUpgrade()
 
-        if let pendingUpgrade {
+        if let pendingUpgrade = request.pendingUpgrade {
             gameState.pendingUpgrades.append(pendingUpgrade)
         }
 
         // Reserve any immediate payment in displayed balance. The actual
         // balance is settled from cashFlowCosts when the day is completed.
-        if item.paymentSchedule == .oneTime {
-            gameState.finance!.displayedBalance -= item.price
+        if request.paymentSchedule == .oneTime {
+            gameState.finance!.displayedBalance -= request.price
         }
 
         // Record the upgrade in UpgradeTracker.
         gameState.upgradeTracker.recordUpgrade(
-            state.dimensionID,
+            request.purchaseCategory,
             on: gameState.calendar!.simulationDay
         )
 
         // Create a BusinessEvent for the purchase.
-        let purchaseCategory = state.dimensionID
-
-        let financialTransaction = item.paymentSchedule == .oneTime
+        let financialTransaction = request.paymentSchedule == .oneTime
             ? FinancialTransaction(
-                amount: item.price,
+                amount: request.price,
                 direction: .outflow
             )
             : nil
@@ -214,12 +231,12 @@ struct PurchaseWorkflow: Workflow {
             calendarDate: gameState.calendar!.currentDate,
             type: .purchase(
                 PurchaseEvent(
-                    category: purchaseCategory,
-                    itemID: item.purchaseItemID
+                    category: request.purchaseCategory,
+                    itemID: request.purchaseItemID
                 )
             ),
-            title: item.name,
-            details: item.description,
+            title: request.name,
+            details: request.description,
             financialTransaction: financialTransaction
         )
 
@@ -238,24 +255,22 @@ struct PurchaseWorkflow: Workflow {
         } catch {
             restoreGameState(
                 from: rollbackSnapshot,
-                state: state,
-                dimensionRollbackState: dimensionRollbackState
+                revertDimension: revertDimension
             )
 
             return .saveFailed
         }
     }
 
-    private func restoreGameState<State: PurchasableState>(
+    private func restoreGameState(
         from snapshot: RollbackSnapshot,
-        state: State,
-        dimensionRollbackState: State.RollbackState
+        revertDimension: () -> Void
     ) {
         gameState.finance!.actualBalance = snapshot.actualBalance
         gameState.finance!.displayedBalance = snapshot.displayedBalance
         gameState.upgradeTracker = snapshot.upgradeTracker
         gameState.pendingBusinessEvents = snapshot.pendingBusinessEvents
         gameState.pendingUpgrades = snapshot.pendingUpgrades
-        state.revertUpgrade(to: dimensionRollbackState)
+        revertDimension()
     }
 }
