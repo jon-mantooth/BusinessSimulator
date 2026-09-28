@@ -177,34 +177,7 @@ struct EquipmentCatalog {
     }
 
     init() {
-        primaryCapacitySchedule = CapacitySchedule(
-            upgrades: [
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierZero),
-                    scheduledCapacity: 0.90
-                ),
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierOne),
-                    scheduledCapacity: 1.30
-                ),
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierTwo),
-                    scheduledCapacity: 1.70
-                ),
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierThree),
-                    scheduledCapacity: 2.10
-                ),
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierFour),
-                    scheduledCapacity: 2.70
-                ),
-                CapacityUpgrade(
-                    upgradeID: .tier(.tierFive),
-                    scheduledCapacity: 3.30
-                )
-            ]
-        )
+        primaryCapacitySchedule = ProductionCapacityBalance.schedule
         secondaryCapacitySchedule = CapacitySchedule(
             upgrades: [
                 CapacityUpgrade(

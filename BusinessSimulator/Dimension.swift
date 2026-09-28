@@ -18,17 +18,49 @@ enum PaymentSchedule: String, Codable, Hashable {
 /// extends capacity to 330%.
 enum ProductionCapacityBalance {
 
-    static let tierRatios =
-        ProductionCapacitySchedules.primaryEquipmentCapacities
-    static let baselineRatio = tierRatios[0]
-    static let totalTiers = tierRatios.count - 1
-    static let targetRatio = tierRatios[totalTiers]
+    static let schedule = CapacitySchedule(
+        upgrades: [
+            CapacityUpgrade(
+                upgradeID: .tier(.tierZero),
+                scheduledCapacity: 0.90
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierOne),
+                scheduledCapacity: 1.30
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierTwo),
+                scheduledCapacity: 1.70
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierThree),
+                scheduledCapacity: 2.10
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierFour),
+                scheduledCapacity: 2.70
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierFive),
+                scheduledCapacity: 3.30
+            )
+        ]
+    )
+    static let totalTiers = UpgradeTierLevel.allCases.count - 1
+    static let baselineRatio = schedule.scheduledCapacity(
+        for: .tier(.tierZero)
+    )
+    static let targetRatio = schedule.scheduledCapacity(
+        for: .tier(.tierFive)
+    )
 
     static func baseCapacity(
         baseIdealUnitsSold: Int
     ) -> Int {
-        schedule(baseIdealUnitsSold: baseIdealUnitsSold)
-            .capacity(for: "equipment-tier-0")
+        schedule.capacity(
+            for: .tier(.tierZero),
+            idealUnitsSold: baseIdealUnitsSold
+        )
     }
 
     /// Returns the cumulative capacity increase above the 90% baseline after
@@ -40,17 +72,16 @@ enum ProductionCapacityBalance {
         assert(baseIdealUnitsSold > 0)
         assert((0...totalTiers).contains(tierLevel))
 
-        let schedule = schedule(baseIdealUnitsSold: baseIdealUnitsSold)
-        return schedule.capacity(for: "equipment-tier-\(tierLevel)")
-            - schedule.capacity(for: "equipment-tier-0")
-    }
+        guard let tier = UpgradeTierLevel(rawValue: tierLevel) else {
+            preconditionFailure("Invalid primary-equipment tier \(tierLevel).")
+        }
 
-    private static func schedule(
-        baseIdealUnitsSold: Int
-    ) -> CapacitySchedule {
-        ProductionCapacitySchedules.primaryEquipment(
-            idealUnitsSold: baseIdealUnitsSold,
-            upgradeIDs: (0...totalTiers).map { "equipment-tier-\($0)" }
+        return schedule.capacity(
+            for: .tier(tier),
+            idealUnitsSold: baseIdealUnitsSold
+        ) - schedule.capacity(
+            for: .tier(.tierZero),
+            idealUnitsSold: baseIdealUnitsSold
         )
     }
 }

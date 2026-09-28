@@ -75,6 +75,16 @@ struct CapacitySchedule {
         for upgradeID: CapacityUpgradeID,
         product: Product
     ) -> Int {
+        capacity(
+            for: upgradeID,
+            idealUnitsSold: product.idealUnitsSold
+        )
+    }
+
+    func capacity(
+        for upgradeID: CapacityUpgradeID,
+        idealUnitsSold: Int
+    ) -> Int {
         guard let upgrade = upgrades.first(
             where: { $0.upgradeID == upgradeID }
         ) else {
@@ -85,9 +95,23 @@ struct CapacitySchedule {
 
         return Int(
             (
-                Double(product.idealUnitsSold)
+                Double(idealUnitsSold)
                     * upgrade.scheduledCapacity
             ).rounded()
         )
+    }
+
+    func scheduledCapacity(
+        for upgradeID: CapacityUpgradeID
+    ) -> Double {
+        guard let upgrade = upgrades.first(
+            where: { $0.upgradeID == upgradeID }
+        ) else {
+            preconditionFailure(
+                "Capacity schedule does not contain \(upgradeID)."
+            )
+        }
+
+        return upgrade.scheduledCapacity
     }
 }
