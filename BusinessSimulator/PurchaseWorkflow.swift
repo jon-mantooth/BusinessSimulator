@@ -115,9 +115,9 @@ struct PurchaseWorkflow {
         for request: PurchaseDimensionAvailabilityRequest
     ) -> PurchaseDimensionAvailability {
         gameState.upgradeTracker.canUpgrade(
-            category,
+            request.category,
             on: gameState.calendar!.simulationDay
-        )
+        ) ? .available : .upgradeLimitReached
     }
 
     func validateFinancialAvailability(
