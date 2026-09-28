@@ -97,7 +97,14 @@ struct PurchaseRequest {
 
 /// Coordinates the shared purchase process used by advertisements,
 /// equipment, labor, transportation, and storage.
-struct PurchaseWorkflow {
+struct PurchaseWorkflow: Workflow {
+    typealias DimensionAvailabilityRequest =
+        PurchaseDimensionAvailabilityRequest
+    typealias DimensionAvailability = PurchaseDimensionAvailability
+    typealias ItemRequest = PurchaseRequest
+    typealias ItemAvailability = PurchaseAvailability
+    typealias CompletionResult = PurchaseWorkflowResult
+
     private struct RollbackSnapshot {
         let actualBalance: Double
         let displayedBalance: Double
