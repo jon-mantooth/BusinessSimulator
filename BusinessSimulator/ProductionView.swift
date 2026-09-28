@@ -157,11 +157,8 @@ struct ProductionView: View {
                             activeTier: equipmentState.activePrimaryTier,
                             availableTier: equipmentState.nextPrimaryTier,
                             purchaseAvailability: { equipment in
-                                purchaseWorkflow.validatePurchaseAvailability(
-                                    price: equipment.price,
-                                    requiredLocationTier:
-                                        equipmentState.nextPrimaryTier!
-                                            .requiredLocationTier
+                                purchaseWorkflow.itemAvailability(
+                                    for: purchaseRequest(for: equipment)
                                 )
                             },
                             onPurchase: attemptPurchase
@@ -206,8 +203,10 @@ struct ProductionView: View {
                         selectedSecondaryEquipment
                     ),
                     purchaseAvailability: purchaseWorkflow
-                        .validateFinancialAvailability(
-                            price: selectedSecondaryEquipment.price
+                        .itemAvailability(
+                            for: purchaseRequest(
+                                for: selectedSecondaryEquipment
+                            )
                         ),
                     onPurchase: {
                         attemptPurchase(selectedSecondaryEquipment)
@@ -254,21 +253,9 @@ struct ProductionView: View {
     private func attemptPurchase(
         _ equipment: Equipment
     ) {
-        let availability: PurchaseAvailability
-        if let requiredLocationTier = equipmentState.requiredLocationTier(
-            for: equipment
+        switch purchaseWorkflow.itemAvailability(
+            for: purchaseRequest(for: equipment)
         ) {
-            availability = purchaseWorkflow.validatePurchaseAvailability(
-                price: equipment.price,
-                requiredLocationTier: requiredLocationTier
-            )
-        } else {
-            availability = purchaseWorkflow.validateFinancialAvailability(
-                price: equipment.price
-            )
-        }
-
-        switch availability {
         case .available:
             equipmentPendingConfirmation = equipment
         case let .locationLocked(requiredTier):
@@ -282,15 +269,26 @@ struct ProductionView: View {
         }
     }
 
-    private func confirmPurchase(
-        _ equipment: Equipment
-    ) {
-        let result = purchaseWorkflow.completePurchase(
+    private func purchaseRequest(
+        for equipment: Equipment
+    ) -> PurchaseRequest {
+        PurchaseRequest(
             state: equipmentState,
             item: equipment,
+            requiredLocationTier: equipmentState.requiredLocationTier(
+                for: equipment
+            ),
             pendingUpgrade: equipment.ingredientUpgrade.map {
                 .ingredient($0)
             }
+        )
+    }
+
+    private func confirmPurchase(
+        _ equipment: Equipment
+    ) {
+        let result = purchaseWorkflow.complete(
+            purchaseRequest(for: equipment)
         )
 
         equipmentPendingConfirmation = nil
@@ -299,8 +297,27 @@ struct ProductionView: View {
         case .completed:
             selectedSecondaryEquipment = nil
             showingEquipment = false
+        case let .unavailable(availability):
+            showPurchaseWarning(for: availability)
         case .saveFailed:
             purchaseWarning = .purchaseSaveFailed
+        }
+    }
+
+    private func showPurchaseWarning(
+        for availability: PurchaseAvailability
+    ) {
+        switch availability {
+        case .available:
+            break
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 

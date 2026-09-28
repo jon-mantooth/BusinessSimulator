@@ -177,10 +177,8 @@ struct AdvertisementView: View {
         let actionColor = actionColor(for: advertisement)
         let canSelectAdvertisement: Bool = {
             if case .available = purchaseWorkflow
-                .validatePurchaseAvailability(
-                    price: advertisement.price,
-                    requiredLocationTier: advertisementState.nextTier!
-                        .requiredLocationTier
+                .itemAvailability(
+                    for: purchaseRequest(for: advertisement)
                 )
             {
                 return true
@@ -252,10 +250,8 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        switch purchaseWorkflow.validatePurchaseAvailability(
-            price: advertisement.price,
-            requiredLocationTier: advertisementState.nextTier!
-                .requiredLocationTier
+        switch purchaseWorkflow.itemAvailability(
+            for: purchaseRequest(for: advertisement)
         ) {
         case .available:
             advertisementPendingConfirmation = advertisement
@@ -270,12 +266,22 @@ struct AdvertisementView: View {
         }
     }
 
+    private func purchaseRequest(
+        for advertisement: Advertisement
+    ) -> PurchaseRequest {
+        PurchaseRequest(
+            state: advertisementState,
+            item: advertisement,
+            requiredLocationTier: advertisementState.nextTier!
+                .requiredLocationTier
+        )
+    }
+
     private func confirmPurchase(
         _ advertisement: Advertisement
     ) {
-        let result = purchaseWorkflow.completePurchase(
-            state: advertisementState,
-            item: advertisement
+        let result = purchaseWorkflow.complete(
+            purchaseRequest(for: advertisement)
         )
 
         advertisementPendingConfirmation = nil
@@ -283,8 +289,27 @@ struct AdvertisementView: View {
         switch result {
         case .completed:
             onClose()
+        case let .unavailable(availability):
+            showPurchaseWarning(for: availability)
         case .saveFailed:
             purchaseWarning = .purchaseSaveFailed
+        }
+    }
+
+    private func showPurchaseWarning(
+        for availability: PurchaseAvailability
+    ) {
+        switch availability {
+        case .available:
+            break
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 

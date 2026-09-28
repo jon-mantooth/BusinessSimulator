@@ -239,8 +239,11 @@ struct LaborView: View {
     }
 
     private func attemptPurchase(_ labor: Labor) {
-        switch purchaseWorkflow.validateFinancialAvailability(
-            price: labor.price
+        switch purchaseWorkflow.itemAvailability(
+            for: PurchaseRequest(
+                state: laborState,
+                item: labor
+            )
         ) {
         case .available:
             laborPendingConfirmation = labor
@@ -256,9 +259,11 @@ struct LaborView: View {
     }
 
     private func confirmPurchase(_ labor: Labor) {
-        let result = purchaseWorkflow.completePurchase(
-            state: laborState,
-            item: labor
+        let result = purchaseWorkflow.complete(
+            PurchaseRequest(
+                state: laborState,
+                item: labor
+            )
         )
 
         laborPendingConfirmation = nil
@@ -266,8 +271,27 @@ struct LaborView: View {
         switch result {
         case .completed:
             onClose()
+        case let .unavailable(availability):
+            showPurchaseWarning(for: availability)
         case .saveFailed:
             purchaseWarning = .purchaseSaveFailed
+        }
+    }
+
+    private func showPurchaseWarning(
+        for availability: PurchaseAvailability
+    ) {
+        switch availability {
+        case .available:
+            break
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 
