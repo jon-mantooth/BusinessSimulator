@@ -37,6 +37,64 @@ enum PurchaseWorkflowResult {
     case saveFailed
 }
 
+struct PurchaseDimensionAvailabilityRequest {
+    let category: PurchaseCategory
+}
+
+enum PurchaseDimensionAvailability: Equatable {
+    case available
+    case upgradeLimitReached
+}
+
+/// Hides the concrete PurchasableState and item types while preserving the
+/// state-specific operations needed to complete or revert the purchase.
+struct PurchaseRequest {
+    let purchaseItemID: String
+    let name: String
+    let description: String
+    let price: Double
+    let paymentSchedule: PaymentSchedule
+    let purchaseCategory: PurchaseCategory
+    let requiredLocationTier: LocationTierLevel?
+    let pendingUpgrade: PendingUpgrade?
+
+    private let captureDimensionRollback: () -> () -> Void
+    private let applyDimensionUpgrade: () -> Void
+
+    init<State: PurchasableState>(
+        state: State,
+        item: State.PurchaseItem,
+        requiredLocationTier: LocationTierLevel? = nil,
+        pendingUpgrade: PendingUpgrade? = nil
+    ) {
+        self.purchaseItemID = item.purchaseItemID
+        self.name = item.name
+        self.description = item.description
+        self.price = item.price
+        self.paymentSchedule = item.paymentSchedule
+        self.purchaseCategory = state.dimensionID
+        self.requiredLocationTier = requiredLocationTier
+        self.pendingUpgrade = pendingUpgrade
+        self.captureDimensionRollback = {
+            let rollbackState = state.captureRollbackState()
+            return {
+                state.revertUpgrade(to: rollbackState)
+            }
+        }
+        self.applyDimensionUpgrade = {
+            state.applyUpgrade(item)
+        }
+    }
+
+    func captureRollback() -> () -> Void {
+        captureDimensionRollback()
+    }
+
+    func applyUpgrade() {
+        applyDimensionUpgrade()
+    }
+}
+
 /// Coordinates the shared purchase process used by advertisements,
 /// equipment, labor, transportation, and storage.
 struct PurchaseWorkflow {
@@ -53,9 +111,9 @@ struct PurchaseWorkflow {
 
     // MARK: - Before Purchase
 
-    func validateUpgradeAvailability(
-        category: PurchaseCategory
-    ) -> Bool {
+    func dimensionAvailability(
+        for request: PurchaseDimensionAvailabilityRequest
+    ) -> PurchaseDimensionAvailability {
         gameState.upgradeTracker.canUpgrade(
             category,
             on: gameState.calendar!.simulationDay

@@ -44,9 +44,11 @@ struct ProductionView: View {
                     systemImage: "gearshape.fill",
                     scale: scale,
                     action: {
-                        if purchaseWorkflow.validateUpgradeAvailability(
-                            category: .equipment
-                        ) {
+                        if purchaseWorkflow.dimensionAvailability(
+                            for: PurchaseDimensionAvailabilityRequest(
+                                category: .equipment
+                            )
+                        ) == .available {
                             selectedEquipmentTab = .primary
                             showingEquipment = true
                         } else {
@@ -64,9 +66,11 @@ struct ProductionView: View {
                     systemImage: "person.2.fill",
                     scale: scale,
                     action: {
-                        if purchaseWorkflow.validateUpgradeAvailability(
-                            category: .labor
-                        ) {
+                        if purchaseWorkflow.dimensionAvailability(
+                            for: PurchaseDimensionAvailabilityRequest(
+                                category: .labor
+                            )
+                        ) == .available {
                             showingLabor = true
                         } else {
                             showingLaborUpgradeLimit = true

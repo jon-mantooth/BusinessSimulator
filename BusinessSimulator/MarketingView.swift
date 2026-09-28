@@ -58,10 +58,11 @@ struct MarketingView: View {
                         systemImage: "megaphone.fill",
                         scale: scale,
                         action: {
-                            if purchaseWorkflow
-                                .validateUpgradeAvailability(
+                            if purchaseWorkflow.dimensionAvailability(
+                                for: PurchaseDimensionAvailabilityRequest(
                                     category: .advertisement
-                                ) {
+                                )
+                            ) == .available {
                                 showingAdvertisement = true
                             } else {
                                 showingAdvertisementUpgradeLimit = true
