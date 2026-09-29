@@ -127,7 +127,7 @@ struct GameRunner {
         gameState.simulationSummary.daySummaries.append(summary)
         
         //increment day
-        gameState.calendar.simulationDay += 1
+        gameState.calendar.advanceDay()
 
         if gameState.calendar.currentWeekday == .monday {
             prepForNextWeek()
