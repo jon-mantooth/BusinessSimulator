@@ -173,6 +173,7 @@ final class GameState {
         guard let product = productState?.product else { return }
 
         calendar.beginSeason(product: product)
+        upgradeTracker.reset()
         weather.generateWeeklyForecast(
             starting: calendar.currentWeekStartDate
         )
