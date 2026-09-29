@@ -5,6 +5,7 @@ struct RelocationDimensionAvailabilityRequest {}
 enum RelocationDimensionAvailability: Equatable {
     case available
     case upgradeMadeToday
+    case pendingBusinessEvents
 }
 
 enum RelocationWorkflowResult {
@@ -95,9 +96,17 @@ struct RelocationWorkflow {
     func dimensionAvailability(
         for request: RelocationDimensionAvailabilityRequest
     ) -> RelocationDimensionAvailability {
-        gameState.upgradeTracker.hasUpgrade(
+        if gameState.upgradeTracker.hasUpgrade(
             on: gameState.calendar.simulationDay
-        ) ? .upgradeMadeToday : .available
+        ) {
+            return .upgradeMadeToday
+        }
+
+        guard gameState.pendingBusinessEvents.isEmpty else {
+            return .pendingBusinessEvents
+        }
+
+        return .available
     }
 
     func itemAvailability(
