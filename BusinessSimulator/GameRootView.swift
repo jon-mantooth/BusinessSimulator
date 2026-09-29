@@ -72,7 +72,7 @@ struct GameRootView: View {
             try gameState.restoreBusiness(from: gameSave)
             previewedProduct = nil
             currentSummary = nil
-            currentScreen = .prep
+            showNewDayBackground()
         } catch {
             showingLoadError = true
         }
@@ -81,11 +81,17 @@ struct GameRootView: View {
     private func onContinue(product: Product){
         gameState.initializeBusiness(product: product)
         previewedProduct = nil
-        currentScreen = .prep
+        showNewDayBackground()
     }
     
     private func onNextDay() {
         dayPlaybackState.reset()
+        showNewDayBackground()
+    }
+
+    private func showNewDayBackground() {
+        gameState.beginSeasonIfNeeded()
+        selectedArea = .gameMode
         currentScreen = .neighborhood
         dayTransitionState.beginSunrise(
             date: gameState.calendar.currentDate,
