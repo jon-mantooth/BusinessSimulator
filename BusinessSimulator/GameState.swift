@@ -400,7 +400,8 @@ final class GameState {
             savedSummary in
             let summary = DaySummary(
                 day: savedSummary.day,
-                startingBalance: savedSummary.startingBalance
+                startingBalance: savedSummary.startingBalance,
+                type: savedSummary.type
             )
             summary.demandedSales = savedSummary.demandedSales
             summary.sales = savedSummary.sales

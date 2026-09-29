@@ -19,10 +19,16 @@ struct SummarySection {
     var notes: [String]
 }
 
+enum DaySummaryType: String, Codable {
+    case operating
+    case relocation
+}
+
 final class DaySummary {
 
     let day: Int
     let startingBalance: Double
+    let type: DaySummaryType
 
     var demandedSales: Int = 0
     var sales: Int = 0
@@ -46,10 +52,12 @@ final class DaySummary {
 
     init(
         day: Int,
-        startingBalance: Double
+        startingBalance: Double,
+        type: DaySummaryType = .operating
     ) {
         self.day = day
         self.startingBalance = startingBalance
+        self.type = type
     }
 
     func addNote(
