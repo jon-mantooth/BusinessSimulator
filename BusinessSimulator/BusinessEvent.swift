@@ -14,8 +14,14 @@ struct PurchaseEvent: Codable {
     let itemID: String
 }
 
+struct RelocationEvent: Codable {
+    let previousLocationID: LocationID
+    let newLocationID: LocationID
+}
+
 enum BusinessEventType: Codable {
     case purchase(PurchaseEvent)
+    case relocation(RelocationEvent)
 }
 
 struct BusinessEvent: Identifiable, Codable {
