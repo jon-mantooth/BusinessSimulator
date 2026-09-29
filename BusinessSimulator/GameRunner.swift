@@ -94,9 +94,15 @@ struct GameRunner {
         }
 
         if gameState.calendar.currentWeekday == .friday {
+            let weeklyCostMultiplier =
+                gameState.calendar.seasonDay < 5
+                    ? Double(gameState.calendar.seasonDay) / 5.0
+                    : 1.0
+
             for department in departments {
                 totalCosts += department.calculateWeeklyCosts(
-                    summary: summary
+                    summary: summary,
+                    multiplier: weeklyCostMultiplier
                 )
             }
         }
