@@ -210,6 +210,10 @@ final class GameCalendar {
         currentDate = state.currentDate
     }
 
+    func prepareForNewSeason() {
+        seasonDay = 0
+    }
+
     func beginSeason(
         product: Product
     ) {
