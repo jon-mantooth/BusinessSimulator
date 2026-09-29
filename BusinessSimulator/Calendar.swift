@@ -211,6 +211,7 @@ final class GameCalendar {
     }
 
     func prepareForNewSeason() {
+        simulationDay += 1
         seasonDay = 0
     }
 
