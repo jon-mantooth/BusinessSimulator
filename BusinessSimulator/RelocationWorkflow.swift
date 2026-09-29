@@ -9,7 +9,7 @@ enum RelocationDimensionAvailability: Equatable {
 }
 
 enum RelocationWorkflowResult {
-    case completed
+    case completed(DaySummary)
     case unavailable(RelocationItemAvailability)
     case saveFailed
 }
@@ -80,6 +80,7 @@ struct RelocationWorkflow {
     }
 
     let gameState: GameState
+    let saveRepository: any GameSaveRepository
 
     private func captureRollbackSnapshot() -> RollbackSnapshot {
         RollbackSnapshot(
@@ -162,18 +163,80 @@ struct RelocationWorkflow {
 
         let rollbackSnapshot = captureRollbackSnapshot()
 
-        gameState.finance.displayedBalance -= request.relocationPrice
+        let relocationEvent = BusinessEvent(
+            simulationDay: gameState.calendar.simulationDay,
+            calendarDate: gameState.calendar.currentDate,
+            type: .relocation(
+                RelocationEvent(
+                    previousLocationID:
+                        rollbackSnapshot.activeLocationID,
+                    newLocationID: request.destination.id
+                )
+            ),
+            title: "Relocated to \(request.destination.name)",
+            details: request.destination.description,
+            financialTransaction: FinancialTransaction(
+                amount: request.relocationPrice,
+                direction: .outflow
+            )
+        )
+
+        let relocationSummary = DaySummary(
+            day: gameState.calendar.simulationDay,
+            startingBalance: gameState.finance.actualBalance,
+            type: .relocation
+        )
+        relocationSummary.businessEvents.append(relocationEvent)
+        relocationSummary.cashFlowCosts.append(
+            Cost(
+                name: "Relocation",
+                amount: request.relocationPrice
+            )
+        )
+        _ = calculateProratedWeeklyCost(
+            summary: relocationSummary
+        )
+
+        gameState.finance.actualBalance = relocationSummary.balance
+        gameState.finance.displayedBalance = relocationSummary.balance
         gameState.calendar.prepareForNewSeason()
         gameState.locationState!.relocate(
             to: request.destination.id
         )
-
-        // The remaining relocation transaction will use this snapshot to
-        // restore GameState if persistence fails.
-        _ = rollbackSnapshot
-        preconditionFailure(
-            "The relocation transaction has not been implemented yet."
+        gameState.simulationSummary.daySummaries.append(
+            relocationSummary
         )
+
+        do {
+            try saveRepository.save(
+                GameSave(gameState: gameState)
+            )
+
+            return .completed(relocationSummary)
+        } catch {
+            restoreGameState(from: rollbackSnapshot)
+            return .saveFailed
+        }
+    }
+
+    private func restoreGameState(
+        from snapshot: RollbackSnapshot
+    ) {
+        gameState.locationState!.relocate(
+            to: snapshot.activeLocationID
+        )
+        gameState.calendar.revert(to: snapshot.calendarState)
+        gameState.finance.actualBalance = snapshot.actualBalance
+        gameState.finance.displayedBalance = snapshot.displayedBalance
+
+        let addedSummaryCount =
+            gameState.simulationSummary.daySummaries.count
+            - snapshot.summaryCount
+        precondition(
+            addedSummaryCount == 1,
+            "Relocation must append exactly one summary before rollback."
+        )
+        gameState.simulationSummary.daySummaries.removeLast()
     }
 
     private func requirementStatuses(
