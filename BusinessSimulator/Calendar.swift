@@ -32,12 +32,16 @@ final class GameCalendar {
     }()
 
     var simulationDay: Int
-    private(set) var locationStartDate: Date
-    private(set) var locationStartSimulationDay: Int
+    private(set) var seasonDay: Int
+    private(set) var season: Season
 
     private let foundationCalendar: Foundation.Calendar
 
     var currentDate: Date {
+        guard seasonDay > 0 else {
+            return season.startDate
+        }
+
         date(forSimulationDay: simulationDay)
     }
 
@@ -66,15 +70,44 @@ final class GameCalendar {
     }
 
     init(
-        simulationDay: Int = 1,
-        locationStartDate: Date = GameCalendar.defaultStartDate,
-        locationStartSimulationDay: Int = 1
+        simulationDay: Int = 0,
+        startDate: Date = GameCalendar.defaultStartDate
     ) {
-        precondition(simulationDay >= 1, "Simulation day must be at least 1.")
+        precondition(simulationDay >= 0, "Simulation day cannot be negative.")
+
+        let calendar = Foundation.Calendar(identifier: .gregorian)
+        let resolvedStartDate = Self.firstWeekday(
+            onOrAfter: calendar.startOfDay(for: startDate),
+            using: calendar
+        )
+
+        self.foundationCalendar = calendar
+        self.simulationDay = simulationDay
+        self.seasonDay = simulationDay
+        self.season = Season(
+            number: 1,
+            startSimulationDay: 1,
+            endSimulationDay: nil,
+            startDate: resolvedStartDate,
+            endDate: nil
+        )
+    }
+
+    init(
+        simulationDay: Int,
+        seasonDay: Int,
+        season: Season
+    ) {
+        precondition(simulationDay >= 0, "Simulation day cannot be negative.")
+        precondition(seasonDay >= 0, "Season day cannot be negative.")
         precondition(
-            locationStartSimulationDay >= 1
-                && locationStartSimulationDay <= simulationDay,
-            "Location start day must fall within the simulation timeline."
+            season.startSimulationDay >= 1,
+            "A season must start on simulation day one or later."
+        )
+        precondition(
+            seasonDay == 0
+                || season.startSimulationDay <= simulationDay,
+            "An initialized season cannot begin after the current simulation day."
         )
 
         let calendar = Foundation.Calendar(identifier: .gregorian)
