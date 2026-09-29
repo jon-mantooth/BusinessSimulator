@@ -116,6 +116,11 @@ struct InventoryByAge {
 
     // Mutations
 
+    mutating func reset(currentDay: Int) {
+        self.currentDay = currentDay
+        inventoryByPurchaseDay.removeAll()
+    }
+
     /// Consumes inventory using FIFO.
     ///
     /// Inventory is stored internally in purchase units.
