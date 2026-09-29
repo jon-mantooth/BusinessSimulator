@@ -38,9 +38,7 @@ enum PurchaseWorkflowResult {
     case saveFailed
 }
 
-struct PurchaseDimensionAvailabilityRequest {
-    let category: PurchaseCategory
-}
+struct PurchaseDimensionAvailabilityRequest {}
 
 enum PurchaseDimensionAvailability: Equatable {
     case available
@@ -123,8 +121,7 @@ struct PurchaseWorkflow: Workflow {
         for request: PurchaseDimensionAvailabilityRequest
     ) -> PurchaseDimensionAvailability {
         gameState.upgradeTracker.canUpgrade(
-            request.category,
-            on: gameState.calendar!.simulationDay
+            during: gameState.calendar.currentWeekStartDate
         ) ? .available : .upgradeLimitReached
     }
 
@@ -214,8 +211,8 @@ struct PurchaseWorkflow: Workflow {
 
         // Record the upgrade in UpgradeTracker.
         gameState.upgradeTracker.recordUpgrade(
-            request.purchaseCategory,
-            on: gameState.calendar!.simulationDay
+            on: gameState.calendar.simulationDay,
+            weekStarting: gameState.calendar.currentWeekStartDate
         )
 
         // Create a BusinessEvent for the purchase.

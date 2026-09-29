@@ -87,26 +87,36 @@ enum ProductionCapacityBalance {
 }
 
 struct UpgradeTracker {
-    private(set) var lastUpgradeDays: [PurchaseCategory: Int]
+    private(set) var lastUpgradeSimulationDay: Int?
+    private(set) var lastUpgradeWeekStartDate: Date?
 
     init(
-        lastUpgradeDays: [PurchaseCategory: Int] = [:]
+        lastUpgradeSimulationDay: Int? = nil,
+        lastUpgradeWeekStartDate: Date? = nil
     ) {
-        self.lastUpgradeDays = lastUpgradeDays
+        self.lastUpgradeSimulationDay = lastUpgradeSimulationDay
+        self.lastUpgradeWeekStartDate = lastUpgradeWeekStartDate
     }
 
-    func canUpgrade(
-        _ category: PurchaseCategory,
-        on simulationDay: Int
-    ) -> Bool {
-        lastUpgradeDays[category] != simulationDay
+    func canUpgrade(during weekStartDate: Date) -> Bool {
+        lastUpgradeWeekStartDate != weekStartDate
     }
 
     mutating func recordUpgrade(
-        _ category: PurchaseCategory,
-        on simulationDay: Int
+        on simulationDay: Int,
+        weekStarting weekStartDate: Date
     ) {
-        lastUpgradeDays[category] = simulationDay
+        lastUpgradeSimulationDay = simulationDay
+        lastUpgradeWeekStartDate = weekStartDate
+    }
+
+    func hasUpgrade(on simulationDay: Int) -> Bool {
+        lastUpgradeSimulationDay == simulationDay
+    }
+
+    mutating func reset() {
+        lastUpgradeSimulationDay = nil
+        lastUpgradeWeekStartDate = nil
     }
 }
 

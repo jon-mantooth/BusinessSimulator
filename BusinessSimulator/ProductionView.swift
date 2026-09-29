@@ -45,9 +45,7 @@ struct ProductionView: View {
                     scale: scale,
                     action: {
                         if purchaseWorkflow.dimensionAvailability(
-                            for: PurchaseDimensionAvailabilityRequest(
-                                category: .equipment
-                            )
+                            for: PurchaseDimensionAvailabilityRequest()
                         ) == .available {
                             selectedEquipmentTab = .primary
                             showingEquipment = true
@@ -67,9 +65,7 @@ struct ProductionView: View {
                     scale: scale,
                     action: {
                         if purchaseWorkflow.dimensionAvailability(
-                            for: PurchaseDimensionAvailabilityRequest(
-                                category: .labor
-                            )
+                            for: PurchaseDimensionAvailabilityRequest()
                         ) == .available {
                             showingLabor = true
                         } else {
@@ -112,7 +108,7 @@ struct ProductionView: View {
         .overlay {
             if showingEquipmentUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(upgradeName: "equipment"),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingEquipmentUpgradeLimit = false
@@ -122,7 +118,7 @@ struct ProductionView: View {
 
             if showingLaborUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(upgradeName: "labor"),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingLaborUpgradeLimit = false

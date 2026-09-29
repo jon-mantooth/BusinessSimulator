@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 10
+    static let currentSchemaVersion = 11
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -80,7 +80,8 @@ struct LaborStateSave: Codable {
 }
 
 struct UpgradeTrackerSave: Codable {
-    let lastUpgradeDays: [PurchaseCategory: Int]
+    let lastUpgradeSimulationDay: Int?
+    let lastUpgradeWeekStartDate: Date?
 }
 
 struct DaySummarySave: Codable {
@@ -201,7 +202,10 @@ extension GameSave {
         pendingBusinessEvents = gameState.pendingBusinessEvents
         pendingUpgrades = gameState.pendingUpgrades
         upgradeTracker = UpgradeTrackerSave(
-            lastUpgradeDays: gameState.upgradeTracker.lastUpgradeDays
+            lastUpgradeSimulationDay:
+                gameState.upgradeTracker.lastUpgradeSimulationDay,
+            lastUpgradeWeekStartDate:
+                gameState.upgradeTracker.lastUpgradeWeekStartDate
         )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in

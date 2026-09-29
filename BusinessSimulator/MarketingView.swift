@@ -59,9 +59,7 @@ struct MarketingView: View {
                         scale: scale,
                         action: {
                             if purchaseWorkflow.dimensionAvailability(
-                                for: PurchaseDimensionAvailabilityRequest(
-                                    category: .advertisement
-                                )
+                                for: PurchaseDimensionAvailabilityRequest()
                             ) == .available {
                                 showingAdvertisement = true
                             } else {
@@ -115,9 +113,7 @@ struct MarketingView: View {
 
             if showingAdvertisementUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(
-                        upgradeName: "advertising"
-                    ),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingAdvertisementUpgradeLimit = false

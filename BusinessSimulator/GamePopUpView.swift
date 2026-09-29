@@ -9,7 +9,7 @@ enum GamePopupType {
     case insufficientFunds
     case operatingReserveRequired
     case locationLocked(requiredLevel: Int)
-    case upgradeLimitReached(upgradeName: String)
+    case upgradeLimitReached
     case purchaseSaveFailed
 
     var title: String {
@@ -40,8 +40,8 @@ enum GamePopupType {
             return "You must have enough money remaining to purchase ingredients."
         case let .locationLocked(requiredLevel):
             return "This upgrade is available at Level \(requiredLevel)."
-        case let .upgradeLimitReached(upgradeName):
-            return "You can only upgrade \(upgradeName) once per business day."
+        case .upgradeLimitReached:
+            return "You can make only one business upgrade per week. Another upgrade will be available next week."
         case .purchaseSaveFailed:
             return "Your purchase was not completed because the game could not be saved. Please try again."
         }

@@ -372,7 +372,10 @@ final class GameState {
         finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
 
         upgradeTracker = UpgradeTracker(
-            lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
+            lastUpgradeSimulationDay:
+                gameSave.upgradeTracker.lastUpgradeSimulationDay,
+            lastUpgradeWeekStartDate:
+                gameSave.upgradeTracker.lastUpgradeWeekStartDate
         )
 
         simulationSummary = SimulationSummary()

@@ -4,6 +4,13 @@ struct RelocationDimensionAvailabilityRequest {}
 
 enum RelocationDimensionAvailability: Equatable {
     case available
+    case upgradeMadeToday
+}
+
+enum RelocationWorkflowResult {
+    case completed
+    case unavailable(RelocationItemAvailability)
+    case saveFailed
 }
 
 enum RelocationRequirement: CaseIterable, Equatable {
@@ -69,6 +76,7 @@ struct RelocationWorkflow {
         let actualBalance: Double
         let displayedBalance: Double
         let pendingBusinessEvents: [BusinessEvent]
+        let upgradeTracker: UpgradeTracker
     }
 
     let gameState: GameState
@@ -79,14 +87,17 @@ struct RelocationWorkflow {
             calendarState: gameState.calendar.captureRollbackState(),
             actualBalance: gameState.finance.actualBalance,
             displayedBalance: gameState.finance.displayedBalance,
-            pendingBusinessEvents: gameState.pendingBusinessEvents
+            pendingBusinessEvents: gameState.pendingBusinessEvents,
+            upgradeTracker: gameState.upgradeTracker
         )
     }
 
     func dimensionAvailability(
         for request: RelocationDimensionAvailabilityRequest
     ) -> RelocationDimensionAvailability {
-        .available
+        gameState.upgradeTracker.hasUpgrade(
+            on: gameState.calendar.simulationDay
+        ) ? .upgradeMadeToday : .available
     }
 
     func itemAvailability(
@@ -97,6 +108,30 @@ struct RelocationWorkflow {
             financialAvailability: gameState.finance.purchaseAvailability(
                 for: request.relocationPrice
             )
+        )
+    }
+
+    func complete(
+        _ request: RelocationRequest
+    ) -> RelocationWorkflowResult {
+        let availability = itemAvailability(for: request)
+        guard availability.canRelocate else {
+            return .unavailable(availability)
+        }
+
+        let rollbackSnapshot = captureRollbackSnapshot()
+
+        gameState.finance.displayedBalance -= request.relocationPrice
+        gameState.calendar.prepareForNewSeason()
+        gameState.locationState!.relocate(
+            to: request.destination.id
+        )
+
+        // The remaining relocation transaction will use this snapshot to
+        // restore GameState if persistence fails.
+        _ = rollbackSnapshot
+        preconditionFailure(
+            "The relocation transaction has not been implemented yet."
         )
     }
 
