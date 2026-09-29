@@ -18,6 +18,22 @@ enum GameWeekday: Int {
     case saturday
 }
 
+struct SeasonCalendarDate: Codable, Equatable {
+    let month: Int
+    let day: Int
+
+    init(
+        month: Int,
+        day: Int
+    ) {
+        precondition((1...12).contains(month), "Month must be between 1 and 12.")
+        precondition((1...31).contains(day), "Day must be between 1 and 31.")
+
+        self.month = month
+        self.day = day
+    }
+}
+
 struct Season: Codable, Equatable {
     let number: Int
     let startSimulationDay: Int
