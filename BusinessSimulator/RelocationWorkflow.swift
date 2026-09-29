@@ -63,7 +63,25 @@ struct RelocationRequest {
 /// will be added once the immediate and recurring relocation effects have
 /// been defined.
 struct RelocationWorkflow {
+    private struct RollbackSnapshot {
+        let activeLocationID: LocationID
+        let calendarState: GameCalendar.RollbackState
+        let actualBalance: Double
+        let displayedBalance: Double
+        let pendingBusinessEvents: [BusinessEvent]
+    }
+
     let gameState: GameState
+
+    private func captureRollbackSnapshot() -> RollbackSnapshot {
+        RollbackSnapshot(
+            activeLocationID: gameState.locationState!.activeLocationID,
+            calendarState: gameState.calendar.captureRollbackState(),
+            actualBalance: gameState.finance.actualBalance,
+            displayedBalance: gameState.finance.displayedBalance,
+            pendingBusinessEvents: gameState.pendingBusinessEvents
+        )
+    }
 
     func dimensionAvailability(
         for request: RelocationDimensionAvailabilityRequest

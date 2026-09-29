@@ -45,6 +45,13 @@ struct Season: Codable, Equatable {
 
 @Observable
 final class GameCalendar {
+    struct RollbackState {
+        let simulationDay: Int
+        let seasonDay: Int
+        let season: Season?
+        let currentDate: Date
+    }
+
     private(set) var simulationDay: Int
     private(set) var seasonDay: Int
     private(set) var season: Season?
@@ -185,6 +192,22 @@ final class GameCalendar {
             onOrAfter: followingDate,
             using: foundationCalendar
         )
+    }
+
+    func captureRollbackState() -> RollbackState {
+        RollbackState(
+            simulationDay: simulationDay,
+            seasonDay: seasonDay,
+            season: season,
+            currentDate: currentDate
+        )
+    }
+
+    func revert(to state: RollbackState) {
+        simulationDay = state.simulationDay
+        seasonDay = state.seasonDay
+        season = state.season
+        currentDate = state.currentDate
     }
 
     func beginSeason(
