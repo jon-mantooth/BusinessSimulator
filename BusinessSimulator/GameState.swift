@@ -10,6 +10,7 @@ import Observation
 
 enum GameStateRestoreError: Error {
     case productNotFound(ProductID)
+    case invalidLocationData
     case invalidInventoryData
     case invalidAdvertisementData
     case invalidEquipmentData
@@ -214,13 +215,18 @@ final class GameState {
             }
         )
 
-        // TODO: Restore the persisted active location after location save
-        // support is added. Until then, restored games begin at Home.
         let locationCatalog = LocationCatalog()
         let locationTiers = locationCatalog.tiersByProduct[product.id]!
+        let locationIDs = locationTiers.flatMap(\.locations).map(\.id)
+        guard locationIDs.contains(
+            gameSave.locationState.activeLocationID
+        ) else {
+            throw GameStateRestoreError.invalidLocationData
+        }
+
         locationState = LocationState(
             tiers: locationTiers,
-            activeLocationID: locationTiers[0].locations[0].id
+            activeLocationID: gameSave.locationState.activeLocationID
         )
 
         let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)

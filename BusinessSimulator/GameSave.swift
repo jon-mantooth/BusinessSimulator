@@ -1,12 +1,13 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 9
+    static let currentSchemaVersion = 10
 
     let schemaVersion: Int
     let finance: FinanceSave
     let calendar: CalendarSave
     let weather: WeatherSave
+    let locationState: LocationStateSave
     let productState: ProductStateSave
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
@@ -32,6 +33,10 @@ struct CalendarSave: Codable {
 
 struct WeatherSave: Codable {
     let weeklyForecast: [DailyWeatherSave]
+}
+
+struct LocationStateSave: Codable {
+    let activeLocationID: LocationID
 }
 
 struct DailyWeatherSave: Codable {
@@ -109,6 +114,7 @@ extension GameSave {
             let finance = gameState.finance,
             let calendar = gameState.calendar,
             let weather = gameState.weather,
+            let locationState = gameState.locationState,
             let productState = gameState.productState,
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
@@ -143,6 +149,10 @@ extension GameSave {
                     condition: dailyWeather.condition
                 )
             }
+        )
+
+        self.locationState = LocationStateSave(
+            activeLocationID: locationState.activeLocationID
         )
 
         self.productState = ProductStateSave(
