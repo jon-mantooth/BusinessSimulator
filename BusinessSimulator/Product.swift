@@ -22,6 +22,8 @@ struct Product: Identifiable {
     let idealUnitsSold: Int
     let priceSensitivity: Double
     let temperatureInterpolationFormula: TemperatureInterpolationFormula
+    let seasonTwoStartDate: SeasonCalendarDate
+    let seasonTwoEndDate: SeasonCalendarDate
 }
 
 enum ProductID: String, Codable {

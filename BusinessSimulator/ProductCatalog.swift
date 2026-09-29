@@ -280,7 +280,9 @@ struct ProductCatalog {
                 baseIdealPrice: 12.80,
                 idealUnitsSold: 38,
                 priceSensitivity: 6.0,
-                temperatureInterpolationFormula: .coldWeather
+                temperatureInterpolationFormula: .coldWeather,
+                seasonTwoStartDate: SeasonCalendarDate(month: 9, day: 1),
+                seasonTwoEndDate: SeasonCalendarDate(month: 11, day: 30)
             ),
             Product(
                 id: .smoothies,
@@ -331,7 +333,9 @@ struct ProductCatalog {
                 baseIdealPrice: 3.40,
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
-                temperatureInterpolationFormula: .warmWeather
+                temperatureInterpolationFormula: .warmWeather,
+                seasonTwoStartDate: SeasonCalendarDate(month: 6, day: 1),
+                seasonTwoEndDate: SeasonCalendarDate(month: 8, day: 31)
             ),
             Product(
                 id: .hotDogs,
@@ -398,7 +402,9 @@ struct ProductCatalog {
                 baseIdealPrice: 3.20,
                 idealUnitsSold: 150,
                 priceSensitivity: 6.0,
-                temperatureInterpolationFormula: .temperateWeather
+                temperatureInterpolationFormula: .temperateWeather,
+                seasonTwoStartDate: SeasonCalendarDate(month: 3, day: 1),
+                seasonTwoEndDate: SeasonCalendarDate(month: 5, day: 30)
             )
         ]
     }

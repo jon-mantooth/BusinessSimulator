@@ -18,6 +18,14 @@ enum GameWeekday: Int {
     case saturday
 }
 
+struct Season: Codable, Equatable {
+    let number: Int
+    let startSimulationDay: Int
+    let endSimulationDay: Int?
+    let startDate: Date
+    let endDate: Date?
+}
+
 @Observable
 final class GameCalendar {
     static let defaultStartDate: Date = {

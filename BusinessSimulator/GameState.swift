@@ -185,9 +185,8 @@ final class GameState {
 
         calendar = GameCalendar(
             simulationDay: gameSave.calendar.simulationDay,
-            locationStartDate: gameSave.calendar.locationStartDate,
-            locationStartSimulationDay:
-                gameSave.calendar.locationStartSimulationDay
+            seasonDay: gameSave.calendar.seasonDay,
+            season: gameSave.calendar.season
         )
 
         weather = WeatherState(
