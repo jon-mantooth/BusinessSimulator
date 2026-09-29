@@ -323,7 +323,9 @@ final class AdvertisementDimension: Dimension {
 
         summary.cashFlowCosts.append(
             Cost(
-                name: activeAdvertisement.name,
+                name: multiplier == 1.0
+                    ? activeAdvertisement.name
+                    : "\(activeAdvertisement.name) (Prorated)",
                 amount: proratedCost
             )
         )

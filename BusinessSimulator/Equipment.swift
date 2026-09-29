@@ -411,7 +411,9 @@ final class EquipmentDimension: Dimension {
         if totalCost > 0 {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: "Equipment",
+                    name: multiplier == 1.0
+                        ? "Equipment"
+                        : "Equipment (Prorated)",
                     amount: totalCost
                 )
             )

@@ -293,7 +293,9 @@ final class LaborDimension: Dimension {
         if totalCost > 0 {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: "Labor",
+                    name: multiplier == 1.0
+                        ? "Labor"
+                        : "Labor (Prorated)",
                     amount: totalCost
                 )
             )
