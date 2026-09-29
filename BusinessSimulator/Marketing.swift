@@ -65,13 +65,15 @@ final class MarketingDepartment: Department {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         var totalCosts = 0.0
 
         for dimension in dimensions {
             totalCosts += dimension.calculateWeeklyCosts(
-                summary: summary
+                summary: summary,
+                multiplier: multiplier
             )
         }
 

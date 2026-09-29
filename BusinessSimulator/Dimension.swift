@@ -137,7 +137,8 @@ protocol Dimension {
     ) -> Double
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double
     
     func prepForNextDay(
@@ -173,9 +174,19 @@ extension Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         return 0
+    }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
+        calculateWeeklyCosts(
+            summary: summary,
+            multiplier: 1.0
+        )
     }
     
     func prepForNextDay(

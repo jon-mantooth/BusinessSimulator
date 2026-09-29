@@ -384,17 +384,20 @@ final class EquipmentDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         recordCost(
             for: .weekly,
-            summary: summary
+            summary: summary,
+            multiplier: multiplier
         )
     }
 
     private func recordCost(
         for paymentSchedule: PaymentSchedule,
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double = 1.0
     ) -> Double {
         let primaryEquipment = equipmentState.activePrimaryEquipment.equipment
         let primaryCost = primaryEquipment.paymentSchedule == paymentSchedule
@@ -403,7 +406,7 @@ final class EquipmentDimension: Dimension {
         let secondaryCost = equipmentState
             .ownedSecondaryEquipment
             .totalCosts[paymentSchedule, default: 0.0]
-        let totalCost = primaryCost + secondaryCost
+        let totalCost = (primaryCost + secondaryCost) * multiplier
 
         if totalCost > 0 {
             summary.cashFlowCosts.append(

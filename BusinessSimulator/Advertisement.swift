@@ -307,7 +307,8 @@ final class AdvertisementDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         guard
             let activeAdvertisement = advertisementState
@@ -317,14 +318,17 @@ final class AdvertisementDimension: Dimension {
             return 0.0
         }
 
+        let proratedCost = activeAdvertisement.price * multiplier
+        guard proratedCost > 0 else { return 0.0 }
+
         summary.cashFlowCosts.append(
             Cost(
                 name: activeAdvertisement.name,
-                amount: activeAdvertisement.price
+                amount: proratedCost
             )
         )
 
-        return activeAdvertisement.price
+        return proratedCost
     }
 }
 

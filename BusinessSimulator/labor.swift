@@ -272,20 +272,23 @@ final class LaborDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         recordCost(
             for: .weekly,
-            summary: summary
+            summary: summary,
+            multiplier: multiplier
         )
     }
 
     private func recordCost(
         for paymentSchedule: PaymentSchedule,
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double = 1.0
     ) -> Double {
         let totalCost = laborState
-            .totalCosts[paymentSchedule, default: 0]
+            .totalCosts[paymentSchedule, default: 0] * multiplier
 
         if totalCost > 0 {
             summary.cashFlowCosts.append(
