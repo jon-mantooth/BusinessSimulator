@@ -92,6 +92,39 @@ struct RelocationWorkflow {
         )
     }
 
+    /// Pro-rate weekly costs for the last week before relocation based on
+    /// number of operational days (moving day is not an operational day).
+    /// No daily costs will be deducted for moving day as it is not an operational day
+    private func calculateProratedWeeklyCost(
+        summary: DaySummary
+    ) -> Double {
+        let currentWeekday = gameState.calendar.currentWeekday
+        guard currentWeekday != .saturday,
+              currentWeekday != .sunday else {
+            preconditionFailure(
+                "Relocation must occur on an operating weekday."
+            )
+        }
+
+        if currentWeekday == .monday {
+            return 0
+        }
+
+        let completedOperatingDays = Double(
+            currentWeekday.rawValue - GameWeekday.monday.rawValue
+        )
+
+        let proratedWeeklyCost = gameState.departments.reduce(0.0) {
+            total, department in
+            total + department.calculateWeeklyCosts(
+                summary: summary,
+                multiplier: completedOperatingDays / 5.0
+            )
+        }
+
+        return proratedWeeklyCost
+    }
+
     func dimensionAvailability(
         for request: RelocationDimensionAvailabilityRequest
     ) -> RelocationDimensionAvailability {
