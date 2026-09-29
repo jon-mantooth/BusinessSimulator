@@ -165,9 +165,22 @@ final class GameState {
         self.marketing = marketing
         self.environment = environment
 
-        self.weather.generateWeeklyForecast(
-            starting: self.calendar.currentWeekStartDate
+    }
+
+    func beginSeasonIfNeeded() {
+        guard calendar.seasonDay == 0 else { return }
+        guard let product = productState?.product else { return }
+
+        calendar.beginSeason(product: product)
+        weather.generateWeeklyForecast(
+            starting: calendar.currentWeekStartDate
         )
+
+        for inventoryState in productState.productInventoryStates {
+            inventoryState.inventoryByAge.reset(
+                currentDay: calendar.simulationDay
+            )
+        }
     }
 
     func restoreBusiness(
