@@ -18,11 +18,7 @@ struct GameRunner {
         gameState: GameState
     ) {
         self.gameState = gameState
-        self.departments = [
-            gameState.production!,
-            gameState.marketing!,
-            gameState.environment!
-        ]
+        self.departments = gameState.departments
         self.summary = DaySummary(
             day: self.gameState.calendar.simulationDay,
             startingBalance: self.gameState.finance.actualBalance

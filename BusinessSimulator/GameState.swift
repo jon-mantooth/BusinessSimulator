@@ -40,6 +40,22 @@ final class GameState {
     var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
 
+    var departments: [any Department] {
+        guard let production,
+              let marketing,
+              let environment else {
+            preconditionFailure(
+                "Business departments must be initialized before use."
+            )
+        }
+
+        return [
+            production,
+            marketing,
+            environment
+        ]
+    }
+
     // Total cost of pending outflows. This is helpful in getting the displayed balance correct
     // when restoring game and also when keeping up with ingredients that are in the car tbut not yet
     // purchased
