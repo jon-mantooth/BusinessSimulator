@@ -76,8 +76,7 @@ struct RelocationWorkflow {
         let calendarState: GameCalendar.RollbackState
         let actualBalance: Double
         let displayedBalance: Double
-        let pendingBusinessEvents: [BusinessEvent]
-        let upgradeTracker: UpgradeTracker
+        let summaryCount: Int
     }
 
     let gameState: GameState
@@ -88,8 +87,8 @@ struct RelocationWorkflow {
             calendarState: gameState.calendar.captureRollbackState(),
             actualBalance: gameState.finance.actualBalance,
             displayedBalance: gameState.finance.displayedBalance,
-            pendingBusinessEvents: gameState.pendingBusinessEvents,
-            upgradeTracker: gameState.upgradeTracker
+            summaryCount:
+                gameState.simulationSummary.daySummaries.count
         )
     }
 
