@@ -80,22 +80,19 @@ final class GameCalendar {
         let calendar = Foundation.Calendar(identifier: .gregorian)
         self.foundationCalendar = calendar
         self.simulationDay = simulationDay
-        self.locationStartSimulationDay = locationStartSimulationDay
-        self.locationStartDate = Self.firstWeekday(
-            onOrAfter: calendar.startOfDay(for: locationStartDate),
-            using: calendar
-        )
+        self.seasonDay = seasonDay
+        self.season = season
     }
 
     func date(forSimulationDay simulationDay: Int) -> Date {
         precondition(
-            simulationDay >= locationStartSimulationDay,
-            "Simulation day cannot precede the current location."
+            simulationDay >= season.startSimulationDay,
+            "Simulation day cannot precede the current season."
         )
 
-        var date = locationStartDate
+        var date = season.startDate
         var businessDaysRemaining =
-            simulationDay - locationStartSimulationDay
+            simulationDay - season.startSimulationDay
 
         while businessDaysRemaining > 0 {
             date = foundationCalendar.date(
