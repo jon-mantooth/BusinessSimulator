@@ -47,15 +47,18 @@ struct Location: Identifiable, Equatable {
     let id: LocationID
     let name: String
     let description: String
+    let presentation: LocationPresentation
 
     init(
         id: LocationID,
         name: String,
-        description: String
+        description: String,
+        presentation: LocationPresentation
     ) {
         self.id = id
         self.name = name
         self.description = description
+        self.presentation = presentation
     }
 }
 
@@ -112,6 +115,10 @@ final class LocationState {
         }
 
         return location
+    }
+
+    var activePresentation: LocationPresentation {
+        activeLocation.presentation
     }
 
     var activeTier: LocationTier {
