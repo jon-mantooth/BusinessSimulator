@@ -475,8 +475,8 @@ private func makeSingleIngredientProductState(
         idealUnitsSold: idealUnitsSold,
         priceSensitivity: 1,
         temperatureInterpolationFormula: .coldWeather,
-        seasonTwoStartDate: SeasonCalendarDate(month: 9, day: 1),
-        seasonTwoEndDate: SeasonCalendarDate(month: 11, day: 30)
+        recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 9, day: 1),
+        recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 11, day: 30)
     )
 
     return ProductState(product: product, currentDay: 1)
@@ -546,8 +546,8 @@ private func makeProductStateWithUpgradeIngredient() -> ProductState {
         idealUnitsSold: 1,
         priceSensitivity: 1,
         temperatureInterpolationFormula: .coldWeather,
-        seasonTwoStartDate: SeasonCalendarDate(month: 9, day: 1),
-        seasonTwoEndDate: SeasonCalendarDate(month: 11, day: 30)
+        recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 9, day: 1),
+        recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 11, day: 30)
     )
 
     return ProductState(product: product, currentDay: 1)
