@@ -190,8 +190,7 @@ extension LaborTests {
         #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
         #expect(
             !gameState.upgradeTracker.canUpgrade(
-                .labor,
-                on: gameState.calendar.simulationDay
+                during: gameState.calendar.currentWeekStartDate
             )
         )
 

@@ -339,8 +339,7 @@ extension AdvertisementTests {
         #expect(gameState.pendingBusinessEvents.isEmpty)
         #expect(
             gameState.upgradeTracker.canUpgrade(
-                .advertisement,
-                on: gameState.calendar.simulationDay
+                during: gameState.calendar.currentWeekStartDate
             )
         )
     }

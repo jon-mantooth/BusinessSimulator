@@ -122,7 +122,9 @@ extension DemandTests {
             baseIdealPrice: 1,
             idealUnitsSold: 1,
             priceSensitivity: 1,
-            temperatureInterpolationFormula: .coldWeather
+            temperatureInterpolationFormula: .coldWeather,
+            seasonTwoStartDate: SeasonCalendarDate(month: 9, day: 1),
+            seasonTwoEndDate: SeasonCalendarDate(month: 11, day: 30)
         )
 
         let productState = ProductState(
