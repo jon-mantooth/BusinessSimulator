@@ -186,7 +186,8 @@ final class GameState {
 
     func beginSeasonIfNeeded() {
         guard calendar.seasonDay == 0 else { return }
-        guard let product = productState?.product else { return }
+        guard let productState else { return }
+        let product = productState.product
 
         calendar.beginSeason(product: product)
         upgradeTracker.reset()
