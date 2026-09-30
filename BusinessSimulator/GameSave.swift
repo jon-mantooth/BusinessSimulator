@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 12
+    static let currentSchemaVersion = 13
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -26,8 +26,8 @@ struct FinanceSave: Codable {
 
 struct CalendarSave: Codable {
     let simulationDay: Int
-    let seasonDay: Int
-    let season: Season?
+    let operatingPeriodDay: Int
+    let operatingPeriod: OperatingPeriod?
     let currentDate: Date
 }
 
@@ -137,8 +137,8 @@ extension GameSave {
 
         self.calendar = CalendarSave(
             simulationDay: calendar.simulationDay,
-            seasonDay: calendar.seasonDay,
-            season: calendar.season,
+            operatingPeriodDay: calendar.operatingPeriodDay,
+            operatingPeriod: calendar.operatingPeriod,
             currentDate: calendar.currentDate
         )
 

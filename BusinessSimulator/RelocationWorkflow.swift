@@ -199,7 +199,7 @@ struct RelocationWorkflow {
 
         gameState.finance.actualBalance = relocationSummary.balance
         gameState.finance.displayedBalance = relocationSummary.balance
-        gameState.calendar.prepareForNewSeason()
+        gameState.calendar.prepareForNewOperatingPeriod()
         gameState.locationState!.relocate(
             to: request.destination.id
         )

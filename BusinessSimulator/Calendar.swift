@@ -18,7 +18,7 @@ enum GameWeekday: Int {
     case saturday
 }
 
-struct SeasonCalendarDate: Codable, Equatable {
+struct OperatingPeriodCalendarDate: Codable, Equatable {
     let month: Int
     let day: Int
 
@@ -34,7 +34,7 @@ struct SeasonCalendarDate: Codable, Equatable {
     }
 }
 
-struct Season: Codable, Equatable {
+struct OperatingPeriod: Codable, Equatable {
     let number: Int
     let length: Int?
     let startSimulationDay: Int
@@ -43,18 +43,45 @@ struct Season: Codable, Equatable {
     let endDate: Date?
 }
 
+enum SeasonOfYear {
+    case winter
+    case spring
+    case summer
+    case fall
+
+    init(
+        date: Date,
+        calendar: Foundation.Calendar = Foundation.Calendar(
+            identifier: .gregorian
+        )
+    ) {
+        switch calendar.component(.month, from: date) {
+        case 12, 1, 2:
+            self = .winter
+        case 3...5:
+            self = .spring
+        case 6...8:
+            self = .summer
+        case 9...11:
+            self = .fall
+        default:
+            preconditionFailure("Unable to resolve the season of year.")
+        }
+    }
+}
+
 @Observable
 final class GameCalendar {
     struct RollbackState {
         let simulationDay: Int
-        let seasonDay: Int
-        let season: Season?
+        let operatingPeriodDay: Int
+        let operatingPeriod: OperatingPeriod?
         let currentDate: Date
     }
 
     private(set) var simulationDay: Int
-    private(set) var seasonDay: Int
-    private(set) var season: Season?
+    private(set) var operatingPeriodDay: Int
+    private(set) var operatingPeriod: OperatingPeriod?
     private(set) var currentDate: Date
 
     private let foundationCalendar: Foundation.Calendar
@@ -83,6 +110,13 @@ final class GameCalendar {
         )!
     }
 
+    var seasonOfYear: SeasonOfYear {
+        SeasonOfYear(
+            date: currentDate,
+            calendar: foundationCalendar
+        )
+    }
+
     init(
         simulationDay: Int = 0,
         currentDate: Date = Foundation.Calendar(
@@ -101,60 +135,63 @@ final class GameCalendar {
 
         self.foundationCalendar = calendar
         self.simulationDay = simulationDay
-        self.seasonDay = 0
-        self.season = nil
+        self.operatingPeriodDay = 0
+        self.operatingPeriod = nil
         self.currentDate = calendar.startOfDay(for: currentDate)
     }
 
     init(
         simulationDay: Int,
-        seasonDay: Int,
-        season: Season?,
+        operatingPeriodDay: Int,
+        operatingPeriod: OperatingPeriod?,
         currentDate: Date
     ) {
         precondition(simulationDay >= 0, "Simulation day cannot be negative.")
-        precondition(seasonDay >= 0, "Season day cannot be negative.")
+        precondition(
+            operatingPeriodDay >= 0,
+            "Operating-period day cannot be negative."
+        )
 
-        if let season {
+        if let operatingPeriod {
             precondition(
-                season.startSimulationDay >= 1,
-                "A season must start on simulation day one or later."
+                operatingPeriod.startSimulationDay >= 1,
+                "An operating period must start on simulation day one or later."
             )
             precondition(
-                seasonDay == 0
-                    || season.startSimulationDay <= simulationDay,
-                "An initialized season cannot begin after the current simulation day."
+                operatingPeriodDay == 0
+                    || operatingPeriod.startSimulationDay <= simulationDay,
+                "An initialized operating period cannot begin after the current simulation day."
             )
         } else {
             precondition(
-                seasonDay == 0,
-                "A calendar without a season must be awaiting initialization."
+                operatingPeriodDay == 0,
+                "A calendar without an operating period must be awaiting initialization."
             )
         }
 
         let calendar = Foundation.Calendar(identifier: .gregorian)
         self.foundationCalendar = calendar
         self.simulationDay = simulationDay
-        self.seasonDay = seasonDay
-        self.season = season
+        self.operatingPeriodDay = operatingPeriodDay
+        self.operatingPeriod = operatingPeriod
         self.currentDate = calendar.startOfDay(for: currentDate)
     }
 
     func date(forSimulationDay simulationDay: Int) -> Date {
-        guard let season else {
+        guard let operatingPeriod else {
             preconditionFailure(
-                "A simulation date cannot be calculated before the first season begins."
+                "A simulation date cannot be calculated before the first operating period begins."
             )
         }
 
         precondition(
-            simulationDay >= season.startSimulationDay,
-            "Simulation day cannot precede the current season."
+            simulationDay >= operatingPeriod.startSimulationDay,
+            "Simulation day cannot precede the current operating period."
         )
 
-        var date = season.startDate
+        var date = operatingPeriod.startDate
         var businessDaysRemaining =
-            simulationDay - season.startSimulationDay
+            simulationDay - operatingPeriod.startSimulationDay
 
         while businessDaysRemaining > 0 {
             date = foundationCalendar.date(
@@ -174,12 +211,12 @@ final class GameCalendar {
     func advanceDay() {
         simulationDay += 1
 
-        if let season {
-            seasonDay += 1
+        if let operatingPeriod {
+            operatingPeriodDay += 1
 
-            if let seasonLength = season.length,
-               seasonDay > seasonLength {
-                seasonDay = 0
+            if let operatingPeriodLength = operatingPeriod.length,
+               operatingPeriodDay > operatingPeriodLength {
+                operatingPeriodDay = 0
             }
         }
 
@@ -197,41 +234,42 @@ final class GameCalendar {
     func captureRollbackState() -> RollbackState {
         RollbackState(
             simulationDay: simulationDay,
-            seasonDay: seasonDay,
-            season: season,
+            operatingPeriodDay: operatingPeriodDay,
+            operatingPeriod: operatingPeriod,
             currentDate: currentDate
         )
     }
 
     func revert(to state: RollbackState) {
         simulationDay = state.simulationDay
-        seasonDay = state.seasonDay
-        season = state.season
+        operatingPeriodDay = state.operatingPeriodDay
+        operatingPeriod = state.operatingPeriod
         currentDate = state.currentDate
     }
 
-    func prepareForNewSeason() {
+    func prepareForNewOperatingPeriod() {
         simulationDay += 1
-        seasonDay = 0
+        operatingPeriodDay = 0
     }
 
-    func beginSeason(
+    func beginOperatingPeriod(
         product: Product
     ) {
-        let nextSeasonNumber = (season?.number ?? 0) + 1
+        let nextOperatingPeriodNumber =
+            (operatingPeriod?.number ?? 0) + 1
         let startSimulationDay = max(1, simulationDay)
 
-        if season == nil {
+        if operatingPeriod == nil {
             let startDate = Self.firstWeekday(
                 onOrAfter: currentDate,
                 using: foundationCalendar
             )
 
             simulationDay = startSimulationDay
-            seasonDay = 1
+            operatingPeriodDay = 1
             currentDate = startDate
-            season = Season(
-                number: nextSeasonNumber,
+            operatingPeriod = OperatingPeriod(
+                number: nextOperatingPeriodNumber,
                 length: nil,
                 startSimulationDay: startSimulationDay,
                 endSimulationDay: nil,
@@ -247,7 +285,7 @@ final class GameCalendar {
             from: comparisonDate
         )
         var startDate = resolvedDate(
-            for: product.seasonTwoStartDate,
+            for: product.recurringOperatingPeriodStartDate,
             year: currentYear
         )
         startDate = Self.firstWeekday(
@@ -257,7 +295,7 @@ final class GameCalendar {
 
         if startDate < comparisonDate {
             startDate = resolvedDate(
-                for: product.seasonTwoStartDate,
+                for: product.recurringOperatingPeriodStartDate,
                 year: currentYear + 1
             )
             startDate = Self.firstWeekday(
@@ -268,13 +306,13 @@ final class GameCalendar {
 
         let startYear = foundationCalendar.component(.year, from: startDate)
         var endDate = resolvedDate(
-            for: product.seasonTwoEndDate,
+            for: product.recurringOperatingPeriodEndDate,
             year: startYear
         )
 
         if endDate < startDate {
             endDate = resolvedDate(
-                for: product.seasonTwoEndDate,
+                for: product.recurringOperatingPeriodEndDate,
                 year: startYear + 1
             )
         }
@@ -284,26 +322,27 @@ final class GameCalendar {
             using: foundationCalendar
         )
 
-        let seasonLength = businessDayCount(
+        let operatingPeriodLength = businessDayCount(
             from: startDate,
             through: endDate
         )
 
         simulationDay = startSimulationDay
-        seasonDay = 1
+        operatingPeriodDay = 1
         currentDate = startDate
-        season = Season(
-            number: nextSeasonNumber,
-            length: seasonLength,
+        operatingPeriod = OperatingPeriod(
+            number: nextOperatingPeriodNumber,
+            length: operatingPeriodLength,
             startSimulationDay: startSimulationDay,
-            endSimulationDay: startSimulationDay + seasonLength - 1,
+            endSimulationDay:
+                startSimulationDay + operatingPeriodLength - 1,
             startDate: startDate,
             endDate: endDate
         )
     }
 
     private func resolvedDate(
-        for calendarDate: SeasonCalendarDate,
+        for calendarDate: OperatingPeriodCalendarDate,
         year: Int
     ) -> Date {
         guard let date = foundationCalendar.date(
@@ -314,7 +353,7 @@ final class GameCalendar {
             )
         ) else {
             preconditionFailure(
-                "Unable to resolve season date for \(calendarDate.month)/\(calendarDate.day)/\(year)."
+                "Unable to resolve operating-period date for \(calendarDate.month)/\(calendarDate.day)/\(year)."
             )
         }
 
@@ -325,7 +364,10 @@ final class GameCalendar {
         from startDate: Date,
         through endDate: Date
     ) -> Int {
-        precondition(startDate <= endDate, "A season cannot end before it starts.")
+        precondition(
+            startDate <= endDate,
+            "An operating period cannot end before it starts."
+        )
 
         var date = startDate
         var count = 0

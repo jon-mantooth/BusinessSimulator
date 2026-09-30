@@ -90,7 +90,7 @@ struct GameRootView: View {
     }
 
     private func showNewDayBackground() {
-        gameState.beginSeasonIfNeeded()
+        gameState.beginOperatingPeriodIfNeeded()
         selectedArea = .gameMode
         currentScreen = .neighborhood
         dayTransitionState.beginSunrise(

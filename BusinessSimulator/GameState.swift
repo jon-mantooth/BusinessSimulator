@@ -184,12 +184,12 @@ final class GameState {
 
     }
 
-    func beginSeasonIfNeeded() {
-        guard calendar.seasonDay == 0 else { return }
+    func beginOperatingPeriodIfNeeded() {
+        guard calendar.operatingPeriodDay == 0 else { return }
         guard let productState else { return }
         let product = productState.product
 
-        calendar.beginSeason(product: product)
+        calendar.beginOperatingPeriod(product: product)
         upgradeTracker.reset()
         weather.generateWeeklyForecast(
             starting: calendar.currentWeekStartDate
@@ -217,8 +217,9 @@ final class GameState {
 
         calendar = GameCalendar(
             simulationDay: gameSave.calendar.simulationDay,
-            seasonDay: gameSave.calendar.seasonDay,
-            season: gameSave.calendar.season,
+            operatingPeriodDay:
+                gameSave.calendar.operatingPeriodDay,
+            operatingPeriod: gameSave.calendar.operatingPeriod,
             currentDate: gameSave.calendar.currentDate
         )
 

@@ -281,8 +281,8 @@ struct ProductCatalog {
                 idealUnitsSold: 38,
                 priceSensitivity: 6.0,
                 temperatureInterpolationFormula: .coldWeather,
-                seasonTwoStartDate: SeasonCalendarDate(month: 9, day: 1),
-                seasonTwoEndDate: SeasonCalendarDate(month: 11, day: 30)
+                recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 9, day: 1),
+                recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 11, day: 30)
             ),
             Product(
                 id: .smoothies,
@@ -334,8 +334,8 @@ struct ProductCatalog {
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
                 temperatureInterpolationFormula: .warmWeather,
-                seasonTwoStartDate: SeasonCalendarDate(month: 6, day: 1),
-                seasonTwoEndDate: SeasonCalendarDate(month: 8, day: 31)
+                recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 6, day: 1),
+                recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 8, day: 31)
             ),
             Product(
                 id: .hotDogs,
@@ -403,8 +403,8 @@ struct ProductCatalog {
                 idealUnitsSold: 150,
                 priceSensitivity: 6.0,
                 temperatureInterpolationFormula: .temperateWeather,
-                seasonTwoStartDate: SeasonCalendarDate(month: 3, day: 1),
-                seasonTwoEndDate: SeasonCalendarDate(month: 5, day: 30)
+                recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 3, day: 1),
+                recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 5, day: 30)
             )
         ]
     }
