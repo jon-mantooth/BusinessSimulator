@@ -15,12 +15,19 @@ enum LocationSceneAnchor: Equatable {
     case bottomTrailing
 }
 
+enum LocationSceneAssetSource: Equatable {
+    case image(String)
+    case seasonalHouse
+    case productStand
+}
+
 struct LocationSceneAsset: Identifiable, Equatable {
     let id: String
-    let imageName: String
+    let source: LocationSceneAssetSource
 
-    /// The source image's width divided by its height.
-    let aspectRatio: Double
+    /// The source image's width divided by its height. Contextual assets can
+    /// defer this value until their product or seasonal image is resolved.
+    let aspectRatio: Double?
 
     /// Width as a proportion of the scene's logical canvas width.
     let widthRatio: Double
