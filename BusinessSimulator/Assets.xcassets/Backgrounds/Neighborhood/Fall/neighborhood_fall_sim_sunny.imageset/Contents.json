@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "marketing_background.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "simulation_sunny.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },

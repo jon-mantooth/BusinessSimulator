@@ -1,11 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "marketing_background.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "third_person_night.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
