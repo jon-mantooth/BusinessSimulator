@@ -306,57 +306,12 @@ struct GameRootView: View {
     }
     
     private var gameBackground: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Image("neighborhood_night")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: geometry.size.width,
-                        height: geometry.size.height
-                    )
-                    .clipped()
-                    .opacity(dayTransitionState.nightSceneOpacity)
+        ZStack {
+            LocationSceneView(scene: resolvedNightScene)
+                .opacity(dayTransitionState.nightSceneOpacity)
 
-                Image("neighborhood_background")
-                    .resizable()
-                    .scaledToFill()
-                    .opacity(dayTransitionState.daylightSceneOpacity)
-
-                Image("default_house")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width * 0.92)
-                    .position(
-                        x: geometry.size.width * 0.71,
-                        y: geometry.size.height * 0.535
-                    )
-                    .opacity(dayTransitionState.daylightSceneOpacity)
-
-                if let standImageName {
-                    Image(standImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(
-                            width: geometry.size.width * 0.48,
-                            height: geometry.size.height * 0.40,
-                            alignment: .bottom
-                        )
-                        .position(
-                            x: geometry.size.width * 1.13,
-                            y: geometry.size.height * 0.64
-                        )
-                        .opacity(dayTransitionState.daylightSceneOpacity)
-                }
-
-                // Seasonal and holiday layers will be added here as transparent
-                // overlays when those parts of game state are introduced.
-            }
-            .frame(
-                width: geometry.size.width,
-                height: geometry.size.height
-            )
-            .clipped()
+            LocationSceneView(scene: resolvedDayScene)
+                .opacity(dayTransitionState.daylightSceneOpacity)
         }
         .ignoresSafeArea()
     }
@@ -379,17 +334,55 @@ struct GameRootView: View {
         return gameState.productState?.product
     }
 
-    private var standImageName: String? {
-        switch displayedProduct?.id {
-        case .pies:
-            return "stand_pies"
-        case .smoothies:
-            return "stand_smoothies"
-        case .hotDogs:
-            return "stand_hotdogs"
-        case nil:
-            return nil
+    private var activeLocationPresentation: LocationPresentation {
+        gameState.locationState?.activePresentation
+            ?? locationCatalog.home.presentation
+    }
+
+    private var locationSceneContext: LocationSceneContext {
+        LocationSceneContext(
+            productID: displayedProduct?.id,
+            seasonOfYear: gameState.calendar?.seasonOfYear ?? .fall,
+            weatherCondition: currentWeatherCondition
+        )
+    }
+
+    private var currentWeatherCondition: WeatherCondition {
+        guard let calendar = gameState.calendar,
+              let weather = gameState.weather else {
+            return .sunny
         }
+
+        let foundationCalendar = Foundation.Calendar(
+            identifier: .gregorian
+        )
+        return weather.weeklyForecast.first {
+            foundationCalendar.isDate(
+                $0.date,
+                inSameDayAs: calendar.currentDate
+            )
+        }?.condition ?? .sunny
+    }
+
+    private var resolvedNightScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.nightScene,
+            context: locationSceneContext
+        )
+    }
+
+    private var resolvedDayScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.dayScene,
+            context: locationSceneContext
+        )
+    }
+
+    private var resolvedSimulationScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.simulationScene,
+            context: locationSceneContext
+        )
     }
 
     var body: some View {
@@ -498,7 +491,7 @@ struct GameRootView: View {
                                 progress: dayPlaybackState.progress,
                                 elapsedTime: dayPlaybackState.elapsedTime,
                                 businessHours: gameState.businessHours!,
-                                productID: gameState.productState!.product.id,
+                                scene: resolvedSimulationScene,
                                 onSkip: dayPlaybackState.skip
                             )
                             .opacity(dayTransitionState.playbackSceneOpacity)
