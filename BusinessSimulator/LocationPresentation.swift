@@ -17,8 +17,18 @@ enum LocationSceneAnchor: Equatable {
 
 enum LocationSceneAssetSource: Equatable {
     case image(String)
-    case seasonalHouse
+    case seasonalDayBackground
+    case seasonalNightBackground
+    case seasonalSimulationBackground
+    case weatherSimulationBackground(
+        sunnyImageName: String,
+        rainImageName: String,
+        snowImageName: String?
+    )
     case productStand
+    case customerAnimation
+    case simulationProductStand
+    case playbackInterface
 }
 
 struct LocationSceneAsset: Identifiable, Equatable {
@@ -32,19 +42,41 @@ struct LocationSceneAsset: Identifiable, Equatable {
     /// Width as a proportion of the scene's logical canvas width.
     let widthRatio: Double
 
+    /// Optional height as a proportion of the scene's logical canvas height.
+    /// When omitted, height is derived from the resolved image aspect ratio.
+    let heightRatio: Double?
+
     let position: LocationScenePosition
     let anchor: LocationSceneAnchor
 
     /// Assets with larger values render in front of assets with smaller ones.
     let layerOrder: Int
+
+    init(
+        id: String,
+        source: LocationSceneAssetSource,
+        aspectRatio: Double?,
+        widthRatio: Double,
+        heightRatio: Double? = nil,
+        position: LocationScenePosition,
+        anchor: LocationSceneAnchor,
+        layerOrder: Int
+    ) {
+        self.id = id
+        self.source = source
+        self.aspectRatio = aspectRatio
+        self.widthRatio = widthRatio
+        self.heightRatio = heightRatio
+        self.position = position
+        self.anchor = anchor
+        self.layerOrder = layerOrder
+    }
 }
 
 struct LocationSceneAssets: Equatable {
     let assets: [LocationSceneAsset]
 
-    init(
-        assets: [LocationSceneAsset]
-    ) {
+    init(assets: [LocationSceneAsset]) {
         assert(
             !assets.isEmpty,
             "A location scene must contain at least one asset."
