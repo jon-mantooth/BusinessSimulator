@@ -507,6 +507,7 @@ struct GameRootView: View {
                                 progress: dayPlaybackState.progress,
                                 elapsedTime: dayPlaybackState.elapsedTime,
                                 businessHours: gameState.businessHours!,
+                                weatherCondition: currentWeatherCondition,
                                 scene: resolvedSimulationScene,
                                 onSkip: dayPlaybackState.skip
                             )
