@@ -28,6 +28,9 @@ struct GameRootView: View {
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
     @State private var showingWeather = false
+    @State private var showingLocationMap = false
+    @State private var selectedMapLocation: Location?
+    @State private var relocationWarning: GamePopupType?
     @State private var hasSavedGame = false
     @State private var showingNewJourneyConfirmation = false
     @State private var showingLoadError = false
@@ -36,12 +39,101 @@ struct GameRootView: View {
     @State private var isEditingPrice = false
 
     let productCatalog = ProductCatalog()
+    let locationCatalog = LocationCatalog()
+    let locationSceneResolver = LocationSceneResolver()
 
     private var purchaseWorkflow: PurchaseWorkflow {
         PurchaseWorkflow(
             gameState: gameState,
             saveRepository: saveRepository
         )
+    }
+
+    private var relocationWorkflow: RelocationWorkflow {
+        RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: saveRepository
+        )
+    }
+
+    private func relocationRequest(
+        for location: Location
+    ) -> RelocationRequest {
+        RelocationRequest(
+            destination: location,
+            requirements: RelocationRequirements(
+                storageLevel: 0,
+                transportationLevel: 0,
+                equipmentLevel: 3,
+                laborLevel: 1,
+                advertisementLevel: 2,
+                businessReputation: 3.0
+            ),
+            relocationPrice: 15_000
+        )
+    }
+
+    private func attemptRelocation(
+        request: RelocationRequest,
+        availability: RelocationItemAvailability,
+        dimensionAvailability: RelocationDimensionAvailability
+    ) {
+        switch dimensionAvailability {
+        case .upgradeMadeToday:
+            relocationWarning = .relocationUnavailable(
+                message: "You cannot relocate on the same day as a business upgrade."
+            )
+            return
+        case .pendingBusinessEvents:
+            relocationWarning = .relocationUnavailable(
+                message: "Finish the current day's purchases before relocating."
+            )
+            return
+        case .available:
+            break
+        }
+
+        guard availability.unmetRequirements.isEmpty else {
+            relocationWarning = .relocationUnavailable(
+                message: "Meet the highlighted business requirements before relocating."
+            )
+            return
+        }
+
+        switch availability.financialAvailability {
+        case .insufficientFunds:
+            relocationWarning = .insufficientFunds
+            return
+        case .operatingReserveRequired:
+            relocationWarning = .operatingReserveRequired
+            return
+        case .locationLocked:
+            relocationWarning = .relocationUnavailable(
+                message: "This location is not available yet."
+            )
+            return
+        case .available:
+            break
+        }
+
+        switch relocationWorkflow.complete(request) {
+        case .completed(let summary):
+            currentSummary = summary
+            selectedMapLocation = nil
+            showingLocationMap = false
+            selectedArea = .gameMode
+            currentScreen = .summary
+        case let .unavailable(updatedAvailability):
+            if updatedAvailability.unmetRequirements.isEmpty {
+                relocationWarning = .insufficientFunds
+            } else {
+                relocationWarning = .relocationUnavailable(
+                    message: "Meet the highlighted business requirements before relocating."
+                )
+            }
+        case .saveFailed:
+            showingSaveError = true
+        }
     }
 
     private var calendarSheetHeight: CGFloat {
@@ -353,6 +445,9 @@ struct GameRootView: View {
                         },
                         onWeatherTapped: {
                             showingWeather = true
+                        },
+                        onMapTapped: {
+                            showingLocationMap = true
                         }
                     )
                 }
@@ -433,6 +528,70 @@ struct GameRootView: View {
             }
 
             DayTransitionOverlay(message: dayTransitionState.message)
+
+            if showingLocationMap,
+               let locationState = gameState.locationState {
+                LocationMapView(
+                    locations: [
+                        locationCatalog.home,
+                        locationCatalog.ballpark,
+                        locationCatalog.farmersMarket,
+                        locationCatalog.beach
+                    ],
+                    activeLocationID: locationState.activeLocationID,
+                    onLocationSelected: { location in
+                        selectedMapLocation = location
+                    },
+                    onClose: {
+                        showingLocationMap = false
+                        selectedMapLocation = nil
+                    }
+                )
+                .zIndex(10)
+            }
+
+            if let selectedMapLocation {
+                let request = relocationRequest(for: selectedMapLocation)
+                let availability = relocationWorkflow.itemAvailability(
+                    for: request
+                )
+                let dimensionAvailability = relocationWorkflow
+                    .dimensionAvailability(
+                        for: RelocationDimensionAvailabilityRequest()
+                    )
+
+                LocationSelectionView(
+                    location: selectedMapLocation,
+                    availability: availability,
+                    canRelocate: availability.canRelocate
+                        && dimensionAvailability == .available,
+                    relocationCost: request.relocationPrice,
+                    onRelocate: {
+                        attemptRelocation(
+                            request: request,
+                            availability: availability,
+                            dimensionAvailability: dimensionAvailability
+                        )
+                    },
+                    onClose: {
+                        self.selectedMapLocation = nil
+                    }
+                )
+                .overlay {
+                    if let relocationWarning {
+                        GamePopupView(
+                            type: relocationWarning,
+                            onConfirm: {
+                                self.relocationWarning = nil
+                            },
+                            onDismiss: {
+                                self.relocationWarning = nil
+                            }
+                        )
+                    }
+                }
+                .zIndex(11)
+            }
 
             if showingNewJourneyConfirmation {
                 GamePopupView(
