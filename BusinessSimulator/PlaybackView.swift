@@ -9,92 +9,85 @@ struct PlaybackView: View {
     let progress: Double
     let elapsedTime: TimeInterval
     let businessHours: BusinessHours
-    let productID: ProductID
+    let scene: ResolvedLocationScene
     let onSkip: () -> Void
 
     var body: some View {
-        GeometryReader { geometry in
-            let clockSize = min(geometry.size.width * 0.34, 180)
-            let activeCustomer = CustomerVisitSchedule.prototype.activeVisit(
-                at: elapsedTime
+        LocationSceneView(scene: scene) { content, canvasSize in
+            dynamicContent(
+                content,
+                canvasSize: canvasSize
             )
-
-            ZStack {
-                Image("animation_background")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: geometry.size.width,
-                        height: geometry.size.height
-                    )
-                    .clipped()
-
-                if let activeCustomer {
-                    CustomerVisitView(
-                        assetName: activeCustomer.assetName,
-                        state: activeCustomer.state
-                    )
-                        .frame(
-                            width: geometry.size.width * 0.72,
-                            height: geometry.size.height * 0.62,
-                            alignment: .bottom
-                        )
-                        .position(
-                            x: customerXPosition(
-                                activeCustomer.position,
-                                sceneWidth: geometry.size.width
-                            ),
-                            y: geometry.size.height * 0.58
-                        )
-                }
-
-                Image(standImageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: geometry.size.width,
-                        height: geometry.size.height
-                    )
-                    .clipped()
-
-                ClockView(
-                    progress: progress,
-                    businessHours: businessHours
-                )
-                    .frame(width: clockSize, height: clockSize)
-                    .position(
-                        x: geometry.size.width * 0.5,
-                        y: geometry.size.height * 0.27
-                    )
-
-                VStack {
-                    HStack {
-                        Spacer()
-                        SkipButton(action: onSkip)
-                    }
-                    Spacer()
-                }
-                .padding(.top, 52)
-                .padding(.trailing, 22)
-            }
-            .frame(
-                width: geometry.size.width,
-                height: geometry.size.height
-            )
-            .clipped()
         }
         .ignoresSafeArea()
     }
 
-    private var standImageName: String {
-        switch productID {
-        case .pies:
-            return "pies"
-        case .smoothies:
-            return "smoothies"
-        case .hotDogs:
-            return "hotdogs"
+    @ViewBuilder
+    private func dynamicContent(
+        _ content: ResolvedLocationSceneContent,
+        canvasSize: CGSize
+    ) -> some View {
+        switch content {
+        case .customerAnimation(let schedule):
+            if let activeCustomer = schedule.activeVisit(
+                at: elapsedTime
+            ) {
+                CustomerVisitView(
+                    assetName: activeCustomer.assetName,
+                    state: activeCustomer.state
+                )
+                .frame(
+                    width: canvasSize.width * 0.72,
+                    height: canvasSize.height * 0.62,
+                    alignment: .bottom
+                )
+                .position(
+                    x: customerXPosition(
+                        activeCustomer.position,
+                        sceneWidth: canvasSize.width
+                    ),
+                    y: canvasSize.height * 0.58
+                )
+            }
+
+        case .playbackInterface:
+            playbackInterface(canvasSize: canvasSize)
+
+        case .empty, .image:
+            EmptyView()
         }
+    }
+
+    private func playbackInterface(
+        canvasSize: CGSize
+    ) -> some View {
+        let clockSize = min(canvasSize.width * 0.34, 180)
+
+        return ZStack {
+            ClockView(
+                progress: progress,
+                businessHours: businessHours
+            )
+            .frame(width: clockSize, height: clockSize)
+            .position(
+                x: canvasSize.width * 0.5,
+                y: canvasSize.height * 0.27
+            )
+
+            VStack {
+                HStack {
+                    Spacer()
+                    SkipButton(action: onSkip)
+                }
+                Spacer()
+            }
+            .padding(.top, 52)
+            .padding(.trailing, 22)
+        }
+        .frame(
+            width: canvasSize.width,
+            height: canvasSize.height
+        )
     }
 
     private func customerXPosition(
