@@ -430,7 +430,8 @@ struct GameRootView: View {
             VStack(spacing: 0) {
                 if currentScreen != .home
                     && currentScreen != .productSelection
-                    && currentScreen != .playback {
+                    && currentScreen != .playback
+                    && currentScreen != .summary {
                     HeaderView(
                         gameState: gameState,
                         onCalendarTapped: {
@@ -512,6 +513,7 @@ struct GameRootView: View {
                 if currentScreen != .home
                     && currentScreen != .productSelection
                     && currentScreen != .playback
+                    && currentScreen != .summary
                     && !isEditingPrice {
                     FooterView(
                         selectedArea: selectedArea,
