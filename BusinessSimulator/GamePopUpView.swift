@@ -10,6 +10,7 @@ enum GamePopupType {
     case operatingReserveRequired
     case locationLocked(requiredLevel: Int)
     case upgradeLimitReached
+    case relocationUnavailable(message: String)
     case purchaseSaveFailed
 
     var title: String {
@@ -23,6 +24,8 @@ enum GamePopupType {
              .locationLocked,
              .upgradeLimitReached:
             return "PURCHASE UNAVAILABLE"
+        case .relocationUnavailable:
+            return "RELOCATION UNAVAILABLE"
         case .purchaseSaveFailed:
             return "PURCHASE NOT SAVED"
         }
@@ -42,6 +45,8 @@ enum GamePopupType {
             return "This upgrade is available at Level \(requiredLevel)."
         case .upgradeLimitReached:
             return "You can make only one business upgrade per week. Another upgrade will be available next week."
+        case let .relocationUnavailable(message):
+            return message
         case .purchaseSaveFailed:
             return "Your purchase was not completed because the game could not be saved. Please try again."
         }
@@ -61,6 +66,8 @@ enum GamePopupType {
             return .system("lock.fill")
         case .upgradeLimitReached:
             return .system("clock.fill")
+        case .relocationUnavailable:
+            return .system("map.fill")
         case .purchaseSaveFailed:
             return .system("exclamationmark.triangle.fill")
         }
@@ -76,6 +83,7 @@ enum GamePopupType {
              .operatingReserveRequired,
              .locationLocked,
              .upgradeLimitReached,
+             .relocationUnavailable,
              .purchaseSaveFailed:
             return "OK"
         }
@@ -90,6 +98,7 @@ enum GamePopupType {
              .operatingReserveRequired,
              .locationLocked,
              .upgradeLimitReached,
+             .relocationUnavailable,
              .purchaseSaveFailed:
             return false
         }
