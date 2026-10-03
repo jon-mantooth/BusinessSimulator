@@ -40,7 +40,7 @@ struct RelocationRequirementStatus: Equatable {
 
     var isMet: Bool {
         guard let currentValue else {
-            return false
+            return requiredValue <= 0
         }
 
         return currentValue >= requiredValue
