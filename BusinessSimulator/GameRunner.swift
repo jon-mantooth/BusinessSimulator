@@ -139,11 +139,13 @@ struct GameRunner {
         gameState.simulationSummary.daySummaries.append(summary)
     }
 
-    func prepForNextDay() {
+    static func prepForNextDay(
+        gameState: GameState
+    ) {
         gameState.calendar.advanceDay()
 
         if gameState.calendar.currentWeekday == .monday {
-            prepForNextWeek()
+            prepForNextWeek(gameState: gameState)
         }
 
         // Delayed purchase effects are activated only after the completed
@@ -153,7 +155,9 @@ struct GameRunner {
         
     }
 
-    private func prepForNextWeek() {
+    private static func prepForNextWeek(
+        gameState: GameState
+    ) {
         gameState.weather.generateWeeklyForecast(
             starting: gameState.calendar.currentDate
         )

@@ -25,6 +25,7 @@ struct GameRootView: View {
     @State private var dayPlaybackState = DayPlaybackState()
     @State private var dayTransitionState = DayTransitionState()
     @State private var currentSummary: DaySummary?
+    @State private var stateBeforeSimulatedDay: GameSave?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
     @State private var showingWeather = false
@@ -270,39 +271,22 @@ struct GameRootView: View {
             )
         }
 
-        gameRunner.prepForNextDay()
-
-        // TODO: Persist a game-progress phase before adding a passage-of-time
-        // delay. Save this completed day as awaiting summary, then show the
-        // summary after the delay. On restore, an awaiting summary should be
-        // shown instead of returning directly to PrepView. After the player
-        // acknowledges it, persist the phase for preparing the next day.
-        do {
-            let gameSave = GameSave(gameState: gameState)
-            try saveRepository.save(gameSave)
-
-            currentSummary = summary
-            hasSavedGame = true
-            currentScreen = .playback
-            dayTransitionState.beginOpening(
-                reduceMotion: reduceMotion,
-                onPlaybackReady: {
-                    guard currentScreen == .playback else { return }
-                    dayPlaybackState.start()
-                }
-            )
-        } catch {
-            do {
-                try gameState.restoreBusiness(from: stateBeforeDay)
-            } catch {
-                preconditionFailure(
-                    "Unable to restore the valid pre-simulation game state."
-                )
+        gameRunner.finalizeDay()
+        stateBeforeSimulatedDay = stateBeforeDay
+        currentSummary = summary
+        currentScreen = .playback
+        dayTransitionState.beginOpening(
+            reduceMotion: reduceMotion,
+            onPlaybackReady: {
+                guard currentScreen == .playback else { return }
+                dayPlaybackState.start()
             }
+        )
+    }
 
-            currentSummary = nil
-            showingSaveError = true
-        }
+    private func completeDayPlayback() {
+        guard currentScreen == .playback else { return }
+        transitionFromPlaybackToSummary()
     }
     
     private var gameBackground: some View {
@@ -321,9 +305,40 @@ struct GameRootView: View {
             reduceMotion: reduceMotion,
             onNightReady: {
                 guard currentScreen == .playback else { return }
-                currentScreen = .summary
+                prepareNextDayAndShowSummary()
             }
         )
+    }
+
+    private func prepareNextDayAndShowSummary() {
+        guard let stateBeforeSimulatedDay else { return }
+
+        GameRunner.prepForNextDay(gameState: gameState)
+
+        do {
+            try saveRepository.save(GameSave(gameState: gameState))
+            self.stateBeforeSimulatedDay = nil
+            hasSavedGame = true
+            currentScreen = .summary
+        } catch {
+            do {
+                try gameState.restoreBusiness(
+                    from: stateBeforeSimulatedDay
+                )
+            } catch {
+                preconditionFailure(
+                    "Unable to restore the valid pre-simulation game state."
+                )
+            }
+
+            self.stateBeforeSimulatedDay = nil
+            currentSummary = nil
+            dayPlaybackState.reset()
+            dayTransitionState.resetToDaytime()
+            selectedArea = .gameMode
+            currentScreen = .prep
+            showingSaveError = true
+        }
     }
 
     private var displayedProduct: Product? {
@@ -620,7 +635,7 @@ struct GameRootView: View {
         }
         .onChange(of: dayPlaybackState.phase) { _, newPhase in
             if newPhase == .completed {
-                transitionFromPlaybackToSummary()
+                completeDayPlayback()
             }
         }
         .alert(
