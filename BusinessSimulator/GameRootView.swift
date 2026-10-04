@@ -357,7 +357,7 @@ struct GameRootView: View {
     private var locationSceneContext: LocationSceneContext {
         LocationSceneContext(
             productID: displayedProduct?.id,
-            seasonOfYear: gameState.calendar?.seasonOfYear ?? .fall,
+            seasonOfYear: gameState.calendar?.seasonOfYear ?? .spring,
             weatherCondition: currentWeatherCondition
         )
     }
