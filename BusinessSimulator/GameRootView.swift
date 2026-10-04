@@ -550,6 +550,9 @@ struct GameRootView: View {
                         locationCatalog.beach
                     ],
                     activeLocationID: locationState.activeLocationID,
+                    availableLocationIDs: Set(
+                        locationState.locations.map(\.id)
+                    ),
                     onLocationSelected: { location in
                         selectedMapLocation = location
                     },

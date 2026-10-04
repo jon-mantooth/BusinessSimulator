@@ -3,10 +3,12 @@ import SwiftUI
 struct LocationMapView: View {
     let locations: [Location]
     let activeLocationID: LocationID
+    let availableLocationIDs: Set<LocationID>
     let onLocationSelected: (Location) -> Void
     let onClose: () -> Void
 
     @State private var selectedLocationID: LocationID?
+    @State private var unavailableLocation: Location?
 
     private let parchment = Color(red: 0.96, green: 0.82, blue: 0.58)
     private let darkBrown = Color(red: 0.24, green: 0.12, blue: 0.05)
@@ -51,6 +53,26 @@ struct LocationMapView: View {
             )
         }
         .ignoresSafeArea()
+        .alert(
+            "Location Unavailable",
+            isPresented: Binding(
+                get: { unavailableLocation != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        unavailableLocation = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let unavailableLocation {
+                Text(
+                    "\(unavailableLocation.name) is available for "
+                        + "\(productName(for: unavailableLocation.id))."
+                )
+            }
+        }
     }
 
     private var mapHeader: some View {
@@ -88,10 +110,16 @@ struct LocationMapView: View {
 
     private func locationButton(_ location: Location) -> some View {
         let isCurrent = location.id == activeLocationID
+        let isAvailable = availableLocationIDs.contains(location.id)
         let isSelected = location.id == selectedLocationID
         let appearance = markerAppearance(for: location.id)
 
         return Button {
+            guard isAvailable else {
+                unavailableLocation = location
+                return
+            }
+
             selectedLocationID = location.id
             if !isCurrent {
                 onLocationSelected(location)
@@ -142,11 +170,28 @@ struct LocationMapView: View {
             }
         }
         .buttonStyle(.plain)
+        .grayscale(isAvailable ? 0 : 1)
+        .opacity(isAvailable ? 1 : 0.78)
         .accessibilityLabel(
             isCurrent
                 ? "\(location.name), current location"
-                : location.name
+                : isAvailable
+                    ? location.name
+                    : "\(location.name), unavailable for this product"
         )
+    }
+
+    private func productName(for locationID: LocationID) -> String {
+        switch locationID.rawValue {
+        case "ballpark":
+            return "Hot Dogs"
+        case "farmers-market":
+            return "Pies"
+        case "beach":
+            return "Smoothies"
+        default:
+            return "this product"
+        }
     }
 
     private func placement(for locationID: LocationID) -> CGPoint {
