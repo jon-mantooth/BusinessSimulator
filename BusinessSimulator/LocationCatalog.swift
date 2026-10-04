@@ -46,7 +46,7 @@ struct LocationCatalog {
                         layerOrder: 0
                     ),
                     LocationSceneAsset(
-                        id: "product-stand",
+                        id: "neighborhood-product-stand",
                         source: .productStand,
                         aspectRatio: nil,
                         widthRatio: 0.37,

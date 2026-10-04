@@ -14,6 +14,7 @@ enum ResolvedLocationSceneContent {
 struct ResolvedLocationSceneAsset: Identifiable {
     let layout: LocationSceneAsset
     let content: ResolvedLocationSceneContent
+    let position: LocationScenePosition
 
     var id: String {
         layout.id
@@ -38,6 +39,10 @@ struct LocationSceneResolver {
                     content: resolveContent(
                         for: asset,
                         context: context
+                    ),
+                    position: resolvedPosition(
+                        for: asset,
+                        context: context
                     )
                 )
             }
@@ -46,6 +51,24 @@ struct LocationSceneResolver {
             }
 
         return ResolvedLocationScene(assets: resolvedAssets)
+    }
+
+    private func resolvedPosition(
+        for asset: LocationSceneAsset,
+        context: LocationSceneContext
+    ) -> LocationScenePosition {
+        guard asset.id == "neighborhood-product-stand",
+              asset.source == .productStand,
+              context.seasonOfYear == .spring else {
+            return asset.position
+        }
+
+        // The spring neighborhood artwork places the sidewalk lower than the
+        // other seasonal backgrounds, so its stand follows that visual anchor.
+        return LocationScenePosition(
+            x: asset.position.x,
+            y: 0.781
+        )
     }
 
     private func resolveContent(

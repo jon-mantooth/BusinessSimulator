@@ -57,6 +57,7 @@ struct LocationSceneView<DynamicContent: View>: View {
                 named: name,
                 aspectRatio: aspectRatio,
                 layout: asset.layout,
+                position: asset.position,
                 canvasSize: canvasSize
             )
 
@@ -70,6 +71,7 @@ struct LocationSceneView<DynamicContent: View>: View {
         named name: String,
         aspectRatio: Double,
         layout: LocationSceneAsset,
+        position: LocationScenePosition,
         canvasSize: CGSize
     ) -> some View {
         if layout.layerOrder == 0 && layout.widthRatio == 1.0 {
@@ -87,6 +89,7 @@ struct LocationSceneView<DynamicContent: View>: View {
             } ?? width / aspectRatio
             let center = centerPosition(
                 layout: layout,
+                position: position,
                 assetSize: CGSize(width: width, height: height),
                 canvasSize: canvasSize
             )
@@ -136,11 +139,12 @@ struct LocationSceneView<DynamicContent: View>: View {
 
     private func centerPosition(
         layout: LocationSceneAsset,
+        position: LocationScenePosition,
         assetSize: CGSize,
         canvasSize: CGSize
     ) -> CGPoint {
-        var x = canvasSize.width * layout.position.x
-        var y = canvasSize.height * layout.position.y
+        var x = canvasSize.width * position.x
+        var y = canvasSize.height * position.y
 
         switch layout.anchor {
         case .center:
