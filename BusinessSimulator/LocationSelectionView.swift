@@ -253,11 +253,7 @@ struct LocationSelectionView: View {
     }
 
     private func relocationHelp(panelSize: CGSize) -> some View {
-        Text(
-            canRelocate
-                ? "Ready to begin your next chapter."
-                : "Meet all requirements to relocate to this location."
-        )
+        Text("Relocation takes effect immediately.")
         .font(.system(size: 11, weight: .bold, design: .rounded))
         .italic()
         .foregroundStyle(mutedBlue)
