@@ -334,7 +334,7 @@ struct AdvertisementView: View {
                 .font(.caption)
                 .foregroundStyle(fadedRed)
 
-            Text("TIER \(level)")
+            Text("LEVEL \(level)")
                 .foregroundStyle(fadedRed)
 
             Text("— CHOOSE YOUR NEXT CAMPAIGN")
@@ -366,7 +366,7 @@ struct AdvertisementView: View {
                 .font(.title)
                 .foregroundStyle(fadedRed)
 
-            Text("TOP ADVERTISEMENT TIER")
+            Text("TOP ADVERTISEMENT LEVEL")
                 .font(.headline.weight(.black))
                 .foregroundStyle(navy)
 
