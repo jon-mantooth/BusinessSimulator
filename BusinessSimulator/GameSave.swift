@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 13
+    static let currentSchemaVersion = 14
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -86,6 +86,7 @@ struct UpgradeTrackerSave: Codable {
 
 struct DaySummarySave: Codable {
     let day: Int
+    let locationID: LocationID
     let startingBalance: Double
     let type: DaySummaryType
     let demandedSales: Int
@@ -212,6 +213,7 @@ extension GameSave {
         summaries = gameState.simulationSummary.daySummaries.map { summary in
             DaySummarySave(
                 day: summary.day,
+                locationID: summary.locationID,
                 startingBalance: summary.startingBalance,
                 type: summary.type,
                 demandedSales: summary.demandedSales,

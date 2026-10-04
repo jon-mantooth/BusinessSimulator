@@ -402,6 +402,7 @@ final class GameState {
             savedSummary in
             let summary = DaySummary(
                 day: savedSummary.day,
+                locationID: savedSummary.locationID,
                 startingBalance: savedSummary.startingBalance,
                 type: savedSummary.type
             )

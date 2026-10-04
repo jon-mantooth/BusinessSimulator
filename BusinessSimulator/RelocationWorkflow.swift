@@ -183,6 +183,7 @@ struct RelocationWorkflow {
 
         let relocationSummary = DaySummary(
             day: gameState.calendar.simulationDay,
+            locationID: rollbackSnapshot.activeLocationID,
             startingBalance: gameState.finance.actualBalance,
             type: .relocation
         )

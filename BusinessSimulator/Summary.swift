@@ -27,6 +27,7 @@ enum DaySummaryType: String, Codable {
 final class DaySummary {
 
     let day: Int
+    let locationID: LocationID
     let startingBalance: Double
     let type: DaySummaryType
 
@@ -52,10 +53,12 @@ final class DaySummary {
 
     init(
         day: Int,
+        locationID: LocationID = LocationID(rawValue: "home"),
         startingBalance: Double,
         type: DaySummaryType = .operating
     ) {
         self.day = day
+        self.locationID = locationID
         self.startingBalance = startingBalance
         self.type = type
     }

@@ -21,6 +21,7 @@ struct GameRunner {
         self.departments = gameState.departments
         self.summary = DaySummary(
             day: self.gameState.calendar.simulationDay,
+            locationID: self.gameState.locationState!.activeLocationID,
             startingBalance: self.gameState.finance.actualBalance
         )
     }
