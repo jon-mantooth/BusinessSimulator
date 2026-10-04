@@ -192,9 +192,9 @@ struct LocationSelectionView: View {
             text = String(format: "%.1f / %.1f", currentValue, status.requiredValue)
         case .advertisementLevel:
             text = "Level \(Int(currentValue)) / \(Int(status.requiredValue))"
-        case .equipmentLevel, .storageLevel:
+        case .equipmentLevel, .storageLevel, .transportationLevel:
             text = "Level \(Int(currentValue)) / \(Int(status.requiredValue))"
-        case .laborLevel, .transportationLevel:
+        case .laborLevel:
             text = "\(Int(currentValue)) / \(Int(status.requiredValue))"
         }
 

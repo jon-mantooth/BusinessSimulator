@@ -68,7 +68,7 @@ struct GameRootView: View {
                 equipmentLevel: 3,
                 laborLevel: 1,
                 advertisementLevel: 2,
-                businessReputation: 3.0
+                businessReputation: 4.2
             ),
             relocationPrice: 15_000
         )
