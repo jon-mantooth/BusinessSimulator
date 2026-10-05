@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import BusinessSimulator
 
@@ -506,4 +507,234 @@ private final class LocationTestSaveRepository: GameSaveRepository {
     }
 
     func deleteSave() throws {}
+}
+
+// MARK: - Global Upgrade Timing
+
+extension LocationTests {
+
+    @Test
+    func newUpgradeTrackerAllowsUpgrade() {
+        let tracker = UpgradeTracker()
+        let weekStart = locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 6
+        )
+
+        #expect(tracker.canUpgrade(during: weekStart))
+        #expect(!tracker.hasUpgrade(on: 1))
+    }
+
+    @Test
+    func recordedUpgradeBlocksEntireCalendarWeek() {
+        let calendar = GameCalendar(
+            simulationDay: 1,
+            currentDate: locationTestDate(
+                year: 2026,
+                month: 4,
+                day: 6
+            )
+        )
+        var tracker = UpgradeTracker()
+        let recordedWeek = calendar.currentWeekStartDate
+        tracker.recordUpgrade(
+            on: calendar.simulationDay,
+            weekStarting: recordedWeek
+        )
+
+        while calendar.currentWeekday != .friday {
+            #expect(!tracker.canUpgrade(during: calendar.currentWeekStartDate))
+            calendar.advanceDay()
+        }
+
+        #expect(!tracker.canUpgrade(during: calendar.currentWeekStartDate))
+        calendar.advanceDay()
+        #expect(calendar.currentWeekday == .monday)
+        #expect(tracker.canUpgrade(during: calendar.currentWeekStartDate))
+    }
+
+    @Test
+    func hasUpgradeMatchesOnlyRecordedSimulationDay() {
+        var tracker = UpgradeTracker()
+        tracker.recordUpgrade(
+            on: 12,
+            weekStarting: locationTestDate(
+                year: 2026,
+                month: 4,
+                day: 6
+            )
+        )
+
+        #expect(!tracker.hasUpgrade(on: 11))
+        #expect(tracker.hasUpgrade(on: 12))
+        #expect(!tracker.hasUpgrade(on: 13))
+    }
+
+    @Test
+    func recordingLaterUpgradeReplacesPreviousTiming() {
+        var tracker = UpgradeTracker()
+        let firstWeek = locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 6
+        )
+        let laterWeek = locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 13
+        )
+
+        tracker.recordUpgrade(on: 4, weekStarting: firstWeek)
+        tracker.recordUpgrade(on: 9, weekStarting: laterWeek)
+
+        #expect(tracker.lastUpgradeSimulationDay == 9)
+        #expect(tracker.lastUpgradeWeekStartDate == laterWeek)
+        #expect(tracker.canUpgrade(during: firstWeek))
+        #expect(!tracker.canUpgrade(during: laterWeek))
+    }
+
+    @Test
+    func resettingTrackerClearsTimingAndReopensUpgradeWindow() {
+        var tracker = UpgradeTracker()
+        let weekStart = locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 6
+        )
+        tracker.recordUpgrade(on: 4, weekStarting: weekStart)
+
+        tracker.reset()
+
+        #expect(tracker.lastUpgradeSimulationDay == nil)
+        #expect(tracker.lastUpgradeWeekStartDate == nil)
+        #expect(tracker.canUpgrade(during: weekStart))
+        #expect(!tracker.hasUpgrade(on: 4))
+    }
+
+    @Test
+    func upgradeWindowUsesCalendarWeekRatherThanSimulationDayDistance() {
+        var tracker = UpgradeTracker()
+        let originalWeek = locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 6
+        )
+        let laterWeek = locationTestDate(
+            year: 2026,
+            month: 6,
+            day: 1
+        )
+        tracker.recordUpgrade(on: 20, weekStarting: originalWeek)
+
+        #expect(tracker.canUpgrade(during: laterWeek))
+        #expect(tracker.hasUpgrade(on: 20))
+    }
+}
+
+// MARK: - Relocation Upgrade Timing
+
+extension LocationTests {
+
+    @Test
+    func sameDayUpgradeBlocksRelocation() {
+        let gameState = locationTestGameState(productID: .pies)
+        gameState.upgradeTracker.recordUpgrade(
+            on: gameState.calendar.simulationDay,
+            weekStarting: gameState.calendar.currentWeekStartDate
+        )
+        let workflow = RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: LocationTestSaveRepository()
+        )
+
+        #expect(
+            workflow.dimensionAvailability(
+                for: RelocationDimensionAvailabilityRequest()
+            ) == .upgradeMadeToday
+        )
+    }
+
+    @Test
+    func earlierUpgradeInSameWeekDoesNotBlockRelocation() {
+        let gameState = locationTestGameState(productID: .pies)
+        gameState.upgradeTracker.recordUpgrade(
+            on: gameState.calendar.simulationDay,
+            weekStarting: gameState.calendar.currentWeekStartDate
+        )
+        gameState.calendar.advanceDay()
+        let workflow = RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: LocationTestSaveRepository()
+        )
+
+        #expect(
+            workflow.dimensionAvailability(
+                for: RelocationDimensionAvailabilityRequest()
+            ) == .available
+        )
+    }
+
+    @Test
+    func pendingBusinessEventsBlockRelocationIndependently() {
+        let gameState = locationTestGameState(productID: .pies)
+        gameState.pendingBusinessEvents = [locationTestBusinessEvent()]
+        let workflow = RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: LocationTestSaveRepository()
+        )
+
+        #expect(
+            workflow.dimensionAvailability(
+                for: RelocationDimensionAvailabilityRequest()
+            ) == .pendingBusinessEvents
+        )
+    }
+
+    @Test
+    func untouchedTrackerAndNoPendingEventsAllowRelocationChecks() {
+        let gameState = locationTestGameState(productID: .pies)
+        let workflow = RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: LocationTestSaveRepository()
+        )
+
+        #expect(
+            workflow.dimensionAvailability(
+                for: RelocationDimensionAvailabilityRequest()
+            ) == .available
+        )
+    }
+}
+
+private func locationTestDate(
+    year: Int,
+    month: Int,
+    day: Int
+) -> Date {
+    Foundation.Calendar(identifier: .gregorian).date(
+        from: DateComponents(
+            year: year,
+            month: month,
+            day: day
+        )
+    )!
+}
+
+private func locationTestBusinessEvent() -> BusinessEvent {
+    BusinessEvent(
+        simulationDay: 1,
+        calendarDate: locationTestDate(
+            year: 2026,
+            month: 4,
+            day: 1
+        ),
+        type: .purchase(
+            PurchaseEvent(
+                category: .advertisement,
+                itemID: "location-test-purchase"
+            )
+        ),
+        title: "Location Test Purchase"
+    )
 }
