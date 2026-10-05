@@ -149,3 +149,361 @@ extension LocationTests {
         #expect(summary.cashFlowCosts.isEmpty)
     }
 }
+
+// MARK: - Upgrade Location Requirements
+
+extension LocationTests {
+
+    @Test(arguments: locationTestProductIDs)
+    func advertisementLocationRequirementsDoNotMoveBackward(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let tiers = AdvertisementCatalog(product: product)
+            .tiersByProduct[productID]!
+            .sorted { $0.level < $1.level }
+        let requirements = tiers.map(\.requiredLocationTier)
+
+        for (earlier, later) in zip(
+            requirements,
+            requirements.dropFirst()
+        ) {
+            #expect(later >= earlier)
+        }
+        #expect(requirements.first == .tierOne)
+        #expect(requirements.contains { $0 > requirements[0] })
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func primaryEquipmentLocationRequirementsDoNotMoveBackward(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let tiers = EquipmentCatalog().primaryTiers(for: product)
+            .sorted { $0.level < $1.level }
+        let requirements = tiers.map(\.requiredLocationTier)
+
+        for (earlier, later) in zip(
+            requirements,
+            requirements.dropFirst()
+        ) {
+            #expect(later >= earlier)
+        }
+        #expect(requirements.first == .tierOne)
+        #expect(requirements.contains { $0 > requirements[0] })
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func primaryEquipmentResolvesContainingTiersLocationRequirement(
+        productID: ProductID
+    ) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let equipmentState = try #require(gameState.equipmentState)
+
+        for tier in equipmentState.primaryTiers {
+            for equipment in tier.equipment {
+                #expect(
+                    equipmentState.requiredLocationTier(for: equipment)
+                        == tier.requiredLocationTier
+                )
+            }
+        }
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func secondaryEquipmentIsLocationAgnostic(productID: ProductID) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let equipmentState = try #require(gameState.equipmentState)
+
+        for equipment in equipmentState.secondaryEquipmentCatalog.equipment {
+            #expect(
+                equipmentState.requiredLocationTier(for: equipment) == nil
+            )
+        }
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func laborPurchaseRequestsAreLocationAgnostic(productID: ProductID) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let laborState = try #require(gameState.laborState)
+        let labor = try #require(laborState.availableLabor.labor.first)
+        let request = PurchaseRequest(state: laborState, item: labor)
+
+        #expect(request.requiredLocationTier == nil)
+    }
+}
+
+// MARK: - Location-Locked Purchase Availability
+
+extension LocationTests {
+
+    @Test(arguments: locationTestProductIDs)
+    func declaredRequirementControlsAdvertisementAvailability(
+        productID: ProductID
+    ) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+        let advertisementState = try #require(gameState.advertisementState)
+        let startingTier = gameState.locationState!.activeTier.level
+
+        for tier in advertisementState.tiers {
+            let expected: PurchaseAvailability =
+                startingTier >= tier.requiredLocationTier
+                    ? .available
+                    : .locationLocked(
+                        requiredTier: tier.requiredLocationTier
+                    )
+
+            #expect(
+                workflow.locationAvailability(
+                    requiredTier: tier.requiredLocationTier
+                ) == expected
+            )
+        }
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func declaredRequirementControlsPrimaryEquipmentAvailability(
+        productID: ProductID
+    ) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+        let equipmentState = try #require(gameState.equipmentState)
+        let startingTier = gameState.locationState!.activeTier.level
+
+        for tier in equipmentState.primaryTiers {
+            let expected: PurchaseAvailability =
+                startingTier >= tier.requiredLocationTier
+                    ? .available
+                    : .locationLocked(
+                        requiredTier: tier.requiredLocationTier
+                    )
+
+            #expect(
+                workflow.locationAvailability(
+                    requiredTier: tier.requiredLocationTier
+                ) == expected
+            )
+        }
+    }
+
+    @Test(arguments: locationTestProductIDs)
+    func reachingLaterLocationUnlocksDeclaredRequirements(
+        productID: ProductID
+    ) throws {
+        let gameState = locationTestGameState(productID: productID)
+        let destinationTier = try #require(
+            gameState.locationState?.tiers.first {
+                $0.level > gameState.locationState!.activeTier.level
+            }
+        )
+        let destination = try #require(destinationTier.locations.first)
+        gameState.locationState!.relocate(to: destination.id)
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+
+        for requirement in gameState.advertisementState!.tiers.map(
+            \.requiredLocationTier
+        ) {
+            #expect(
+                workflow.locationAvailability(requiredTier: requirement)
+                    == .available
+            )
+        }
+        for requirement in gameState.equipmentState!.primaryTiers.map(
+            \.requiredLocationTier
+        ) {
+            #expect(
+                workflow.locationAvailability(requiredTier: requirement)
+                    == .available
+            )
+        }
+    }
+
+    @Test
+    func locationLockTakesPriorityOverFinancialFailure() throws {
+        let gameState = locationTestGameState(productID: .pies)
+        let request = try lockedAdvertisementRequest(gameState: gameState)
+        gameState.finance.displayedBalance = 0
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+
+        #expect(
+            workflow.itemAvailability(for: request)
+                == .locationLocked(
+                    requiredTier: request.requiredLocationTier!
+                )
+        )
+    }
+
+    @Test
+    func freeItemAtAvailableLocationIgnoresFinancialRestrictions() throws {
+        let gameState = locationTestGameState(productID: .pies)
+        let advertisementState = try #require(gameState.advertisementState)
+        let startingTier = try #require(advertisementState.tiers.first)
+        let freeAdvertisement = try #require(
+            startingTier.advertisements.first { $0.price == 0 }
+        )
+        gameState.finance.displayedBalance = 0
+        let request = PurchaseRequest(
+            state: advertisementState,
+            item: freeAdvertisement,
+            requiredLocationTier: startingTier.requiredLocationTier
+        )
+
+        #expect(
+            locationTestPurchaseWorkflow(gameState: gameState)
+                .itemAvailability(for: request) == .available
+        )
+    }
+
+    @Test
+    func unlockedItemReturnsToOrdinaryFinancialValidation() throws {
+        let gameState = locationTestGameState(productID: .pies)
+        let request = try lockedAdvertisementRequest(gameState: gameState)
+        let destinationTier = try #require(
+            gameState.locationState?.tiers.first {
+                $0.level == request.requiredLocationTier
+            }
+        )
+        let destination = try #require(destinationTier.locations.first)
+        gameState.locationState!.relocate(to: destination.id)
+        gameState.finance.displayedBalance = 0
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+
+        #expect(
+            workflow.itemAvailability(for: request) == .insufficientFunds
+        )
+    }
+
+    @Test
+    func unlockedItemStillEnforcesOperatingReserve() throws {
+        let gameState = locationTestGameState(productID: .pies)
+        let request = try lockedAdvertisementRequest(gameState: gameState)
+        let destinationTier = try #require(
+            gameState.locationState?.tiers.first {
+                $0.level == request.requiredLocationTier
+            }
+        )
+        let destination = try #require(destinationTier.locations.first)
+        gameState.locationState!.relocate(to: destination.id)
+        gameState.finance.displayedBalance =
+            request.price + gameState.finance.minimumOperatingAllowance - 1
+        let workflow = locationTestPurchaseWorkflow(gameState: gameState)
+
+        #expect(
+            workflow.itemAvailability(for: request)
+                == .operatingReserveRequired
+        )
+    }
+
+    @Test
+    func completingLockedPurchaseRechecksAvailabilityWithoutMutation() throws {
+        let gameState = locationTestGameState(productID: .pies)
+        let request = try lockedAdvertisementRequest(gameState: gameState)
+        let startingAdvertisement =
+            gameState.advertisementState!.activeAdvertisement
+        let startingActualBalance = gameState.finance.actualBalance
+        let startingDisplayedBalance = gameState.finance.displayedBalance
+        let startingUpgradeTracker = gameState.upgradeTracker
+        let startingBusinessEventIDs = gameState.pendingBusinessEvents.map(\.id)
+        let startingPendingUpgrades = gameState.pendingUpgrades
+        let repository = LocationTestSaveRepository()
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+
+        let result = workflow.complete(request)
+
+        guard case let .unavailable(availability) = result else {
+            Issue.record("Expected the location-locked purchase to fail.")
+            return
+        }
+        #expect(
+            availability == .locationLocked(
+                requiredTier: request.requiredLocationTier!
+            )
+        )
+        #expect(
+            gameState.advertisementState!.activeAdvertisement
+                == startingAdvertisement
+        )
+        #expect(gameState.finance.actualBalance == startingActualBalance)
+        #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
+        #expect(
+            gameState.upgradeTracker.lastUpgradeSimulationDay
+                == startingUpgradeTracker.lastUpgradeSimulationDay
+        )
+        #expect(
+            gameState.upgradeTracker.lastUpgradeWeekStartDate
+                == startingUpgradeTracker.lastUpgradeWeekStartDate
+        )
+        #expect(
+            gameState.pendingBusinessEvents.map(\.id)
+                == startingBusinessEventIDs
+        )
+        #expect(gameState.pendingUpgrades == startingPendingUpgrades)
+        #expect(repository.saveCallCount == 0)
+    }
+}
+
+private let locationTestProductIDs: [ProductID] = [
+    .pies,
+    .hotDogs,
+    .smoothies
+]
+
+private func locationTestGameState(productID: ProductID) -> GameState {
+    let gameState = GameState()
+    gameState.initializeBusiness(
+        product: ProductCatalog().product(for: productID)
+    )
+    return gameState
+}
+
+private func locationTestPurchaseWorkflow(
+    gameState: GameState
+) -> PurchaseWorkflow {
+    PurchaseWorkflow(
+        gameState: gameState,
+        saveRepository: LocationTestSaveRepository()
+    )
+}
+
+private func lockedAdvertisementRequest(
+    gameState: GameState
+) throws -> PurchaseRequest {
+    let advertisementState = try #require(gameState.advertisementState)
+    let activeLocationTier = try #require(
+        gameState.locationState?.activeTier.level
+    )
+    let lockedTier = try #require(
+        advertisementState.tiers.first {
+            $0.requiredLocationTier > activeLocationTier
+        }
+    )
+    let advertisement = try #require(lockedTier.advertisements.first)
+
+    return PurchaseRequest(
+        state: advertisementState,
+        item: advertisement,
+        requiredLocationTier: lockedTier.requiredLocationTier
+    )
+}
+
+private final class LocationTestSaveRepository: GameSaveRepository {
+    private(set) var saveCallCount = 0
+
+    func save(_ gameSave: GameSave) throws {
+        saveCallCount += 1
+    }
+
+    func load() throws -> GameSave? {
+        nil
+    }
+
+    func hasSave() -> Bool {
+        false
+    }
+
+    func deleteSave() throws {}
+}
