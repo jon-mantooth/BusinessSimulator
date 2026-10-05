@@ -135,7 +135,7 @@ extension PendingUpgradeTests {
         #expect(appleState.recipeAmountMultiplier == 1.0)
         #expect(gameState.pendingUpgrades.count == 1)
 
-        runner.prepForNextDay()
+        GameRunner.prepForNextDay(gameState: gameState)
 
         #expect(appleState.recipeAmountMultiplier == 0.8)
         #expect(gameState.pendingUpgrades.isEmpty)
@@ -217,6 +217,9 @@ private func makePendingUpgradeGameState(
     )
     let gameState = GameState()
     gameState.initializeBusiness(product: product)
+    gameState.beginOperatingPeriodIfNeeded()
+    gameState.finance.actualBalance += 100_000
+    gameState.finance.displayedBalance += 100_000
     return gameState
 }
 

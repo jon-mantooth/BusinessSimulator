@@ -160,8 +160,11 @@ extension RelocationWorkflowTests {
                 + gameState.finance.minimumOperatingAllowance
         let availability = relocationTestWorkflow(gameState: gameState)
             .itemAvailability(for: request)
+        let requirementsAreMet = availability.requirements.allSatisfy {
+            $0.isMet
+        }
 
-        #expect(availability.requirements.allSatisfy(\.isMet))
+        #expect(requirementsAreMet)
         #expect(availability.financialAvailability == .available)
         #expect(availability.canRelocate)
     }
@@ -212,8 +215,11 @@ extension RelocationWorkflowTests {
         gameState.finance.displayedBalance = request.relocationPrice - 1
         let availability = relocationTestWorkflow(gameState: gameState)
             .itemAvailability(for: request)
+        let requirementsAreMet = availability.requirements.allSatisfy {
+            $0.isMet
+        }
 
-        #expect(availability.requirements.allSatisfy(\.isMet))
+        #expect(requirementsAreMet)
         #expect(availability.financialAvailability == .insufficientFunds)
         #expect(!availability.canRelocate)
     }
@@ -231,8 +237,11 @@ extension RelocationWorkflowTests {
                 + gameState.finance.minimumOperatingAllowance - 1
         let availability = relocationTestWorkflow(gameState: gameState)
             .itemAvailability(for: request)
+        let requirementsAreMet = availability.requirements.allSatisfy {
+            $0.isMet
+        }
 
-        #expect(availability.requirements.allSatisfy(\.isMet))
+        #expect(requirementsAreMet)
         #expect(
             availability.financialAvailability
                 == .operatingReserveRequired

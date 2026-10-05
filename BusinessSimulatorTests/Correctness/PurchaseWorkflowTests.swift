@@ -417,6 +417,8 @@ private func makeGameState() -> GameState {
     }!
     let gameState = GameState()
     gameState.initializeBusiness(product: product)
+    gameState.finance.actualBalance += 100_000
+    gameState.finance.displayedBalance += 100_000
     return gameState
 }
 
