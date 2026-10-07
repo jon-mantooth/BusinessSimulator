@@ -240,6 +240,12 @@ struct BusinessDimensions {
                     laborState: gameState.laborState!
                 )
             ],
+            distribution: [
+                StorageDimension(
+                    storageState: gameState.storageState!,
+                    locationState: gameState.locationState!
+                )
+            ],
             marketing: [
                 BusinessReputationDimension(
                     reputation: gameState.reputation!
