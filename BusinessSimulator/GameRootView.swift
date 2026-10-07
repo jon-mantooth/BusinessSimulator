@@ -63,7 +63,7 @@ struct GameRootView: View {
         RelocationRequest(
             destination: location,
             requirements: RelocationRequirements(
-                storageLevel: 0,
+                storageLevel: 1,
                 transportationLevel: 0,
                 equipmentLevel: 3,
                 laborLevel: 1,

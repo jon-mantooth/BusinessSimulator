@@ -249,7 +249,9 @@ struct RelocationWorkflow {
             RelocationRequirementStatus(
                 requirement: .storageLevel,
                 requiredValue: Double(required.storageLevel),
-                currentValue: nil
+                currentValue: gameState.storageState.map {
+                    Double($0.activeStorage.tierLevel)
+                }
             ),
             RelocationRequirementStatus(
                 requirement: .transportationLevel,
