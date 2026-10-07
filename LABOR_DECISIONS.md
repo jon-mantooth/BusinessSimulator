@@ -22,22 +22,22 @@ Use this file to record decisions made during the labor feature, including enoug
 
 ## Equipment and Labor Capacity Curves
 
-Equipment capacity follows the shared `ProductionCapacityBalance` curve. Tier zero begins at 90% of the product's ideal units sold, and tier five reaches 200%. The 110-percentage-point increase is divided evenly across five tier transitions.
+Primary-equipment capacity begins at 90% of the product's ideal units sold. Its three Location Tier 1 purchases reach 210%, and its two Location Tier 2 purchases extend capacity to 330%.
 
 Main labor has a tier-zero capacity of 120% and a tier-one capacity of 170%. These are the initial chosen balance values and may still be adjusted after gameplay testing.
 
 | Tier | Equipment capacity | Main labor capacity |
 |---:|---:|---:|
 | 0 | 90% | 120% |
-| 1 | 112% | 170% |
-| 2 | 134% | — |
-| 3 | 156% | — |
-| 4 | 178% | — |
-| 5 | 200% | — |
+| 1 | 130% | 170% |
+| 2 | 170% | — |
+| 3 | 210% | — |
+| 4 | 270% | — |
+| 5 | 330% | — |
 
 Actual whole-unit capacities can differ slightly from these percentages because the game rounds the baseline, target, and tier increases.
 
-Fully upgraded primary and secondary equipment reaches approximately 225% to 230% of ideal units sold, depending on the product and whole-unit rounding. Fully upgraded labor should reach the same general range.
+The labor schedule shown below is still the original Location Tier 1 design and will be revised separately to reach the new 330% capacity ceiling. Secondary equipment continues to add capacity beyond the primary-equipment values.
 
 After the primary chef raises labor capacity to 170%, the three secondary labor additions provide 60 additional percentage points combined. Each secondary hire adds 20% of ideal units sold.
 
