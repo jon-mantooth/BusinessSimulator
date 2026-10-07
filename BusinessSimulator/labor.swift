@@ -4,7 +4,8 @@ struct LaborID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
+struct Labor: Identifiable, Equatable, Codable, PurchasableItem,
+    CapacityProviding {
     let id: LaborID
     let name: String
     let smallIcon: GameIcon
@@ -25,6 +26,10 @@ struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
 
     var purchaseItemID: String {
         id.rawValue
+    }
+
+    var capacityType: CapacityType {
+        .additional
     }
 
     init(
@@ -59,8 +64,8 @@ struct Labor: Identifiable, Equatable, Codable, PurchasableItem {
 
 enum LaborCapacityBalance {
     static let playerBaselineRatio = 1.20
-    static let specialistRatio = 0.50
-    static let sharedWorkerRatio = 0.20
+    static let specialistRatio = 0.90
+    static let sharedWorkerRatio = 0.40
 
     static func capacity(
         ratio: Double,
@@ -186,12 +191,16 @@ final class LaborState: PurchasableState {
             ownedLabor.labor.allSatisfy { catalogIDs.contains($0.id) },
             "Owned labor must belong to this state's catalog."
         )
+        assert(
+            !laborCatalog.labor.isEmpty,
+            "A labor state requires a capacity schedule."
+        )
 
         self.laborCatalog = laborCatalog
-        self.playerBaselineCapacity = LaborCapacityBalance
-            .playerBaselineCapacity(
-                baseIdealUnitsSold: baseIdealUnitsSold
-            )
+        self.playerBaselineCapacity = LaborCapacityBalance.capacity(
+            ratio: LaborCapacityBalance.playerBaselineRatio,
+            baseIdealUnitsSold: baseIdealUnitsSold
+        )
         self.ownedLabor = ownedLabor
     }
 
@@ -263,25 +272,30 @@ final class LaborDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         recordCost(
             for: .weekly,
-            summary: summary
+            summary: summary,
+            multiplier: multiplier
         )
     }
 
     private func recordCost(
         for paymentSchedule: PaymentSchedule,
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double = 1.0
     ) -> Double {
         let totalCost = laborState
-            .totalCosts[paymentSchedule, default: 0]
+            .totalCosts[paymentSchedule, default: 0] * multiplier
 
         if totalCost > 0 {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: "Labor",
+                    name: multiplier == 1.0
+                        ? "Labor"
+                        : "Labor (Prorated)",
                     amount: totalCost
                 )
             )

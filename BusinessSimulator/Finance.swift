@@ -12,8 +12,9 @@ enum CashFlowDirection: String, Codable {
     case outflow
 }
 
-enum PurchaseAvailability {
+enum PurchaseAvailability: Equatable {
     case available
+    case locationLocked(requiredTier: LocationTierLevel)
     case insufficientFunds
     case operatingReserveRequired
 }

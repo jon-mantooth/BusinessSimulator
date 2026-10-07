@@ -122,7 +122,9 @@ extension DemandTests {
             baseIdealPrice: 1,
             idealUnitsSold: 1,
             priceSensitivity: 1,
-            temperatureInterpolationFormula: .coldWeather
+            temperatureInterpolationFormula: .coldWeather,
+            recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 9, day: 1),
+            recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 11, day: 30)
         )
 
         let productState = ProductState(
@@ -494,7 +496,8 @@ private func makeAdvertisementDimension(
         id: AdvertisementTierID(rawValue: "demand-test-tier"),
         level: 0,
         advertisements: [advertisement],
-        product: ProductCatalog().product(for: .pies)
+        product: ProductCatalog().product(for: .pies),
+        requiredLocationTier: .tierOne
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],

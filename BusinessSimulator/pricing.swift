@@ -25,19 +25,22 @@ enum UpgradePricing {
     static let maximumRecurringBenefitMultiplier = 1.20
     static let minimumRecurringBenefitMultiplier = 0.60
 
-    // TODO: Adjust tier pricing for the demand and market-size multipliers
-    // associated with the location active when the upgrade becomes available.
-
     /// Calculates an upgrade's expected daily benefit by applying each of its
     /// effects independently to the representative business state at the start
     /// of the supplied tier. The individual profit changes are added so one
-    /// dimension's upgrade does not increase the priced value of another.
+    /// dimension's upgrade does not increase the priced value of another. The
+    /// expected location multipliers establish the demand and market-size
+    /// environment in which the upgrade becomes available, without pricing
+    /// those existing benefits as part of the upgrade.
     static func calculateDailyBenefit(
         tierLevel: Int,
         product: Product,
+        locationDemandMultiplier: Double = 1.0,
+        representativeMarketSizeMultiplier: Double = 1.0,
         demandEffectScore: Double = 0,
         demandWeight: Double = 0,
-        marketSizeEffectScore: Double = 0,
+        marketSizeStartingTargetMultiplier: Double = 1.0,
+        marketSizeEndingTargetMultiplier: Double = 1.0,
         marketSizeWeight: Double = 0,
         capacityEffect: CapacityPricingEffect = .none
     ) -> Double {
@@ -45,9 +48,15 @@ enum UpgradePricing {
             (1...totalUpgradeTiers).contains(tierLevel),
             "Pricing tier must be tier 1 through 5."
         )
+        assert(locationDemandMultiplier > 0)
+        assert(representativeMarketSizeMultiplier > 0)
         assert((0.0...1.0).contains(demandEffectScore))
         assert((0.0...1.0).contains(demandWeight))
-        assert((0.0...1.0).contains(marketSizeEffectScore))
+        assert(marketSizeStartingTargetMultiplier > 0)
+        assert(
+            marketSizeEndingTargetMultiplier
+                >= marketSizeStartingTargetMultiplier
+        )
         assert((0.0...1.0).contains(marketSizeWeight))
 
         let precedingLevel = tierLevel - 1
@@ -58,11 +67,9 @@ enum UpgradePricing {
                 weight: 1.0,
                 effectScore: tierProgress
             )
+            * locationDemandMultiplier
         let initialMarketSizeMultiplier =
-            SimulationBalance.marketSize.multiplier(
-                weight: 1.0,
-                effectScore: tierProgress
-            )
+            representativeMarketSizeMultiplier
         let initialProfit = expectedDailyProfit(
             product: product,
             demandMultiplier: initialDemandMultiplier,
@@ -82,20 +89,29 @@ enum UpgradePricing {
         )
         let demandBenefit = max(0, demandProfit - initialProfit)
 
-        let purchasedMarketSizeMultiplier =
+        let startingMarketSizeMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: marketSizeWeight,
-                effectScore: marketSizeEffectScore
+                targetMultiplier: marketSizeStartingTargetMultiplier
             )
-        let marketSizeProfit = expectedDailyProfit(
+        let endingMarketSizeMultiplier =
+            SimulationBalance.marketSize.multiplier(
+                weight: marketSizeWeight,
+                targetMultiplier: marketSizeEndingTargetMultiplier
+            )
+        let marketSizeStartingProfit = expectedDailyProfit(
             product: product,
             demandMultiplier: initialDemandMultiplier,
-            marketSizeMultiplier: initialMarketSizeMultiplier
-                * purchasedMarketSizeMultiplier
+            marketSizeMultiplier: startingMarketSizeMultiplier
+        )
+        let marketSizeEndingProfit = expectedDailyProfit(
+            product: product,
+            demandMultiplier: initialDemandMultiplier,
+            marketSizeMultiplier: endingMarketSizeMultiplier
         )
         let marketSizeBenefit = max(
             0,
-            marketSizeProfit - initialProfit
+            marketSizeEndingProfit - marketSizeStartingProfit
         )
 
         let initialCapacity = ProductionCapacityBalance.baseCapacity(

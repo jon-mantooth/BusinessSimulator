@@ -4,6 +4,145 @@ import Testing
 
 struct MarketSizeTests {}
 
+// MARK: - Market Size Progression
+
+extension MarketSizeTests {
+
+    @Test
+    func zeroStarsReturnsStartingMarketSizeMultiplier() {
+        let multiplier = MarketSizeProgression.targetMultiplier(
+            marketSizeStars: 0,
+            allocations: progressionTestAllocations
+        )
+
+        #expect(multiplier == 1)
+    }
+
+    @Test
+    func finalStarReachesFinalLocationTierTarget() throws {
+        let finalTier = try #require(
+            progressionTestAllocations.map(\.locationTier).max()
+        )
+        let totalStars = progressionTestAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+
+        let multiplier = MarketSizeProgression.targetMultiplier(
+            marketSizeStars: totalStars,
+            allocations: progressionTestAllocations
+        )
+
+        #expect(multiplier == Double(finalTier.rawValue + 1))
+    }
+
+    @Test
+    func starsWithinLocationTierAddEqualMarketSizeGrowth() {
+        let tierOneStars = progressionTestAllocations[0].totalStars
+        let multipliers = (0...tierOneStars).map { stars in
+            MarketSizeProgression.targetMultiplier(
+                marketSizeStars: stars,
+                allocations: progressionTestAllocations
+            )
+        }
+        let increases = zip(
+            multipliers.dropFirst(),
+            multipliers
+        ).map { later, earlier in
+            later - earlier
+        }
+        let firstIncrease = increases[0]
+
+        for increase in increases.dropFirst() {
+            #expect(abs(increase - firstIncrease) < 0.000_001)
+        }
+    }
+
+    @Test
+    func laterLocationTierContinuesFromCompletedEarlierTier() {
+        let tierOneStars = progressionTestAllocations[0].totalStars
+        let completedTierOne = MarketSizeProgression.targetMultiplier(
+            marketSizeStars: tierOneStars,
+            allocations: progressionTestAllocations
+        )
+        let firstTierTwoStar = MarketSizeProgression.targetMultiplier(
+            marketSizeStars: tierOneStars + 1,
+            allocations: progressionTestAllocations
+        )
+
+        #expect(firstTierTwoStar > completedTierOne)
+    }
+
+    @Test
+    func zeroStarTierCarriesGrowthIntoNextTier() {
+        let starsInLaterTier = progressionTestAllocations[1].totalStars
+        let allocationWithEmptyStartingTier = [
+            MarketSizeLevelAllocation(
+                locationTier: progressionTestAllocations[0].locationTier,
+                totalStars: 0
+            ),
+            MarketSizeLevelAllocation(
+                locationTier: progressionTestAllocations[1].locationTier,
+                totalStars: starsInLaterTier
+            )
+        ]
+        let multiplier = MarketSizeProgression.targetMultiplier(
+            marketSizeStars: starsInLaterTier,
+            allocations: allocationWithEmptyStartingTier
+        )
+        let finalTier = progressionTestAllocations[1].locationTier
+
+        #expect(multiplier == Double(finalTier.rawValue + 1))
+    }
+
+    @Test
+    func allocationOrderDoesNotChangeProgression() {
+        let totalStars = progressionTestAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+
+        for stars in 0...totalStars {
+            let ordered = MarketSizeProgression.targetMultiplier(
+                marketSizeStars: stars,
+                allocations: progressionTestAllocations
+            )
+            let reversed = MarketSizeProgression.targetMultiplier(
+                marketSizeStars: stars,
+                allocations: Array(progressionTestAllocations.reversed())
+            )
+
+            #expect(abs(ordered - reversed) < 0.000_001)
+        }
+    }
+
+    @Test
+    func marketSizeProgressionNeverDecreases() {
+        let totalStars = progressionTestAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+        let multipliers = (0...totalStars).map { stars in
+            MarketSizeProgression.targetMultiplier(
+                marketSizeStars: stars,
+                allocations: progressionTestAllocations
+            )
+        }
+
+        for (earlier, later) in zip(multipliers, multipliers.dropFirst()) {
+            #expect(later >= earlier)
+        }
+    }
+}
+
+private let progressionTestAllocations = [
+    MarketSizeLevelAllocation(
+        locationTier: .tierOne,
+        totalStars: 2
+    ),
+    MarketSizeLevelAllocation(
+        locationTier: .tierTwo,
+        totalStars: 3
+    )
+]
+
 // MARK: - Total Market Size Allocation
 
 // TODO: Enable once every permanent market size dimension has been implemented.
@@ -46,8 +185,10 @@ extension MarketSizeTests {
         )
         let expectedMarketSize = SimulationBalance.marketSize.multiplier(
             weight: AdvertisementDimension.marketSizeWeight,
-            effectScore: Double(testCase.marketSizeLevel)
-                / Double(totalLevels)
+            targetMultiplier:
+                Advertisement.marketSizeTargetMultiplier(
+                    for: testCase.marketSizeLevel
+                )
         )
 
         let marketSize = advertisementDimension.calculateMarketSize()
@@ -75,6 +216,41 @@ extension MarketSizeTests {
     }
 
     @Test
+    func advertisementMarketSizeNeverDecreasesAsLevelsIncrease() {
+        let totalLevels = Advertisement.marketSizeLevelAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+        let marketSizes = (0...totalLevels).map { level in
+            makeAdvertisementDimension(
+                demandLevel: 0,
+                marketSizeLevel: level,
+                totalLevels: totalLevels
+            ).calculateMarketSize()
+        }
+
+        for (earlier, later) in zip(marketSizes, marketSizes.dropFirst()) {
+            #expect(later >= earlier)
+        }
+    }
+
+    @Test
+    func advertisementUsesSharedMarketSizeProgression() {
+        let totalLevels = Advertisement.marketSizeLevelAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+
+        for level in 0...totalLevels {
+            #expect(
+                Advertisement.marketSizeTargetMultiplier(for: level)
+                    == MarketSizeProgression.targetMultiplier(
+                        marketSizeStars: level,
+                        allocations: Advertisement.marketSizeLevelAllocations
+                    )
+            )
+        }
+    }
+
+    @Test
     func canvassingTimeReducesEntireReachableMarket() {
         let catalog = AdvertisementCatalog(productID: .pies)
         let canvassing = catalog.canvassing
@@ -84,7 +260,8 @@ extension MarketSizeTests {
         let advertisementMultiplier =
             SimulationBalance.marketSize.multiplier(
                 weight: AdvertisementDimension.marketSizeWeight,
-                effectScore: canvassing.marketSizeEffectScore
+                targetMultiplier:
+                    canvassing.marketSizeTargetMultiplier
             )
         let expectedSellingTimeMultiplier = 7.5 / 8.0
         let expectedMarketSize =
@@ -184,7 +361,8 @@ private func makeAdvertisementDimension(
         id: AdvertisementTierID(rawValue: "market-size-test-tier"),
         level: 0,
         advertisements: [advertisement],
-        product: ProductCatalog().product(for: .pies)
+        product: ProductCatalog().product(for: .pies),
+        requiredLocationTier: .tierOne
     )
     let advertisementState = AdvertisementState(
         tiers: [tier],

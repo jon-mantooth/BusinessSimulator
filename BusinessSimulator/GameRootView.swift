@@ -25,9 +25,13 @@ struct GameRootView: View {
     @State private var dayPlaybackState = DayPlaybackState()
     @State private var dayTransitionState = DayTransitionState()
     @State private var currentSummary: DaySummary?
+    @State private var stateBeforeSimulatedDay: GameSave?
     @State private var previewedProduct: Product?
     @State private var showingCalendar = false
     @State private var showingWeather = false
+    @State private var showingLocationMap = false
+    @State private var selectedMapLocation: Location?
+    @State private var relocationWarning: GamePopupType?
     @State private var hasSavedGame = false
     @State private var showingNewJourneyConfirmation = false
     @State private var showingLoadError = false
@@ -36,12 +40,101 @@ struct GameRootView: View {
     @State private var isEditingPrice = false
 
     let productCatalog = ProductCatalog()
+    let locationCatalog = LocationCatalog()
+    let locationSceneResolver = LocationSceneResolver()
 
     private var purchaseWorkflow: PurchaseWorkflow {
         PurchaseWorkflow(
             gameState: gameState,
             saveRepository: saveRepository
         )
+    }
+
+    private var relocationWorkflow: RelocationWorkflow {
+        RelocationWorkflow(
+            gameState: gameState,
+            saveRepository: saveRepository
+        )
+    }
+
+    private func relocationRequest(
+        for location: Location
+    ) -> RelocationRequest {
+        RelocationRequest(
+            destination: location,
+            requirements: RelocationRequirements(
+                storageLevel: 0,
+                transportationLevel: 0,
+                equipmentLevel: 3,
+                laborLevel: 1,
+                advertisementLevel: 2,
+                businessReputation: 4.2
+            ),
+            relocationPrice: 15_000
+        )
+    }
+
+    private func attemptRelocation(
+        request: RelocationRequest,
+        availability: RelocationItemAvailability,
+        dimensionAvailability: RelocationDimensionAvailability
+    ) {
+        switch dimensionAvailability {
+        case .upgradeMadeToday:
+            relocationWarning = .relocationUnavailable(
+                message: "You cannot relocate on the same day as a business upgrade."
+            )
+            return
+        case .pendingBusinessEvents:
+            relocationWarning = .relocationUnavailable(
+                message: "Finish the current day's purchases before relocating."
+            )
+            return
+        case .available:
+            break
+        }
+
+        guard availability.unmetRequirements.isEmpty else {
+            relocationWarning = .relocationUnavailable(
+                message: "Meet the highlighted business requirements before relocating."
+            )
+            return
+        }
+
+        switch availability.financialAvailability {
+        case .insufficientFunds:
+            relocationWarning = .insufficientFunds
+            return
+        case .operatingReserveRequired:
+            relocationWarning = .operatingReserveRequired
+            return
+        case .locationLocked:
+            relocationWarning = .relocationUnavailable(
+                message: "This location is not available yet."
+            )
+            return
+        case .available:
+            break
+        }
+
+        switch relocationWorkflow.complete(request) {
+        case .completed(let summary):
+            currentSummary = summary
+            selectedMapLocation = nil
+            showingLocationMap = false
+            selectedArea = .gameMode
+            currentScreen = .summary
+        case let .unavailable(updatedAvailability):
+            if updatedAvailability.unmetRequirements.isEmpty {
+                relocationWarning = .insufficientFunds
+            } else {
+                relocationWarning = .relocationUnavailable(
+                    message: "Meet the highlighted business requirements before relocating."
+                )
+            }
+        case .saveFailed:
+            showingSaveError = true
+        }
     }
 
     private var calendarSheetHeight: CGFloat {
@@ -72,7 +165,7 @@ struct GameRootView: View {
             try gameState.restoreBusiness(from: gameSave)
             previewedProduct = nil
             currentSummary = nil
-            currentScreen = .prep
+            showNewDayBackground()
         } catch {
             showingLoadError = true
         }
@@ -81,11 +174,17 @@ struct GameRootView: View {
     private func onContinue(product: Product){
         gameState.initializeBusiness(product: product)
         previewedProduct = nil
-        currentScreen = .prep
+        showNewDayBackground()
     }
     
     private func onNextDay() {
         dayPlaybackState.reset()
+        showNewDayBackground()
+    }
+
+    private func showNewDayBackground() {
+        gameState.beginOperatingPeriodIfNeeded()
+        selectedArea = .gameMode
         currentScreen = .neighborhood
         dayTransitionState.beginSunrise(
             date: gameState.calendar.currentDate,
@@ -172,93 +271,31 @@ struct GameRootView: View {
             )
         }
 
-        gameRunner.prepForNextDay()
-
-        // TODO: Persist a game-progress phase before adding a passage-of-time
-        // delay. Save this completed day as awaiting summary, then show the
-        // summary after the delay. On restore, an awaiting summary should be
-        // shown instead of returning directly to PrepView. After the player
-        // acknowledges it, persist the phase for preparing the next day.
-        do {
-            let gameSave = GameSave(gameState: gameState)
-            try saveRepository.save(gameSave)
-
-            currentSummary = summary
-            hasSavedGame = true
-            currentScreen = .playback
-            dayTransitionState.beginOpening(
-                reduceMotion: reduceMotion,
-                onPlaybackReady: {
-                    guard currentScreen == .playback else { return }
-                    dayPlaybackState.start()
-                }
-            )
-        } catch {
-            do {
-                try gameState.restoreBusiness(from: stateBeforeDay)
-            } catch {
-                preconditionFailure(
-                    "Unable to restore the valid pre-simulation game state."
-                )
+        gameRunner.finalizeDay()
+        stateBeforeSimulatedDay = stateBeforeDay
+        currentSummary = summary
+        currentScreen = .playback
+        dayTransitionState.beginOpening(
+            reduceMotion: reduceMotion,
+            onPlaybackReady: {
+                guard currentScreen == .playback else { return }
+                dayPlaybackState.start()
             }
+        )
+    }
 
-            currentSummary = nil
-            showingSaveError = true
-        }
+    private func completeDayPlayback() {
+        guard currentScreen == .playback else { return }
+        transitionFromPlaybackToSummary()
     }
     
     private var gameBackground: some View {
-        GeometryReader { geometry in
-            ZStack {
-                Image("neighborhood_night")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(
-                        width: geometry.size.width,
-                        height: geometry.size.height
-                    )
-                    .clipped()
-                    .opacity(dayTransitionState.nightSceneOpacity)
+        ZStack {
+            LocationSceneView(scene: resolvedNightScene)
+                .opacity(dayTransitionState.nightSceneOpacity)
 
-                Image("neighborhood_background")
-                    .resizable()
-                    .scaledToFill()
-                    .opacity(dayTransitionState.daylightSceneOpacity)
-
-                Image("default_house")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width * 0.92)
-                    .position(
-                        x: geometry.size.width * 0.71,
-                        y: geometry.size.height * 0.535
-                    )
-                    .opacity(dayTransitionState.daylightSceneOpacity)
-
-                if let standImageName {
-                    Image(standImageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(
-                            width: geometry.size.width * 0.48,
-                            height: geometry.size.height * 0.40,
-                            alignment: .bottom
-                        )
-                        .position(
-                            x: geometry.size.width * 1.13,
-                            y: geometry.size.height * 0.64
-                        )
-                        .opacity(dayTransitionState.daylightSceneOpacity)
-                }
-
-                // Seasonal and holiday layers will be added here as transparent
-                // overlays when those parts of game state are introduced.
-            }
-            .frame(
-                width: geometry.size.width,
-                height: geometry.size.height
-            )
-            .clipped()
+            LocationSceneView(scene: resolvedDayScene)
+                .opacity(dayTransitionState.daylightSceneOpacity)
         }
         .ignoresSafeArea()
     }
@@ -268,9 +305,40 @@ struct GameRootView: View {
             reduceMotion: reduceMotion,
             onNightReady: {
                 guard currentScreen == .playback else { return }
-                currentScreen = .summary
+                prepareNextDayAndShowSummary()
             }
         )
+    }
+
+    private func prepareNextDayAndShowSummary() {
+        guard let stateBeforeSimulatedDay else { return }
+
+        GameRunner.prepForNextDay(gameState: gameState)
+
+        do {
+            try saveRepository.save(GameSave(gameState: gameState))
+            self.stateBeforeSimulatedDay = nil
+            hasSavedGame = true
+            currentScreen = .summary
+        } catch {
+            do {
+                try gameState.restoreBusiness(
+                    from: stateBeforeSimulatedDay
+                )
+            } catch {
+                preconditionFailure(
+                    "Unable to restore the valid pre-simulation game state."
+                )
+            }
+
+            self.stateBeforeSimulatedDay = nil
+            currentSummary = nil
+            dayPlaybackState.reset()
+            dayTransitionState.resetToDaytime()
+            selectedArea = .gameMode
+            currentScreen = .prep
+            showingSaveError = true
+        }
     }
 
     private var displayedProduct: Product? {
@@ -281,17 +349,55 @@ struct GameRootView: View {
         return gameState.productState?.product
     }
 
-    private var standImageName: String? {
-        switch displayedProduct?.id {
-        case .pies:
-            return "stand_pies"
-        case .smoothies:
-            return "stand_smoothies"
-        case .hotDogs:
-            return "stand_hotdogs"
-        case nil:
-            return nil
+    private var activeLocationPresentation: LocationPresentation {
+        gameState.locationState?.activePresentation
+            ?? locationCatalog.home.presentation
+    }
+
+    private var locationSceneContext: LocationSceneContext {
+        LocationSceneContext(
+            productID: displayedProduct?.id,
+            seasonOfYear: gameState.calendar?.seasonOfYear ?? .spring,
+            weatherCondition: currentWeatherCondition
+        )
+    }
+
+    private var currentWeatherCondition: WeatherCondition {
+        guard let calendar = gameState.calendar,
+              let weather = gameState.weather else {
+            return .sunny
         }
+
+        let foundationCalendar = Foundation.Calendar(
+            identifier: .gregorian
+        )
+        return weather.weeklyForecast.first {
+            foundationCalendar.isDate(
+                $0.date,
+                inSameDayAs: calendar.currentDate
+            )
+        }?.condition ?? .sunny
+    }
+
+    private var resolvedNightScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.nightScene,
+            context: locationSceneContext
+        )
+    }
+
+    private var resolvedDayScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.dayScene,
+            context: locationSceneContext
+        )
+    }
+
+    private var resolvedSimulationScene: ResolvedLocationScene {
+        locationSceneResolver.resolve(
+            activeLocationPresentation.simulationScene,
+            context: locationSceneContext
+        )
     }
 
     var body: some View {
@@ -339,7 +445,8 @@ struct GameRootView: View {
             VStack(spacing: 0) {
                 if currentScreen != .home
                     && currentScreen != .productSelection
-                    && currentScreen != .playback {
+                    && currentScreen != .playback
+                    && currentScreen != .summary {
                     HeaderView(
                         gameState: gameState,
                         onCalendarTapped: {
@@ -347,6 +454,9 @@ struct GameRootView: View {
                         },
                         onWeatherTapped: {
                             showingWeather = true
+                        },
+                        onMapTapped: {
+                            showingLocationMap = true
                         }
                     )
                 }
@@ -397,7 +507,8 @@ struct GameRootView: View {
                                 progress: dayPlaybackState.progress,
                                 elapsedTime: dayPlaybackState.elapsedTime,
                                 businessHours: gameState.businessHours!,
-                                productID: gameState.productState!.product.id,
+                                weatherCondition: currentWeatherCondition,
+                                scene: resolvedSimulationScene,
                                 onSkip: dayPlaybackState.skip
                             )
                             .opacity(dayTransitionState.playbackSceneOpacity)
@@ -418,6 +529,7 @@ struct GameRootView: View {
                 if currentScreen != .home
                     && currentScreen != .productSelection
                     && currentScreen != .playback
+                    && currentScreen != .summary
                     && !isEditingPrice {
                     FooterView(
                         selectedArea: selectedArea,
@@ -427,6 +539,73 @@ struct GameRootView: View {
             }
 
             DayTransitionOverlay(message: dayTransitionState.message)
+
+            if showingLocationMap,
+               let locationState = gameState.locationState {
+                LocationMapView(
+                    locations: [
+                        locationCatalog.home,
+                        locationCatalog.ballpark,
+                        locationCatalog.farmersMarket,
+                        locationCatalog.beach
+                    ],
+                    activeLocationID: locationState.activeLocationID,
+                    availableLocationIDs: Set(
+                        locationState.locations.map(\.id)
+                    ),
+                    onLocationSelected: { location in
+                        selectedMapLocation = location
+                    },
+                    onClose: {
+                        showingLocationMap = false
+                        selectedMapLocation = nil
+                    }
+                )
+                .zIndex(10)
+            }
+
+            if let selectedMapLocation {
+                let request = relocationRequest(for: selectedMapLocation)
+                let availability = relocationWorkflow.itemAvailability(
+                    for: request
+                )
+                let dimensionAvailability = relocationWorkflow
+                    .dimensionAvailability(
+                        for: RelocationDimensionAvailabilityRequest()
+                    )
+
+                LocationSelectionView(
+                    location: selectedMapLocation,
+                    availability: availability,
+                    canRelocate: availability.canRelocate
+                        && dimensionAvailability == .available,
+                    relocationCost: request.relocationPrice,
+                    onRelocate: {
+                        attemptRelocation(
+                            request: request,
+                            availability: availability,
+                            dimensionAvailability: dimensionAvailability
+                        )
+                    },
+                    onClose: {
+                        self.selectedMapLocation = nil
+                    }
+                )
+                .overlay {
+                    if let relocationWarning {
+                        GamePopupView(
+                            type: relocationWarning,
+                            onConfirm: {
+                                self.relocationWarning = nil
+                            },
+                            onDismiss: {
+                                self.relocationWarning = nil
+                            }
+                        )
+                    }
+                }
+                .zIndex(11)
+            }
 
             if showingNewJourneyConfirmation {
                 GamePopupView(
@@ -460,7 +639,7 @@ struct GameRootView: View {
         }
         .onChange(of: dayPlaybackState.phase) { _, newPhase in
             if newPhase == .completed {
-                transitionFromPlaybackToSummary()
+                completeDayPlayback()
             }
         }
         .alert(

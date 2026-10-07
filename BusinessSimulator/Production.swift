@@ -50,6 +50,18 @@ final class Production: Department {
         
         return totalCosts
     }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary,
+        multiplier: Double
+    ) -> Double {
+        dimensions.reduce(0.0) { total, dimension in
+            total + dimension.calculateWeeklyCosts(
+                summary: summary,
+                multiplier: multiplier
+            )
+        }
+    }
     
     func prepForNextDay(
         currentDay: Int,

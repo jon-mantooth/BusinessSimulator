@@ -10,6 +10,7 @@ import Observation
 
 enum GameStateRestoreError: Error {
     case productNotFound(ProductID)
+    case invalidLocationData
     case invalidInventoryData
     case invalidAdvertisementData
     case invalidEquipmentData
@@ -23,6 +24,7 @@ final class GameState {
     var finance: Finance!
     var calendar: GameCalendar!
     var weather: WeatherState!
+    var locationState: LocationState?
 
     var productState: ProductState?
     var reputation: BusinessReputationState?
@@ -37,6 +39,22 @@ final class GameState {
     var pendingUpgrades: [PendingUpgrade] = []
     var upgradeTracker = UpgradeTracker()
     var simulationSummary : SimulationSummary = SimulationSummary()
+
+    var departments: [any Department] {
+        guard let production,
+              let marketing,
+              let environment else {
+            preconditionFailure(
+                "Business departments must be initialized before use."
+            )
+        }
+
+        return [
+            production,
+            marketing,
+            environment
+        ]
+    }
 
     // Total cost of pending outflows. This is helpful in getting the displayed balance correct
     // when restoring game and also when keeping up with ingredients that are in the car tbut not yet
@@ -95,6 +113,13 @@ final class GameState {
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
+
+        let locationCatalog = LocationCatalog()
+        let locationTiers = locationCatalog.tiersByProduct[product.id]!
+        self.locationState = LocationState(
+            tiers: locationTiers,
+            activeLocationID: locationTiers[0].locations[0].id
+        )
 
         let productState = ProductState(
             product: product,
@@ -157,9 +182,24 @@ final class GameState {
         self.marketing = marketing
         self.environment = environment
 
-        self.weather.generateWeeklyForecast(
-            starting: self.calendar.currentWeekStartDate
+    }
+
+    func beginOperatingPeriodIfNeeded() {
+        guard calendar.operatingPeriodDay == 0 else { return }
+        guard let productState else { return }
+        let product = productState.product
+
+        calendar.beginOperatingPeriod(product: product)
+        upgradeTracker.reset()
+        weather.generateWeeklyForecast(
+            starting: calendar.currentWeekStartDate
         )
+
+        for inventoryState in productState.productInventoryStates {
+            inventoryState.inventoryByAge.reset(
+                currentDay: calendar.simulationDay
+            )
+        }
     }
 
     func restoreBusiness(
@@ -177,9 +217,10 @@ final class GameState {
 
         calendar = GameCalendar(
             simulationDay: gameSave.calendar.simulationDay,
-            locationStartDate: gameSave.calendar.locationStartDate,
-            locationStartSimulationDay:
-                gameSave.calendar.locationStartSimulationDay
+            operatingPeriodDay:
+                gameSave.calendar.operatingPeriodDay,
+            operatingPeriod: gameSave.calendar.operatingPeriod,
+            currentDate: gameSave.calendar.currentDate
         )
 
         weather = WeatherState(
@@ -191,6 +232,20 @@ final class GameState {
                     condition: $0.condition
                 )
             }
+        )
+
+        let locationCatalog = LocationCatalog()
+        let locationTiers = locationCatalog.tiersByProduct[product.id]!
+        let locationIDs = locationTiers.flatMap(\.locations).map(\.id)
+        guard locationIDs.contains(
+            gameSave.locationState.activeLocationID
+        ) else {
+            throw GameStateRestoreError.invalidLocationData
+        }
+
+        locationState = LocationState(
+            tiers: locationTiers,
+            activeLocationID: gameSave.locationState.activeLocationID
         )
 
         let savedInventoryIDs = gameSave.inventoryStates.map(\.inventoryID)
@@ -336,7 +391,10 @@ final class GameState {
         finance.displayedBalance = finance.actualBalance - pendingOutflowTotal
 
         upgradeTracker = UpgradeTracker(
-            lastUpgradeDays: gameSave.upgradeTracker.lastUpgradeDays
+            lastUpgradeSimulationDay:
+                gameSave.upgradeTracker.lastUpgradeSimulationDay,
+            lastUpgradeWeekStartDate:
+                gameSave.upgradeTracker.lastUpgradeWeekStartDate
         )
 
         simulationSummary = SimulationSummary()
@@ -344,7 +402,9 @@ final class GameState {
             savedSummary in
             let summary = DaySummary(
                 day: savedSummary.day,
-                startingBalance: savedSummary.startingBalance
+                locationID: savedSummary.locationID,
+                startingBalance: savedSummary.startingBalance,
+                type: savedSummary.type
             )
             summary.demandedSales = savedSummary.demandedSales
             summary.sales = savedSummary.sales

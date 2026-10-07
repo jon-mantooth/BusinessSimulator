@@ -164,6 +164,8 @@ extension LaborTests {
         let product = ProductCatalog().product(for: .smoothies)
         let gameState = GameState()
         gameState.initializeBusiness(product: product)
+        gameState.finance.actualBalance += 100_000
+        gameState.finance.displayedBalance += 100_000
         let repository = LaborTestGameSaveRepository()
         let workflow = PurchaseWorkflow(
             gameState: gameState,
@@ -190,8 +192,7 @@ extension LaborTests {
         #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
         #expect(
             !gameState.upgradeTracker.canUpgrade(
-                .labor,
-                on: gameState.calendar.simulationDay
+                during: gameState.calendar.currentWeekStartDate
             )
         )
 
@@ -726,6 +727,8 @@ extension LaborTests {
         let product = ProductCatalog().product(for: .pies)
         let gameState = GameState()
         gameState.initializeBusiness(product: product)
+        gameState.finance.actualBalance += 100_000
+        gameState.finance.displayedBalance += 100_000
         let workflow = PurchaseWorkflow(
             gameState: gameState,
             saveRepository: LaborTestGameSaveRepository()

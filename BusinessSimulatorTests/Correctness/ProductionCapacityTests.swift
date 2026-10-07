@@ -9,7 +9,7 @@ struct ProductionCapacityTests {}
 extension ProductionCapacityTests {
 
     @Test
-    func baseCapacityIsNinetyPercentRoundedUp() {
+    func baseCapacityIsNinetyPercentRounded() {
         #expect(
             ProductionCapacityBalance.baseCapacity(
                 baseIdealUnitsSold: 100
@@ -18,7 +18,7 @@ extension ProductionCapacityTests {
         #expect(
             ProductionCapacityBalance.baseCapacity(
                 baseIdealUnitsSold: 38
-            ) == 35
+            ) == 34
         )
     }
 
@@ -50,7 +50,23 @@ extension ProductionCapacityTests {
     }
 
     @Test
-    func finalTierReachesTwoHundredPercentCapacity() {
+    func primaryEquipmentUsesLocationCapacitySchedule() {
+        let capacities = (0...ProductionCapacityBalance.totalTiers).map {
+            let baseCapacity = ProductionCapacityBalance.baseCapacity(
+                baseIdealUnitsSold: 100
+            )
+            return baseCapacity
+                + ProductionCapacityBalance.expectedCapacityIncrease(
+                    baseIdealUnitsSold: 100,
+                    tierLevel: $0
+                )
+        }
+
+        #expect(capacities == [90, 130, 170, 210, 270, 330])
+    }
+
+    @Test
+    func finalTierReachesThreeHundredThirtyPercentCapacity() {
         let idealUnitsSold = 101
         let baseCapacity = ProductionCapacityBalance.baseCapacity(
             baseIdealUnitsSold: idealUnitsSold
@@ -211,19 +227,34 @@ private func makeLaborCapacityLimitContext() -> LaborCapacityLimitContext {
 
 extension ProductionCapacityTests {
 
-    @Test
-    func secondaryStrengthUsesExpectedPercentOfIdealSales() {
-        #expect(SecondaryCapacityStrength.low.capacity(for: 100) == 3)
-        #expect(SecondaryCapacityStrength.medium.capacity(for: 100) == 5)
-        #expect(SecondaryCapacityStrength.high.capacity(for: 100) == 7)
-    }
+    @Test(arguments: [ProductID.pies, .hotDogs, .smoothies])
+    func secondaryStrengthsUseScheduleAndRemainDistinct(
+        productID: ProductID
+    ) throws {
+        let product = ProductCatalog().product(for: productID)
+        let equipment = EquipmentCatalog()
+            .secondaryEquipment(for: product).equipment
+        let capacityByStrength = Dictionary(
+            uniqueKeysWithValues: try [
+                SecondaryCapacityStrength.low,
+                .medium,
+                .high
+            ].map { strength in
+                let item = try #require(
+                    equipment.first {
+                        $0.category == .secondary(
+                            capacityStrength: strength
+                        )
+                    }
+                )
+                return (strength, item.capacity)
+            }
+        )
+        let low = try #require(capacityByStrength[.low])
+        let medium = try #require(capacityByStrength[.medium])
+        let high = try #require(capacityByStrength[.high])
 
-    @Test
-    func secondaryStrengthsRemainDistinctAfterRounding() {
-        let low = SecondaryCapacityStrength.low.capacity(for: 10)
-        let medium = SecondaryCapacityStrength.medium.capacity(for: 10)
-        let high = SecondaryCapacityStrength.high.capacity(for: 10)
-
+        #expect(low >= 1)
         #expect(low < medium)
         #expect(medium < high)
     }

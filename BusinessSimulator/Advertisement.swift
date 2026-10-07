@@ -10,6 +10,17 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
 }
 
 struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
+    static let marketSizeLevelAllocations = [
+        MarketSizeLevelAllocation(
+            locationTier: .tierOne,
+            totalStars: 3
+        ),
+        MarketSizeLevelAllocation(
+            locationTier: .tierTwo,
+            totalStars: 2
+        )
+    ]
+
     let id: AdvertisementID
     let name: String
     let smallIcon: GameIcon
@@ -25,8 +36,19 @@ struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
         Double(demandLevel) / Double(totalLevels)
     }
 
-    var marketSizeEffectScore: Double {
-        Double(marketSizeLevel) / Double(totalLevels)
+    var marketSizeTargetMultiplier: Double {
+        Self.marketSizeTargetMultiplier(
+            for: marketSizeLevel
+        )
+    }
+
+    static func marketSizeTargetMultiplier(
+        for stars: Int
+    ) -> Double {
+        MarketSizeProgression.targetMultiplier(
+            marketSizeStars: stars,
+            allocations: marketSizeLevelAllocations
+        )
     }
 
     var purchaseItemID: String {
@@ -117,13 +139,15 @@ struct ActiveAdvertisement: Identifiable, Equatable, Codable {
 struct AdvertisementTier: Identifiable, Equatable {
     let id: AdvertisementTierID
     let level: Int
+    let requiredLocationTier: LocationTierLevel
     let advertisements: [Advertisement]
 
     init(
         id: AdvertisementTierID,
         level: Int,
         advertisements: [Advertisement],
-        product: Product
+        product: Product,
+        requiredLocationTier: LocationTierLevel
     ) {
         assert(level >= 0, "Advertisement tier level cannot be negative.")
         assert(
@@ -139,19 +163,26 @@ struct AdvertisementTier: Identifiable, Equatable {
 
         self.id = id
         self.level = level
+        self.requiredLocationTier = requiredLocationTier
         self.advertisements = level == 0
             ? advertisements
             : Self.setPrices(
                 advertisements,
                 tierLevel: level,
-                product: product
+                product: product,
+                locationDemandMultiplier:
+                    requiredLocationTier.demandMultiplier,
+                pricingMarketSizeMultiplier:
+                    requiredLocationTier.pricingMarketSizeMultiplier
             )
     }
 
     private static func setPrices(
         _ advertisements: [Advertisement],
         tierLevel: Int,
-        product: Product
+        product: Product,
+        locationDemandMultiplier: Double,
+        pricingMarketSizeMultiplier: Double
     ) -> [Advertisement] {
         advertisements.map { advertisement in
             var pricedAdvertisement = advertisement
@@ -163,21 +194,29 @@ struct AdvertisementTier: Identifiable, Equatable {
 
             let isOneTime = advertisement.paymentSchedule == .oneTime
             let precedingLevel = tierLevel - 1
+            let marketSizeStartingTargetMultiplier = isOneTime
+                ? Advertisement.marketSizeTargetMultiplier(
+                    for: precedingLevel
+                )
+                : 1.0
 
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: tierLevel,
                 product: product,
+                locationDemandMultiplier:
+                    locationDemandMultiplier,
+                representativeMarketSizeMultiplier:
+                    pricingMarketSizeMultiplier,
                 demandEffectScore: Double(
                     isOneTime
                         ? advertisement.demandLevel - precedingLevel
                         : advertisement.demandLevel
                 ) / Double(advertisement.totalLevels),
                 demandWeight: AdvertisementDimension.demandWeight,
-                marketSizeEffectScore: Double(
-                    isOneTime
-                        ? advertisement.marketSizeLevel - precedingLevel
-                        : advertisement.marketSizeLevel
-                ) / Double(advertisement.totalLevels),
+                marketSizeStartingTargetMultiplier:
+                    marketSizeStartingTargetMultiplier,
+                marketSizeEndingTargetMultiplier:
+                    advertisement.marketSizeTargetMultiplier,
                 marketSizeWeight: AdvertisementDimension.marketSizeWeight,
                 capacityEffect: .none
             )
@@ -225,10 +264,11 @@ final class AdvertisementDimension: Dimension {
     func calculateMarketSize() -> Double {
         let activeAdvertisement =
             advertisementState.activeAdvertisement?.advertisement
-        let effectScore = activeAdvertisement?.marketSizeEffectScore ?? 0.0
+        let targetMultiplier = activeAdvertisement?
+            .marketSizeTargetMultiplier ?? 1.0
         let advertisementMultiplier = SimulationBalance.marketSize.multiplier(
             weight: Self.marketSizeWeight,
-            effectScore: effectScore
+            targetMultiplier: targetMultiplier
         )
 
         // Time spent advertising is time the player cannot spend selling, so reduce
@@ -267,7 +307,8 @@ final class AdvertisementDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         guard
             let activeAdvertisement = advertisementState
@@ -277,14 +318,19 @@ final class AdvertisementDimension: Dimension {
             return 0.0
         }
 
+        let proratedCost = activeAdvertisement.price * multiplier
+        guard proratedCost > 0 else { return 0.0 }
+
         summary.cashFlowCosts.append(
             Cost(
-                name: activeAdvertisement.name,
-                amount: activeAdvertisement.price
+                name: multiplier == 1.0
+                    ? activeAdvertisement.name
+                    : "\(activeAdvertisement.name) (Prorated)",
+                amount: proratedCost
             )
         )
 
-        return activeAdvertisement.price
+        return proratedCost
     }
 }
 

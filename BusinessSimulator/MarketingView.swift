@@ -58,10 +58,9 @@ struct MarketingView: View {
                         systemImage: "megaphone.fill",
                         scale: scale,
                         action: {
-                            if purchaseWorkflow
-                                .validateUpgradeAvailability(
-                                    category: .advertisement
-                                ) {
+                            if purchaseWorkflow.dimensionAvailability(
+                                for: PurchaseDimensionAvailabilityRequest()
+                            ) == .available {
                                 showingAdvertisement = true
                             } else {
                                 showingAdvertisementUpgradeLimit = true
@@ -114,9 +113,7 @@ struct MarketingView: View {
 
             if showingAdvertisementUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(
-                        upgradeName: "advertising"
-                    ),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingAdvertisementUpgradeLimit = false

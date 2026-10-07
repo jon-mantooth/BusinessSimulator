@@ -177,8 +177,8 @@ struct AdvertisementView: View {
         let actionColor = actionColor(for: advertisement)
         let canSelectAdvertisement: Bool = {
             if case .available = purchaseWorkflow
-                .validateFinancialAvailability(
-                    price: advertisement.price
+                .itemAvailability(
+                    for: purchaseRequest(for: advertisement)
                 )
             {
                 return true
@@ -250,11 +250,15 @@ struct AdvertisementView: View {
     private func attemptSelection(
         of advertisement: Advertisement
     ) {
-        switch purchaseWorkflow.validateFinancialAvailability(
-            price: advertisement.price
+        switch purchaseWorkflow.itemAvailability(
+            for: purchaseRequest(for: advertisement)
         ) {
         case .available:
             advertisementPendingConfirmation = advertisement
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:
@@ -262,12 +266,22 @@ struct AdvertisementView: View {
         }
     }
 
+    private func purchaseRequest(
+        for advertisement: Advertisement
+    ) -> PurchaseRequest {
+        PurchaseRequest(
+            state: advertisementState,
+            item: advertisement,
+            requiredLocationTier: advertisementState.nextTier!
+                .requiredLocationTier
+        )
+    }
+
     private func confirmPurchase(
         _ advertisement: Advertisement
     ) {
-        let result = purchaseWorkflow.completePurchase(
-            state: advertisementState,
-            item: advertisement
+        let result = purchaseWorkflow.complete(
+            purchaseRequest(for: advertisement)
         )
 
         advertisementPendingConfirmation = nil
@@ -275,8 +289,27 @@ struct AdvertisementView: View {
         switch result {
         case .completed:
             onClose()
+        case let .unavailable(availability):
+            showPurchaseWarning(for: availability)
         case .saveFailed:
             purchaseWarning = .purchaseSaveFailed
+        }
+    }
+
+    private func showPurchaseWarning(
+        for availability: PurchaseAvailability
+    ) {
+        switch availability {
+        case .available:
+            break
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 
@@ -301,7 +334,7 @@ struct AdvertisementView: View {
                 .font(.caption)
                 .foregroundStyle(fadedRed)
 
-            Text("TIER \(level)")
+            Text("LEVEL \(level)")
                 .foregroundStyle(fadedRed)
 
             Text("— CHOOSE YOUR NEXT CAMPAIGN")
@@ -333,7 +366,7 @@ struct AdvertisementView: View {
                 .font(.title)
                 .foregroundStyle(fadedRed)
 
-            Text("TOP ADVERTISEMENT TIER")
+            Text("TOP ADVERTISEMENT LEVEL")
                 .font(.headline.weight(.black))
                 .foregroundStyle(navy)
 

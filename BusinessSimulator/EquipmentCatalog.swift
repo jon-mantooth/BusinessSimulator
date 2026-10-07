@@ -5,6 +5,9 @@ import Foundation
 // - Secondary Equipment.capacityStrength
 
 struct EquipmentCatalog {
+    let primaryCapacitySchedule: CapacitySchedule
+    let secondaryCapacitySchedule: CapacitySchedule
+
     let basicHomeOven: Equipment
     let doubleRangeOven: Equipment
     let convectionOven: Equipment
@@ -78,12 +81,49 @@ struct EquipmentCatalog {
                 }
 
                 var configuredEquipment = equipment
-                configuredEquipment.capacity = capacityStrength.capacity(
-                    for: product.idealUnitsSold
+                configuredEquipment.capacity = secondaryCapacity(
+                    for: capacityStrength,
+                    product: product
                 )
                 return configuredEquipment
             }
         )
+    }
+
+    private func secondaryCapacity(
+        for strength: SecondaryCapacityStrength,
+        product: Product
+    ) -> Int {
+        let lowCapacity = max(
+            1,
+            secondaryCapacitySchedule.capacity(
+                for: .secondaryEquipment(.low),
+                product: product
+            )
+        )
+        let mediumCapacity = max(
+            lowCapacity + 1,
+            secondaryCapacitySchedule.capacity(
+                for: .secondaryEquipment(.medium),
+                product: product
+            )
+        )
+        let highCapacity = max(
+            mediumCapacity + 1,
+            secondaryCapacitySchedule.capacity(
+                for: .secondaryEquipment(.high),
+                product: product
+            )
+        )
+
+        switch strength {
+        case .low:
+            return lowCapacity
+        case .medium:
+            return mediumCapacity
+        case .high:
+            return highCapacity
+        }
     }
 
     func primaryTiers(
@@ -128,12 +168,33 @@ struct EquipmentCatalog {
                 ),
                 level: level,
                 equipment: [equipment],
-                product: product
+                product: product,
+                capacitySchedule: primaryCapacitySchedule,
+                requiredLocationTier:
+                    level <= 3 ? .tierOne : .tierTwo
             )
         }
     }
 
     init() {
+        primaryCapacitySchedule = ProductionCapacityBalance.schedule
+        secondaryCapacitySchedule = CapacitySchedule(
+            upgrades: [
+                CapacityUpgrade(
+                    upgradeID: .secondaryEquipment(.low),
+                    scheduledCapacity: 0.03
+                ),
+                CapacityUpgrade(
+                    upgradeID: .secondaryEquipment(.medium),
+                    scheduledCapacity: 0.05
+                ),
+                CapacityUpgrade(
+                    upgradeID: .secondaryEquipment(.high),
+                    scheduledCapacity: 0.07
+                )
+            ]
+        )
+
         basicHomeOven = Equipment(
             id: EquipmentID(rawValue: "basic-home-oven"),
             name: "Basic Home Oven",

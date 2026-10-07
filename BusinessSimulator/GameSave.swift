@@ -1,12 +1,13 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 7
+    static let currentSchemaVersion = 14
 
     let schemaVersion: Int
     let finance: FinanceSave
     let calendar: CalendarSave
     let weather: WeatherSave
+    let locationState: LocationStateSave
     let productState: ProductStateSave
     let inventoryStates: [InventoryStateSave]
     let reputation: ReputationSave
@@ -25,12 +26,17 @@ struct FinanceSave: Codable {
 
 struct CalendarSave: Codable {
     let simulationDay: Int
-    let locationStartDate: Date
-    let locationStartSimulationDay: Int
+    let operatingPeriodDay: Int
+    let operatingPeriod: OperatingPeriod?
+    let currentDate: Date
 }
 
 struct WeatherSave: Codable {
     let weeklyForecast: [DailyWeatherSave]
+}
+
+struct LocationStateSave: Codable {
+    let activeLocationID: LocationID
 }
 
 struct DailyWeatherSave: Codable {
@@ -74,12 +80,15 @@ struct LaborStateSave: Codable {
 }
 
 struct UpgradeTrackerSave: Codable {
-    let lastUpgradeDays: [PurchaseCategory: Int]
+    let lastUpgradeSimulationDay: Int?
+    let lastUpgradeWeekStartDate: Date?
 }
 
 struct DaySummarySave: Codable {
     let day: Int
+    let locationID: LocationID
     let startingBalance: Double
+    let type: DaySummaryType
     let demandedSales: Int
     let sales: Int
     let revenue: Double
@@ -108,6 +117,7 @@ extension GameSave {
             let finance = gameState.finance,
             let calendar = gameState.calendar,
             let weather = gameState.weather,
+            let locationState = gameState.locationState,
             let productState = gameState.productState,
             let reputation = gameState.reputation,
             let advertisementState = gameState.advertisementState,
@@ -128,9 +138,9 @@ extension GameSave {
 
         self.calendar = CalendarSave(
             simulationDay: calendar.simulationDay,
-            locationStartDate: calendar.locationStartDate,
-            locationStartSimulationDay:
-                calendar.locationStartSimulationDay
+            operatingPeriodDay: calendar.operatingPeriodDay,
+            operatingPeriod: calendar.operatingPeriod,
+            currentDate: calendar.currentDate
         )
 
         self.weather = WeatherSave(
@@ -142,6 +152,10 @@ extension GameSave {
                     condition: dailyWeather.condition
                 )
             }
+        )
+
+        self.locationState = LocationStateSave(
+            activeLocationID: locationState.activeLocationID
         )
 
         self.productState = ProductStateSave(
@@ -190,13 +204,18 @@ extension GameSave {
         pendingBusinessEvents = gameState.pendingBusinessEvents
         pendingUpgrades = gameState.pendingUpgrades
         upgradeTracker = UpgradeTrackerSave(
-            lastUpgradeDays: gameState.upgradeTracker.lastUpgradeDays
+            lastUpgradeSimulationDay:
+                gameState.upgradeTracker.lastUpgradeSimulationDay,
+            lastUpgradeWeekStartDate:
+                gameState.upgradeTracker.lastUpgradeWeekStartDate
         )
 
         summaries = gameState.simulationSummary.daySummaries.map { summary in
             DaySummarySave(
                 day: summary.day,
+                locationID: summary.locationID,
                 startingBalance: summary.startingBalance,
+                type: summary.type,
                 demandedSales: summary.demandedSales,
                 sales: summary.sales,
                 revenue: summary.revenue,

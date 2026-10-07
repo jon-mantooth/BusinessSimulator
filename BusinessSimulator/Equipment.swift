@@ -31,40 +31,10 @@ struct IngredientUpgrade: Equatable, Codable {
     let description: String
 }
 
-enum SecondaryCapacityStrength: String, Equatable, Codable {
+enum SecondaryCapacityStrength: String, Equatable, Hashable, Codable {
     case low
     case medium
     case high
-
-    // Calculate capacity based on CapacityStrength. Low will be 3% of ideal units sold,
-    // medium 5% and high 7%
-    func capacity(
-        for idealUnitsSold: Int
-    ) -> Int {
-        assert(idealUnitsSold > 0)
-
-        let lowCapacity = max(
-            1,
-            Int((Double(idealUnitsSold) * 0.03).rounded())
-        )
-        let mediumCapacity = max(
-            lowCapacity + 1,
-            Int((Double(idealUnitsSold) * 0.05).rounded())
-        )
-        let highCapacity = max(
-            mediumCapacity + 1,
-            Int((Double(idealUnitsSold) * 0.07).rounded())
-        )
-
-        switch self {
-        case .low:
-            return lowCapacity
-        case .medium:
-            return mediumCapacity
-        case .high:
-            return highCapacity
-        }
-    }
 }
 
 enum EquipmentCategory: Equatable, Codable {
@@ -74,7 +44,8 @@ enum EquipmentCategory: Equatable, Codable {
     )
 }
 
-struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
+struct Equipment: Identifiable, Equatable, Codable, PurchasableItem,
+    CapacityProviding {
     let id: EquipmentID
     let name: String
     let smallIcon: GameIcon
@@ -99,6 +70,15 @@ struct Equipment: Identifiable, Equatable, Codable, PurchasableItem {
 
     var purchaseItemID: String {
         id.rawValue
+    }
+
+    var capacityType: CapacityType {
+        switch category {
+        case .primary:
+            return .total
+        case .secondary:
+            return .additional
+        }
     }
 
     /// Rounds primary equipment to a retail-style price ending in 49 or 99.
@@ -257,13 +237,16 @@ struct SecondaryEquipmentCollection: Equatable, Codable {
 struct EquipmentTier: Identifiable, Equatable {
     let id: EquipmentTierID
     let level: Int
+    let requiredLocationTier: LocationTierLevel
     let equipment: [Equipment]
 
     init(
         id: EquipmentTierID,
         level: Int,
         equipment: [Equipment],
-        product: Product
+        product: Product,
+        capacitySchedule: CapacitySchedule,
+        requiredLocationTier: LocationTierLevel
     ) {
         assert(level >= 0, "Equipment tier level cannot be negative.")
         assert(
@@ -283,18 +266,19 @@ struct EquipmentTier: Identifiable, Equatable {
 
         self.id = id
         self.level = level
+        self.requiredLocationTier = requiredLocationTier
         self.equipment = equipment.map { equipment in
-            var configuredEquipment = equipment
-            let baseCapacity = ProductionCapacityBalance.baseCapacity(
-                baseIdealUnitsSold: product.idealUnitsSold
-            )
-            let expectedCapacityIncrease = ProductionCapacityBalance
-                .expectedCapacityIncrease(
-                    baseIdealUnitsSold: product.idealUnitsSold,
-                    tierLevel: level
+            guard let upgradeTier = UpgradeTierLevel(rawValue: level) else {
+                preconditionFailure(
+                    "Equipment tier \(level) has no capacity schedule tier."
                 )
-            configuredEquipment.capacity =
-                baseCapacity + expectedCapacityIncrease
+            }
+
+            var configuredEquipment = equipment
+            configuredEquipment.capacity = capacitySchedule.capacity(
+                for: .tier(upgradeTier),
+                product: product
+            )
 
             guard level > 0 else {
                 configuredEquipment.price = 0
@@ -304,6 +288,10 @@ struct EquipmentTier: Identifiable, Equatable {
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: level,
                 product: product,
+                locationDemandMultiplier:
+                    requiredLocationTier.demandMultiplier,
+                representativeMarketSizeMultiplier:
+                    requiredLocationTier.pricingMarketSizeMultiplier,
                 demandEffectScore:
                     configuredEquipment.demandEffectScore,
                 demandWeight: EquipmentDimension.primaryDemandWeight,
@@ -396,17 +384,20 @@ final class EquipmentDimension: Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         recordCost(
             for: .weekly,
-            summary: summary
+            summary: summary,
+            multiplier: multiplier
         )
     }
 
     private func recordCost(
         for paymentSchedule: PaymentSchedule,
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double = 1.0
     ) -> Double {
         let primaryEquipment = equipmentState.activePrimaryEquipment.equipment
         let primaryCost = primaryEquipment.paymentSchedule == paymentSchedule
@@ -415,12 +406,14 @@ final class EquipmentDimension: Dimension {
         let secondaryCost = equipmentState
             .ownedSecondaryEquipment
             .totalCosts[paymentSchedule, default: 0.0]
-        let totalCost = primaryCost + secondaryCost
+        let totalCost = (primaryCost + secondaryCost) * multiplier
 
         if totalCost > 0 {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: "Equipment",
+                    name: multiplier == 1.0
+                        ? "Equipment"
+                        : "Equipment (Prorated)",
                     amount: totalCost
                 )
             )
@@ -474,6 +467,24 @@ final class EquipmentState: PurchasableState {
                 !ownedSecondaryEquipment.contains($0)
             }
         )
+    }
+
+    func requiredLocationTier(
+        for equipment: Equipment
+    ) -> LocationTierLevel? {
+        guard equipment.category == .primary else {
+            return nil
+        }
+
+        guard let tier = primaryTiers.first(where: { tier in
+            tier.equipment.contains { $0.id == equipment.id }
+        }) else {
+            preconditionFailure(
+                "Primary equipment must belong to an equipment tier."
+            )
+        }
+
+        return tier.requiredLocationTier
     }
 
     var totalCapacity: Int {

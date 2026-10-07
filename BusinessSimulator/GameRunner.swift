@@ -18,13 +18,10 @@ struct GameRunner {
         gameState: GameState
     ) {
         self.gameState = gameState
-        self.departments = [
-            gameState.production!,
-            gameState.marketing!,
-            gameState.environment!
-        ]
+        self.departments = gameState.departments
         self.summary = DaySummary(
             day: self.gameState.calendar.simulationDay,
+            locationID: self.gameState.locationState!.activeLocationID,
             startingBalance: self.gameState.finance.actualBalance
         )
     }
@@ -98,9 +95,17 @@ struct GameRunner {
         }
 
         if gameState.calendar.currentWeekday == .friday {
+            let weeklyCostMultiplier =
+                gameState.calendar.operatingPeriodDay < 5
+                    ? Double(
+                        gameState.calendar.operatingPeriodDay
+                    ) / 5.0
+                    : 1.0
+
             for department in departments {
                 totalCosts += department.calculateWeeklyCosts(
-                    summary: summary
+                    summary: summary,
+                    multiplier: weeklyCostMultiplier
                 )
             }
         }
@@ -112,32 +117,36 @@ struct GameRunner {
         return summary
     }
 
-    func prepForNextDay() {
+    func finalizeDay() {
         gameState.movePendingBusinessEvents(to: summary)
 
         gameState.reputation!.updateOverallReputation(
             dailyReputationResult: summary.dailyReputationResult!
         )
 
-        // Update Balance
-        gameState.finance.actualBalance = summary.balance
-        gameState.finance.displayedBalance = summary.balance
-        
-        //add summary for previous day
-        gameState.simulationSummary.daySummaries.append(summary)
-        
-        //increment day
-        gameState.calendar.simulationDay += 1
-
-        if gameState.calendar.currentWeekday == .monday {
-            prepForNextWeek()
-        }
-        
+        // all department end day actions will not be effective until following
+        // day so we will use simulationDay + 1 as our day
+        let nextSimulationDay = gameState.calendar.simulationDay + 1
         for department in departments {
             department.prepForNextDay(
-                currentDay: gameState.calendar.simulationDay,
+                currentDay: nextSimulationDay,
                 summary: summary
             )
+        }
+
+        gameState.finance.actualBalance = summary.balance
+        gameState.finance.displayedBalance = summary.balance
+
+        gameState.simulationSummary.daySummaries.append(summary)
+    }
+
+    static func prepForNextDay(
+        gameState: GameState
+    ) {
+        gameState.calendar.advanceDay()
+
+        if gameState.calendar.currentWeekday == .monday {
+            prepForNextWeek(gameState: gameState)
         }
 
         // Delayed purchase effects are activated only after the completed
@@ -147,7 +156,9 @@ struct GameRunner {
         
     }
 
-    private func prepForNextWeek() {
+    private static func prepForNextWeek(
+        gameState: GameState
+    ) {
         gameState.weather.generateWeeklyForecast(
             starting: gameState.calendar.currentDate
         )

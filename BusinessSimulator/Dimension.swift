@@ -13,28 +13,58 @@ enum PaymentSchedule: String, Codable, Hashable {
     case weekly
 }
 
-/// Defines the shared capacity progression for equipment, labor, storage, and
-/// other production constraints. Tier zero starts at 90% of ideal unit sales,
-/// and completing all five tiers reaches 200% of ideal unit sales.
+/// Defines primary equipment's capacity progression. Location Tier 1 equipment
+/// grows from 90% to 210% of ideal unit sales, while Location Tier 2 equipment
+/// extends capacity to 330%.
 enum ProductionCapacityBalance {
 
-    static let baselineRatio = 0.90
-    static let targetRatio = 2.00
-    static let totalTiers = 5
+    static let schedule = CapacitySchedule(
+        upgrades: [
+            CapacityUpgrade(
+                upgradeID: .tier(.tierZero),
+                scheduledCapacity: 0.90
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierOne),
+                scheduledCapacity: 1.30
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierTwo),
+                scheduledCapacity: 1.70
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierThree),
+                scheduledCapacity: 2.10
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierFour),
+                scheduledCapacity: 2.70
+            ),
+            CapacityUpgrade(
+                upgradeID: .tier(.tierFive),
+                scheduledCapacity: 3.30
+            )
+        ]
+    )
+    static let totalTiers = UpgradeTierLevel.allCases.count - 1
+    static let baselineRatio = schedule.scheduledCapacity(
+        for: .tier(.tierZero)
+    )
+    static let targetRatio = schedule.scheduledCapacity(
+        for: .tier(.tierFive)
+    )
 
     static func baseCapacity(
         baseIdealUnitsSold: Int
     ) -> Int {
-        assert(baseIdealUnitsSold > 0)
-
-        return Int(
-            (Double(baseIdealUnitsSold) * baselineRatio)
-                .rounded(.up)
+        schedule.capacity(
+            for: .tier(.tierZero),
+            idealUnitsSold: baseIdealUnitsSold
         )
     }
 
-    /// Returns the cumulative capacity increase above the baseline expected
-    /// after reaching the supplied tier.
+    /// Returns the cumulative capacity increase above the 90% baseline after
+    /// reaching the supplied primary-equipment tier.
     static func expectedCapacityIncrease(
         baseIdealUnitsSold: Int,
         tierLevel: Int
@@ -42,44 +72,51 @@ enum ProductionCapacityBalance {
         assert(baseIdealUnitsSold > 0)
         assert((0...totalTiers).contains(tierLevel))
 
-        let baselineCapacity = baseCapacity(
-            baseIdealUnitsSold: baseIdealUnitsSold
-        )
-        let targetCapacity = Int(
-            (Double(baseIdealUnitsSold) * targetRatio)
-                .rounded()
-        )
-        let totalCapacityIncrease = targetCapacity - baselineCapacity
-        let tierProgress = Double(tierLevel) / Double(totalTiers)
+        guard let tier = UpgradeTierLevel(rawValue: tierLevel) else {
+            preconditionFailure("Invalid primary-equipment tier \(tierLevel).")
+        }
 
-        return Int(
-            (Double(totalCapacityIncrease) * tierProgress)
-                .rounded()
+        return schedule.capacity(
+            for: .tier(tier),
+            idealUnitsSold: baseIdealUnitsSold
+        ) - schedule.capacity(
+            for: .tier(.tierZero),
+            idealUnitsSold: baseIdealUnitsSold
         )
     }
 }
 
 struct UpgradeTracker {
-    private(set) var lastUpgradeDays: [PurchaseCategory: Int]
+    private(set) var lastUpgradeSimulationDay: Int?
+    private(set) var lastUpgradeWeekStartDate: Date?
 
     init(
-        lastUpgradeDays: [PurchaseCategory: Int] = [:]
+        lastUpgradeSimulationDay: Int? = nil,
+        lastUpgradeWeekStartDate: Date? = nil
     ) {
-        self.lastUpgradeDays = lastUpgradeDays
+        self.lastUpgradeSimulationDay = lastUpgradeSimulationDay
+        self.lastUpgradeWeekStartDate = lastUpgradeWeekStartDate
     }
 
-    func canUpgrade(
-        _ category: PurchaseCategory,
-        on simulationDay: Int
-    ) -> Bool {
-        lastUpgradeDays[category] != simulationDay
+    func canUpgrade(during weekStartDate: Date) -> Bool {
+        lastUpgradeWeekStartDate != weekStartDate
     }
 
     mutating func recordUpgrade(
-        _ category: PurchaseCategory,
-        on simulationDay: Int
+        on simulationDay: Int,
+        weekStarting weekStartDate: Date
     ) {
-        lastUpgradeDays[category] = simulationDay
+        lastUpgradeSimulationDay = simulationDay
+        lastUpgradeWeekStartDate = weekStartDate
+    }
+
+    func hasUpgrade(on simulationDay: Int) -> Bool {
+        lastUpgradeSimulationDay == simulationDay
+    }
+
+    mutating func reset() {
+        lastUpgradeSimulationDay = nil
+        lastUpgradeWeekStartDate = nil
     }
 }
 
@@ -100,7 +137,8 @@ protocol Dimension {
     ) -> Double
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double
     
     func prepForNextDay(
@@ -136,9 +174,19 @@ extension Dimension {
     }
 
     func calculateWeeklyCosts(
-        summary: DaySummary
+        summary: DaySummary,
+        multiplier: Double
     ) -> Double {
         return 0
+    }
+
+    func calculateWeeklyCosts(
+        summary: DaySummary
+    ) -> Double {
+        calculateWeeklyCosts(
+            summary: summary,
+            multiplier: 1.0
+        )
     }
     
     func prepForNextDay(
@@ -202,6 +250,9 @@ struct BusinessDimensions {
                 )
             ],
             environment: [
+                LocationDimension(
+                    locationState: gameState.locationState!
+                ),
                 WeatherDimension(
                     weatherState: gameState.weather,
                     product: gameState.productState!.product,
@@ -209,6 +260,87 @@ struct BusinessDimensions {
                 )
             ]
         )
+    }
+}
+
+struct MarketSizeLevelAllocation: Equatable {
+    let locationTier: LocationTierLevel
+    let totalStars: Int
+
+    init(
+        locationTier: LocationTierLevel,
+        totalStars: Int
+    ) {
+        assert(
+            totalStars >= 0,
+            "Market-size stars cannot be negative."
+        )
+
+        self.locationTier = locationTier
+        self.totalStars = totalStars
+    }
+}
+
+enum MarketSizeProgression {
+    /// Calculates the target market-size multiplier represented by an
+    /// upgrade's cumulative stars. Each location tier has a target of one
+    /// additional base market. Any growth not earned in a tier with no stars
+    /// carries forward and is divided evenly among the next tier's stars.
+    static func targetMultiplier(
+        marketSizeStars: Int,
+        allocations: [MarketSizeLevelAllocation]
+    ) -> Double {
+        assert(marketSizeStars >= 0)
+        assert(
+            !allocations.isEmpty,
+            "Market-size progression requires at least one location tier."
+        )
+
+        let locationTiers = allocations.map(\.locationTier)
+        assert(
+            Set(locationTiers).count == locationTiers.count,
+            "Market-size progression cannot repeat a location tier."
+        )
+
+        let orderedAllocations = allocations.sorted {
+            $0.locationTier < $1.locationTier
+        }
+        let totalAvailableStars = orderedAllocations.reduce(0) {
+            $0 + $1.totalStars
+        }
+        assert(
+            marketSizeStars <= totalAvailableStars,
+            "Market-size stars cannot exceed the configured progression."
+        )
+
+        var remainingStars = marketSizeStars
+        var targetMultiplier = 1.0
+
+        for allocation in orderedAllocations {
+            guard allocation.totalStars > 0 else {
+                continue
+            }
+
+            let starsUsed = min(
+                remainingStars,
+                allocation.totalStars
+            )
+            let locationTargetMultiplier = Double(
+                allocation.locationTier.rawValue + 1
+            )
+            let growthPerStar = (
+                locationTargetMultiplier - targetMultiplier
+            ) / Double(allocation.totalStars)
+
+            targetMultiplier += Double(starsUsed) * growthPerStar
+            remainingStars -= starsUsed
+
+            if remainingStars == 0 {
+                break
+            }
+        }
+
+        return targetMultiplier
     }
 }
 
@@ -235,6 +367,20 @@ struct GrowthBalance {
         pow(
             totalGrowthFactor,
             weight * effectScore
+        )
+    }
+
+    /// Applies a dimension's weight to a target multiplier that has already
+    /// been calculated by a non-uniform progression.
+    func multiplier(
+        weight: Double,
+        targetMultiplier: Double
+    ) -> Double {
+        assert(targetMultiplier > 0)
+
+        return pow(
+            targetMultiplier / startingMultiplier,
+            weight
         )
     }
 }

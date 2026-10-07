@@ -8,7 +8,9 @@ enum GamePopupType {
     )
     case insufficientFunds
     case operatingReserveRequired
-    case upgradeLimitReached(upgradeName: String)
+    case locationLocked(requiredLevel: Int)
+    case upgradeLimitReached
+    case relocationUnavailable(message: String)
     case purchaseSaveFailed
 
     var title: String {
@@ -19,8 +21,11 @@ enum GamePopupType {
             return "CONFIRM UPGRADE"
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached:
             return "PURCHASE UNAVAILABLE"
+        case .relocationUnavailable:
+            return "RELOCATION UNAVAILABLE"
         case .purchaseSaveFailed:
             return "PURCHASE NOT SAVED"
         }
@@ -36,8 +41,12 @@ enum GamePopupType {
             return "You do not have enough money for this purchase."
         case .operatingReserveRequired:
             return "You must have enough money remaining to purchase ingredients."
-        case let .upgradeLimitReached(upgradeName):
-            return "You can only upgrade \(upgradeName) once per business day."
+        case let .locationLocked(requiredLevel):
+            return "This upgrade is available at Level \(requiredLevel)."
+        case .upgradeLimitReached:
+            return "You can make only one business upgrade per week. Another upgrade will be available next week."
+        case let .relocationUnavailable(message):
+            return message
         case .purchaseSaveFailed:
             return "Your purchase was not completed because the game could not be saved. Please try again."
         }
@@ -53,8 +62,12 @@ enum GamePopupType {
             return .system("dollarsign.circle.fill")
         case .operatingReserveRequired:
             return .system("basket.fill")
+        case .locationLocked:
+            return .system("lock.fill")
         case .upgradeLimitReached:
             return .system("clock.fill")
+        case .relocationUnavailable:
+            return .system("map.fill")
         case .purchaseSaveFailed:
             return .system("exclamationmark.triangle.fill")
         }
@@ -68,7 +81,9 @@ enum GamePopupType {
             return "CONFIRM"
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached,
+             .relocationUnavailable,
              .purchaseSaveFailed:
             return "OK"
         }
@@ -81,7 +96,9 @@ enum GamePopupType {
             return true
         case .insufficientFunds,
              .operatingReserveRequired,
+             .locationLocked,
              .upgradeLimitReached,
+             .relocationUnavailable,
              .purchaseSaveFailed:
             return false
         }

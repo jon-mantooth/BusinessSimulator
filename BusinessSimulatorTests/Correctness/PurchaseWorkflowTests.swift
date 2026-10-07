@@ -9,30 +9,44 @@ struct PurchaseWorkflowTests {}
 extension PurchaseWorkflowTests {
 
     @Test
-    func upgradeAvailabilityUsesCategoryAndSimulationDay() {
+    func upgradeAvailabilityIsGlobalForTheCurrentWeek() {
         let gameState = makeGameState()
         let workflow = makeWorkflow(gameState: gameState)
+        let initialWeekStart = gameState.calendar.currentWeekStartDate
 
         #expect(
-            workflow.validateUpgradeAvailability(category: .advertisement)
+            workflow.dimensionAvailability(
+                for: PurchaseDimensionAvailabilityRequest()
+            ) == .available
         )
 
         gameState.upgradeTracker.recordUpgrade(
-            .advertisement,
-            on: gameState.calendar.simulationDay
+            on: gameState.calendar.simulationDay,
+            weekStarting: initialWeekStart
         )
 
         #expect(
-            !workflow.validateUpgradeAvailability(category: .advertisement)
-        )
-        #expect(
-            workflow.validateUpgradeAvailability(category: .equipment)
+            workflow.dimensionAvailability(
+                for: PurchaseDimensionAvailabilityRequest()
+            ) == .upgradeLimitReached
         )
 
-        gameState.calendar.simulationDay += 1
+        gameState.calendar.advanceDay()
 
         #expect(
-            workflow.validateUpgradeAvailability(category: .advertisement)
+            workflow.dimensionAvailability(
+                for: PurchaseDimensionAvailabilityRequest()
+            ) == .upgradeLimitReached
+        )
+
+        while gameState.calendar.currentWeekStartDate == initialWeekStart {
+            gameState.calendar.advanceDay()
+        }
+
+        #expect(
+            workflow.dimensionAvailability(
+                for: PurchaseDimensionAvailabilityRequest()
+            ) == .available
         )
     }
 
@@ -43,7 +57,7 @@ extension PurchaseWorkflowTests {
         let reserve = gameState.finance.minimumOperatingAllowance
         gameState.finance.displayedBalance = reserve - 1
 
-        guard case .available = workflow.validateFinancialAvailability(
+        guard case .available = workflow.financialAvailability(
             price: 0
         ) else {
             Issue.record(
@@ -54,7 +68,7 @@ extension PurchaseWorkflowTests {
 
         gameState.finance.displayedBalance = reserve + 100
 
-        guard case .available = workflow.validateFinancialAvailability(
+        guard case .available = workflow.financialAvailability(
             price: 100
         ) else {
             Issue.record("A purchase that preserves the reserve should pass.")
@@ -62,14 +76,14 @@ extension PurchaseWorkflowTests {
         }
 
         guard case .operatingReserveRequired =
-            workflow.validateFinancialAvailability(price: 101)
+            workflow.financialAvailability(price: 101)
         else {
             Issue.record("A purchase that enters the reserve should be blocked.")
             return
         }
 
         guard case .insufficientFunds =
-            workflow.validateFinancialAvailability(price: reserve + 101)
+            workflow.financialAvailability(price: reserve + 101)
         else {
             Issue.record("A purchase above displayed balance should be blocked.")
             return
@@ -119,8 +133,7 @@ extension PurchaseWorkflowTests {
         )
         #expect(
             !gameState.upgradeTracker.canUpgrade(
-                .advertisement,
-                on: gameState.calendar.simulationDay
+                during: gameState.calendar.currentWeekStartDate
             )
         )
         #expect(gameState.pendingBusinessEvents.count == 1)
@@ -233,8 +246,7 @@ extension PurchaseWorkflowTests {
         #expect(gameState.finance.displayedBalance == startingDisplayedBalance)
         #expect(
             gameState.upgradeTracker.canUpgrade(
-                .advertisement,
-                on: gameState.calendar.simulationDay
+                during: gameState.calendar.currentWeekStartDate
             )
         )
         #expect(gameState.pendingBusinessEvents.map(\.id) == [existingEvent.id])
@@ -405,6 +417,8 @@ private func makeGameState() -> GameState {
     }!
     let gameState = GameState()
     gameState.initializeBusiness(product: product)
+    gameState.finance.actualBalance += 100_000
+    gameState.finance.displayedBalance += 100_000
     return gameState
 }
 
@@ -416,7 +430,7 @@ private func makeBusinessEvent(
 ) -> BusinessEvent {
     BusinessEvent(
         simulationDay: 1,
-        calendarDate: GameCalendar.defaultStartDate,
+        calendarDate: Date(timeIntervalSince1970: 0),
         type: .purchase(
             PurchaseEvent(
                 category: .advertisement,

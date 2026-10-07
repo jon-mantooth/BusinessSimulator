@@ -71,7 +71,11 @@ struct SummaryView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(darkBrown)
 
-                Text("Here’s how your day went!")
+                Text(
+                    summary.type == .relocation
+                        ? "Your relocation is complete."
+                        : "Here’s how your day went!"
+                )
                     .font(.subheadline)
                     .foregroundStyle(darkBrown.opacity(0.7))
             }
@@ -87,23 +91,37 @@ struct SummaryView: View {
             systemImage: "chart.line.uptrend.xyaxis",
             color: green
         ) {
-            HStack(spacing: 0) {
-                metric(
-                    label: "Units Sold",
-                    value: summary.sales.formatted(),
-                    color: green
-                )
+            if summary.type == .relocation {
+                VStack(spacing: 4) {
+                    Text("No Operations Today")
+                        .font(.headline)
+                        .foregroundStyle(darkBrown)
 
-                Divider()
-                    .frame(height: 44)
+                    Text("The business was closed while relocating.")
+                        .font(.subheadline)
+                        .foregroundStyle(darkBrown.opacity(0.7))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+            } else {
+                HStack(spacing: 0) {
+                    metric(
+                        label: "Units Sold",
+                        value: summary.sales.formatted(),
+                        color: green
+                    )
 
-                metric(
-                    label: "Revenue",
-                    value: currency(summary.revenue),
-                    color: green
-                )
+                    Divider()
+                        .frame(height: 44)
+
+                    metric(
+                        label: "Revenue",
+                        value: currency(summary.revenue),
+                        color: green
+                    )
+                }
+                .padding(.vertical, 2)
             }
-            .padding(.vertical, 2)
         }
     }
 

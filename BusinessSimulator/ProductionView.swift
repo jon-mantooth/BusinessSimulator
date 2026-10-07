@@ -44,9 +44,9 @@ struct ProductionView: View {
                     systemImage: "gearshape.fill",
                     scale: scale,
                     action: {
-                        if purchaseWorkflow.validateUpgradeAvailability(
-                            category: .equipment
-                        ) {
+                        if purchaseWorkflow.dimensionAvailability(
+                            for: PurchaseDimensionAvailabilityRequest()
+                        ) == .available {
                             selectedEquipmentTab = .primary
                             showingEquipment = true
                         } else {
@@ -64,9 +64,9 @@ struct ProductionView: View {
                     systemImage: "person.2.fill",
                     scale: scale,
                     action: {
-                        if purchaseWorkflow.validateUpgradeAvailability(
-                            category: .labor
-                        ) {
+                        if purchaseWorkflow.dimensionAvailability(
+                            for: PurchaseDimensionAvailabilityRequest()
+                        ) == .available {
                             showingLabor = true
                         } else {
                             showingLaborUpgradeLimit = true
@@ -108,7 +108,7 @@ struct ProductionView: View {
         .overlay {
             if showingEquipmentUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(upgradeName: "equipment"),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingEquipmentUpgradeLimit = false
@@ -118,7 +118,7 @@ struct ProductionView: View {
 
             if showingLaborUpgradeLimit {
                 GamePopupView(
-                    type: .upgradeLimitReached(upgradeName: "labor"),
+                    type: .upgradeLimitReached,
                     onConfirm: {},
                     onDismiss: {
                         showingLaborUpgradeLimit = false
@@ -153,8 +153,8 @@ struct ProductionView: View {
                             activeTier: equipmentState.activePrimaryTier,
                             availableTier: equipmentState.nextPrimaryTier,
                             purchaseAvailability: { equipment in
-                                purchaseWorkflow.validateFinancialAvailability(
-                                    price: equipment.price
+                                purchaseWorkflow.itemAvailability(
+                                    for: purchaseRequest(for: equipment)
                                 )
                             },
                             onPurchase: attemptPurchase
@@ -199,8 +199,10 @@ struct ProductionView: View {
                         selectedSecondaryEquipment
                     ),
                     purchaseAvailability: purchaseWorkflow
-                        .validateFinancialAvailability(
-                            price: selectedSecondaryEquipment.price
+                        .itemAvailability(
+                            for: purchaseRequest(
+                                for: selectedSecondaryEquipment
+                            )
                         ),
                     onPurchase: {
                         attemptPurchase(selectedSecondaryEquipment)
@@ -247,11 +249,15 @@ struct ProductionView: View {
     private func attemptPurchase(
         _ equipment: Equipment
     ) {
-        switch purchaseWorkflow.validateFinancialAvailability(
-            price: equipment.price
+        switch purchaseWorkflow.itemAvailability(
+            for: purchaseRequest(for: equipment)
         ) {
         case .available:
             equipmentPendingConfirmation = equipment
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
         case .insufficientFunds:
             purchaseWarning = .insufficientFunds
         case .operatingReserveRequired:
@@ -259,15 +265,26 @@ struct ProductionView: View {
         }
     }
 
-    private func confirmPurchase(
-        _ equipment: Equipment
-    ) {
-        let result = purchaseWorkflow.completePurchase(
+    private func purchaseRequest(
+        for equipment: Equipment
+    ) -> PurchaseRequest {
+        PurchaseRequest(
             state: equipmentState,
             item: equipment,
+            requiredLocationTier: equipmentState.requiredLocationTier(
+                for: equipment
+            ),
             pendingUpgrade: equipment.ingredientUpgrade.map {
                 .ingredient($0)
             }
+        )
+    }
+
+    private func confirmPurchase(
+        _ equipment: Equipment
+    ) {
+        let result = purchaseWorkflow.complete(
+            purchaseRequest(for: equipment)
         )
 
         equipmentPendingConfirmation = nil
@@ -276,8 +293,27 @@ struct ProductionView: View {
         case .completed:
             selectedSecondaryEquipment = nil
             showingEquipment = false
+        case let .unavailable(availability):
+            showPurchaseWarning(for: availability)
         case .saveFailed:
             purchaseWarning = .purchaseSaveFailed
+        }
+    }
+
+    private func showPurchaseWarning(
+        for availability: PurchaseAvailability
+    ) {
+        switch availability {
+        case .available:
+            break
+        case let .locationLocked(requiredTier):
+            purchaseWarning = .locationLocked(
+                requiredLevel: requiredTier.rawValue
+            )
+        case .insufficientFunds:
+            purchaseWarning = .insufficientFunds
+        case .operatingReserveRequired:
+            purchaseWarning = .operatingReserveRequired
         }
     }
 
