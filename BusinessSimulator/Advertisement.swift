@@ -10,6 +10,8 @@ struct AdvertisementTierID: RawRepresentable, Hashable, Codable {
 }
 
 struct Advertisement: Identifiable, Equatable, Codable, PurchasableItem {
+    static let oneTimeEquivalentWeeks = 4.0
+
     static let marketSizeLevelAllocations = [
         MarketSizeLevelAllocation(
             locationTier: .tierOne,
@@ -192,14 +194,6 @@ struct AdvertisementTier: Identifiable, Equatable {
                 return pricedAdvertisement
             }
 
-            let isOneTime = advertisement.paymentSchedule == .oneTime
-            let precedingLevel = tierLevel - 1
-            let marketSizeStartingTargetMultiplier = isOneTime
-                ? Advertisement.marketSizeTargetMultiplier(
-                    for: precedingLevel
-                )
-                : 1.0
-
             let dailyBenefit = UpgradePricing.calculateDailyBenefit(
                 tierLevel: tierLevel,
                 product: product,
@@ -207,27 +201,36 @@ struct AdvertisementTier: Identifiable, Equatable {
                     locationDemandMultiplier,
                 representativeMarketSizeMultiplier:
                     pricingMarketSizeMultiplier,
-                demandEffectScore: Double(
-                    isOneTime
-                        ? advertisement.demandLevel - precedingLevel
-                        : advertisement.demandLevel
-                ) / Double(advertisement.totalLevels),
+                demandEffectScore: advertisement.demandEffectScore,
                 demandWeight: AdvertisementDimension.demandWeight,
-                marketSizeStartingTargetMultiplier:
-                    marketSizeStartingTargetMultiplier,
                 marketSizeEndingTargetMultiplier:
                     advertisement.marketSizeTargetMultiplier,
                 marketSizeWeight: AdvertisementDimension.marketSizeWeight,
                 capacityEffect: .none
             )
-            let paymentPrice = UpgradePricing.calculatePrice(
-                dailyBenefit: dailyBenefit,
-                paymentSchedule: advertisement.paymentSchedule,
-                tierLevel: tierLevel
+            let weeklyEquivalentPrice = Advertisement.cleanPrice(
+                UpgradePricing.calculatePrice(
+                    dailyBenefit: dailyBenefit,
+                    paymentSchedule: .weekly,
+                    tierLevel: tierLevel
+                )
             )
-            pricedAdvertisement.price = Advertisement.cleanPrice(
-                paymentPrice
-            )
+
+            switch advertisement.paymentSchedule {
+            case .oneTime:
+                pricedAdvertisement.price = weeklyEquivalentPrice
+                    * Advertisement.oneTimeEquivalentWeeks
+            case .weekly:
+                pricedAdvertisement.price = weeklyEquivalentPrice
+            case .daily:
+                pricedAdvertisement.price = Advertisement.cleanPrice(
+                    UpgradePricing.calculatePrice(
+                        dailyBenefit: dailyBenefit,
+                        paymentSchedule: .daily,
+                        tierLevel: tierLevel
+                    )
+                )
+            }
 
             return pricedAdvertisement
         }
