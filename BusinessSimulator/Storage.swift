@@ -104,7 +104,8 @@ struct StorageTier: Identifiable, Equatable {
                 UpgradePricing.calculatePrice(
                     dailyBenefit: dailyBenefit,
                     paymentSchedule: configuredStorage.paymentSchedule,
-                    tierLevel: level
+                    tierLevel: level,
+                    capacityEffect: .replacement(configuredStorage.capacity)
                 )
             )
         }
