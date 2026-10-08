@@ -4,22 +4,87 @@ import Testing
 @MainActor
 struct PricingTests {}
 
+// MARK: - Storage Pricing
+
+extension PricingTests {
+
+    @Test(arguments: pricingProductIDs)
+    func storagePricesUseCapacityAndLocationPricing(productID: ProductID) {
+        let product = ProductCatalog().product(for: productID)
+        let tiers = StorageCatalog().tiers(for: product)
+
+        for tier in tiers where tier.level > 0 {
+            let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+                tierLevel: tier.level,
+                product: product,
+                locationDemandMultiplier:
+                    tier.requiredLocationTier.demandMultiplier,
+                representativeMarketSizeMultiplier:
+                    tier.requiredLocationTier.pricingMarketSizeMultiplier,
+                capacityEffect: .replacement(tier.storage.capacity)
+            )
+            let expectedPrice = Storage.cleanPrice(
+                UpgradePricing.calculatePrice(
+                    dailyBenefit: dailyBenefit,
+                    paymentSchedule: .oneTime,
+                    tierLevel: tier.level,
+                    capacityEffect: .replacement(tier.storage.capacity)
+                )
+            )
+
+            #expect(tier.storage.price == expectedPrice)
+        }
+    }
+
+    @Test
+    func laterStorageTiersUseLocationLevelTwoPricing() {
+        let product = ProductCatalog().product(for: .pies)
+        let tiers = StorageCatalog().tiers(for: product)
+
+        #expect(tiers[1].requiredLocationTier == .tierOne)
+        for tier in tiers.dropFirst(2) {
+            #expect(tier.requiredLocationTier == .tierTwo)
+        }
+    }
+}
+
 // MARK: - Price Calculations
 
 extension PricingTests {
 
     @Test
-    func oneTimePriceUsesTargetPaybackDays() {
+    func oneTimeAdditivePriceUsesAdditiveTargetPaybackDays() {
         let dailyBenefit = 37.50
 
         let price = UpgradePricing.calculatePrice(
             dailyBenefit: dailyBenefit,
             paymentSchedule: .oneTime,
-            tierLevel: 1
+            tierLevel: 1,
+            capacityEffect: .additive(10)
         )
 
         #expect(
-            price == dailyBenefit * UpgradePricing.targetPaybackDays
+            price
+                == dailyBenefit
+                    * UpgradePricing.additiveTargetPaybackDays
+        )
+    }
+
+    @Test
+    func oneTimeReplacementPriceUsesReplacementTargetPaybackDays() {
+        let dailyBenefit = 37.50
+
+        let price = UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: .oneTime,
+            tierLevel: 1,
+            capacityEffect: .replacement(100)
+        )
+
+        #expect(
+            price
+                == dailyBenefit
+                    * UpgradePricing.replacementTargetPaybackDays
         )
     }
 
@@ -502,19 +567,13 @@ extension PricingTests {
     }
 
     @Test(arguments: pricingProductIDs)
-    func replacementCapacityUsesOnlyCapacityAboveExpectedTierCapacity(
+    func replacementCapacityPricesTheItemsTotalCapacity(
         productID: ProductID
     ) {
         let product = ProductCatalog().product(for: productID)
         let tierLevel = 3
         let precedingLevel = tierLevel - 1
-        let expectedTierCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: product.idealUnitsSold
-        ) + ProductionCapacityBalance.expectedCapacityIncrease(
-            baseIdealUnitsSold: product.idealUnitsSold,
-            tierLevel: precedingLevel
-        )
-        let addedCapacity = 10
+        let totalCapacity = 100
         let tierProgress = Double(precedingLevel)
             / Double(UpgradePricing.totalUpgradeTiers)
         let expectedPricePerUnit = product.baseIdealPrice
@@ -524,15 +583,13 @@ extension PricingTests {
             )
         let ingredientCostPerUnit = product.baseIdealPrice
             * UpgradePricing.ingredientCostRatio
-        let expectedBenefit = Double(addedCapacity)
+        let expectedBenefit = Double(totalCapacity)
             * (expectedPricePerUnit - ingredientCostPerUnit)
 
         let benefit = UpgradePricing.calculateDailyBenefit(
             tierLevel: tierLevel,
             product: product,
-            capacityEffect: .replacement(
-                expectedTierCapacity + addedCapacity
-            )
+            capacityEffect: .replacement(totalCapacity)
         )
 
         #expect(abs(benefit - expectedBenefit) < 0.000_001)
@@ -703,30 +760,40 @@ private func expectedAdvertisementPrice(
     tierLevel: Int,
     locationTier: LocationTierLevel
 ) -> Double {
-    let precedingLevel = tierLevel - 1
     let dailyBenefit = UpgradePricing.calculateDailyBenefit(
         tierLevel: tierLevel,
         product: product,
         locationDemandMultiplier: locationTier.demandMultiplier,
         representativeMarketSizeMultiplier:
             locationTier.pricingMarketSizeMultiplier,
-        demandEffectScore: Double(
-            advertisement.demandLevel - precedingLevel
-        ) / Double(advertisement.totalLevels),
+        demandEffectScore: advertisement.demandEffectScore,
         demandWeight: AdvertisementDimension.demandWeight,
-        marketSizeStartingTargetMultiplier:
-            Advertisement.marketSizeTargetMultiplier(for: precedingLevel),
         marketSizeEndingTargetMultiplier:
             advertisement.marketSizeTargetMultiplier,
         marketSizeWeight: AdvertisementDimension.marketSizeWeight
     )
-    let price = UpgradePricing.calculatePrice(
-        dailyBenefit: dailyBenefit,
-        paymentSchedule: advertisement.paymentSchedule,
-        tierLevel: tierLevel
+    let weeklyEquivalentPrice = Advertisement.cleanPrice(
+        UpgradePricing.calculatePrice(
+            dailyBenefit: dailyBenefit,
+            paymentSchedule: .weekly,
+            tierLevel: tierLevel
+        )
     )
 
-    return Advertisement.cleanPrice(price)
+    switch advertisement.paymentSchedule {
+    case .oneTime:
+        return weeklyEquivalentPrice * Advertisement.oneTimeEquivalentWeeks
+    case .weekly:
+        return weeklyEquivalentPrice
+    case .daily:
+        return Advertisement.cleanPrice(
+            UpgradePricing.calculatePrice(
+                dailyBenefit: dailyBenefit,
+                paymentSchedule: .daily,
+                tierLevel: tierLevel
+            )
+        )
+    }
 }
 
 private func makeLocationPricedEquipmentTier(
@@ -773,7 +840,8 @@ private func expectedEquipmentPrice(
     let price = UpgradePricing.calculatePrice(
         dailyBenefit: dailyBenefit,
         paymentSchedule: equipment.paymentSchedule,
-        tierLevel: tierLevel
+        tierLevel: tierLevel,
+        capacityEffect: .replacement(equipment.capacity)
     )
 
     return Equipment.cleanPrice(price)

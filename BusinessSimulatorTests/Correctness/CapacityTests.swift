@@ -169,7 +169,8 @@ extension CapacityTests {
                 UpgradePricing.calculatePrice(
                     dailyBenefit: dailyBenefit,
                     paymentSchedule: equipment.paymentSchedule,
-                    tierLevel: tier.level
+                    tierLevel: tier.level,
+                    capacityEffect: .replacement(equipment.capacity)
                 )
             )
 

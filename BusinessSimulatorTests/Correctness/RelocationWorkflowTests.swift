@@ -97,8 +97,12 @@ extension RelocationWorkflowTests {
                     status.requiredValue
                         == Double(request.requirements.storageLevel)
                 )
-                #expect(status.currentValue == nil)
-                #expect(status.isMet)
+                #expect(
+                    status.currentValue
+                        == Double(
+                            gameState.storageState!.activeStorage.tierLevel
+                        )
+                )
             case .transportationLevel:
                 #expect(
                     status.requiredValue
@@ -440,6 +444,7 @@ extension RelocationWorkflowTests {
 }
 
 private let implementedRelocationRequirements: [RelocationRequirement] = [
+    .storageLevel,
     .equipmentLevel,
     .laborLevel,
     .advertisementLevel,
@@ -508,7 +513,7 @@ private func relocationTestRequest(
     return RelocationRequest(
         destination: destination,
         requirements: RelocationRequirements(
-            storageLevel: 0,
+            storageLevel: requiredValue(for: .storageLevel, value: 1),
             transportationLevel: 0,
             equipmentLevel: requiredValue(
                 for: .equipmentLevel,
@@ -529,6 +534,13 @@ private func satisfyRelocationRequirements(
     _ requirements: RelocationRequirements,
     gameState: GameState
 ) throws {
+    let storageState = try #require(gameState.storageState)
+    while storageState.activeStorage.tierLevel
+        < requirements.storageLevel {
+        let nextTier = try #require(storageState.nextTier)
+        storageState.applyUpgrade(nextTier.storage)
+    }
+
     let equipmentState = try #require(gameState.equipmentState)
     while equipmentState.activePrimaryEquipment.tierLevel
         < requirements.equipmentLevel {
