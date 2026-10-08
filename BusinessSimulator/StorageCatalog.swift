@@ -30,36 +30,31 @@ struct StorageCatalog {
                 id: StorageID(rawValue: "insulated-pie-holding-rack"),
                 name: "Insulated Pie Holding Rack",
                 smallIcon: .system("shippingbox.fill"),
-                description:
-                    "A portable, insulated rack that protects finished pies and keeps them warm during transport and farmers-market service."
+                description: "A portable insulated rack for finished pies."
             ),
             Storage(
                 id: StorageID(rawValue: "heated-pie-display-cabinet"),
                 name: "Heated Pie Display Cabinet",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A compact powered cabinet that keeps more pies warm, organized, and ready for customers throughout market service."
+                description: "A compact heated cabinet for displaying pies."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-pie-warming-cabinet"),
                 name: "Commercial Pie Warming Cabinet",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A full-size heated cabinet with adjustable shelving that keeps a larger supply of pies consistently warm and ready for busy market days."
+                description: "A full-size warming cabinet with adjustable shelves."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-pie-holding-cabinet"),
                 name: "Dual-Zone Pie Holding Cabinet",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A high-capacity cabinet with independently controlled warming zones, allowing different pie varieties to remain at their ideal serving temperatures during peak service."
+                description: "A warming cabinet with two temperature zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-roll-in-pie-warmer"),
                 name: "Commercial Roll-In Pie Warmer",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A premium roll-in warming system that holds full racks of finished pies with precise temperature control and rapid access during the busiest market service."
+                description: "A commercial warmer built for full rolling racks."
             )
         ]
 
@@ -74,36 +69,31 @@ struct StorageCatalog {
                 id: StorageID(rawValue: "insulated-hot-dog-carrier"),
                 name: "Insulated Hot Dog Carrier",
                 smallIcon: .system("shippingbox.fill"),
-                description:
-                    "A portable insulated carrier that keeps prepared hot dogs warm and protected during transport to the ballpark."
+                description: "A portable insulated carrier for prepared hot dogs."
             ),
             Storage(
                 id: StorageID(rawValue: "hot-dog-and-bun-steamer"),
                 name: "Hot Dog and Bun Steamer",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A countertop steamer with separate compartments that keeps hot dogs hot and buns soft throughout service."
+                description: "A countertop steamer with separate bun storage."
             ),
             Storage(
                 id: StorageID(rawValue: "heated-hot-dog-holding-cabinet"),
                 name: "Heated Hot Dog Holding Cabinet",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A commercial heated cabinet that stores a larger supply at a consistent serving temperature during busy games."
+                description: "A commercial heated cabinet for prepared hot dogs."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-hot-dog-holding-station"),
                 name: "Dual-Zone Hot Dog Holding Station",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A high-capacity station with independently controlled sections for hot dogs and buns, improving organization and temperature control."
+                description: "A holding station with separate hot dog and bun zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-ballpark-holding-system"),
                 name: "Commercial Ballpark Holding System",
                 smallIcon: .system("cabinet.fill"),
-                description:
-                    "A premium high-volume holding system designed for rapid access and continuous service during the largest crowds."
+                description: "A high-volume holding system for ballpark service."
             )
         ]
 
@@ -118,36 +108,31 @@ struct StorageCatalog {
                 id: StorageID(rawValue: "insulated-smoothie-cooler"),
                 name: "Insulated Smoothie Cooler",
                 smallIcon: .system("snowflake"),
-                description:
-                    "A portable insulated cooler that keeps prepared smoothies cold and protected during transport to the beach."
+                description: "A portable insulated cooler for prepared smoothies."
             ),
             Storage(
                 id: StorageID(rawValue: "portable-electric-cooler"),
                 name: "Portable Electric Cooler",
                 smallIcon: .system("snowflake"),
-                description:
-                    "A powered portable cooler that maintains a reliable cold temperature throughout beach service."
+                description: "A powered cooler for mobile beach service."
             ),
             Storage(
                 id: StorageID(rawValue: "glass-door-beverage-refrigerator"),
                 name: "Glass-Door Beverage Refrigerator",
                 smallIcon: .system("refrigerator.fill"),
-                description:
-                    "A commercial refrigerator that keeps a larger smoothie supply cold, organized, and visible for quick service."
+                description: "A commercial refrigerator with visible shelving."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-refrigerated-cabinet"),
                 name: "Dual-Zone Refrigerated Cabinet",
                 smallIcon: .system("refrigerator.fill"),
-                description:
-                    "A high-capacity cabinet with independently controlled cooling zones for maintaining different smoothie varieties."
+                description: "A refrigerated cabinet with two cooling zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-roll-in-refrigerator"),
                 name: "Commercial Roll-In Refrigerator",
                 smallIcon: .system("refrigerator.fill"),
-                description:
-                    "A premium high-volume refrigerator that accommodates full racks of prepared smoothies for the busiest beach days."
+                description: "A commercial refrigerator built for rolling racks."
             )
         ]
     }
