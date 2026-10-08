@@ -52,6 +52,26 @@ extension StorageTests {
             #expect(later > earlier)
         }
     }
+
+    @Test(arguments: storageProductIDs)
+    func capacityProgressTracksShareOfMaximumCapacity(
+        productID: ProductID
+    ) {
+        let product = ProductCatalog().product(for: productID)
+        let state = StorageState(
+            tiers: StorageCatalog().tiers(for: product)
+        )
+        let progress = state.tiers.map {
+            state.capacityProgress(for: $0.storage.capacity)
+        }
+
+        #expect(progress.first == 0)
+        #expect(progress.last == 1)
+
+        for (earlier, later) in zip(progress, progress.dropFirst()) {
+            #expect(later > earlier)
+        }
+    }
 }
 
 // MARK: - State

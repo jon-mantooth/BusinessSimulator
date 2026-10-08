@@ -152,6 +152,18 @@ final class StorageState: PurchasableState {
         activeStorage.storage.capacity
     }
 
+    func capacityProgress(for capacity: Int) -> Double {
+        guard let maximumCapacity = tiers.last?.storage.capacity,
+              maximumCapacity > 0 else {
+            return 0
+        }
+
+        return min(
+            max(Double(capacity) / Double(maximumCapacity), 0),
+            1
+        )
+    }
+
     init(
         tiers: [StorageTier],
         activeStorage: ActiveStorage? = nil

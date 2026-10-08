@@ -347,10 +347,7 @@ struct StorageView: View {
         capacity: Int,
         scale: CGFloat
     ) -> some View {
-        let maximumCapacity = storageState.tiers.last?.storage.capacity ?? 0
-        let progress = maximumCapacity > 0
-            ? min(Double(capacity) / Double(maximumCapacity), 1)
-            : 0
+        let progress = storageState.capacityProgress(for: capacity)
 
         return GeometryReader { geometry in
             ZStack(alignment: .leading) {
