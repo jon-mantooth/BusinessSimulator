@@ -302,7 +302,10 @@ struct EquipmentTier: Identifiable, Equatable {
             let price = UpgradePricing.calculatePrice(
                 dailyBenefit: dailyBenefit,
                 paymentSchedule: configuredEquipment.paymentSchedule,
-                tierLevel: level
+                tierLevel: level,
+                capacityEffect: .replacement(
+                    configuredEquipment.capacity
+                )
             )
             configuredEquipment.price = Equipment.cleanPrice(
                 price

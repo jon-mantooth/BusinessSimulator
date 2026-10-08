@@ -5,7 +5,9 @@
 
 enum CapacityPricingEffect {
     case none
+    /// Prices only the additional capacity supplied by a cumulative upgrade.
     case additive(Int)
+    /// Prices the full capacity of a newly purchased replacement item.
     case replacement(Int)
 }
 
@@ -20,7 +22,8 @@ enum UpgradePricing {
     // Ingredient cost is approximately 5/12 of a product's starting ideal price.
     static let ingredientCostRatio = 5.0 / 12.0
 
-    static let targetPaybackDays = 12.0
+    static let replacementTargetPaybackDays = 6.0
+    static let additiveTargetPaybackDays = 12.0
     static let businessDaysPerWeek = 5.0
     static let maximumRecurringBenefitMultiplier = 1.20
     static let minimumRecurringBenefitMultiplier = 0.60
@@ -114,31 +117,23 @@ enum UpgradePricing {
             marketSizeEndingProfit - marketSizeStartingProfit
         )
 
-        let initialCapacity = ProductionCapacityBalance.baseCapacity(
-            baseIdealUnitsSold: product.idealUnitsSold
-        )
-            + ProductionCapacityBalance.expectedCapacityIncrease(
-                baseIdealUnitsSold: product.idealUnitsSold,
-                tierLevel: precedingLevel
-            )
-        let newCapacity: Int
+        let pricedCapacity: Int
         switch capacityEffect {
         case .none:
-            newCapacity = initialCapacity
+            pricedCapacity = 0
         case .additive(let addedCapacity):
             assert(addedCapacity >= 0)
-            newCapacity = initialCapacity + addedCapacity
+            pricedCapacity = addedCapacity
         case .replacement(let totalCapacity):
-            assert(totalCapacity >= initialCapacity)
-            newCapacity = totalCapacity
+            assert(totalCapacity >= 0)
+            pricedCapacity = totalCapacity
         }
 
-        let addedCapacity = newCapacity - initialCapacity
         let expectedPricePerUnit = product.baseIdealPrice
             * initialDemandMultiplier
         let ingredientCostPerUnit = product.baseIdealPrice
             * ingredientCostRatio
-        let capacityBenefit = Double(addedCapacity)
+        let capacityBenefit = Double(pricedCapacity)
             * (expectedPricePerUnit - ingredientCostPerUnit)
 
         return demandBenefit + marketSizeBenefit + capacityBenefit
@@ -151,13 +146,21 @@ enum UpgradePricing {
     static func calculatePrice(
         dailyBenefit: Double,
         paymentSchedule: PaymentSchedule,
-        tierLevel: Int
+        tierLevel: Int,
+        capacityEffect: CapacityPricingEffect = .none
     ) -> Double {
         assert(dailyBenefit >= 0)
         assert((1...totalUpgradeTiers).contains(tierLevel))
 
         switch paymentSchedule {
         case .oneTime:
+            let targetPaybackDays: Double
+            switch capacityEffect {
+            case .replacement:
+                targetPaybackDays = replacementTargetPaybackDays
+            case .none, .additive:
+                targetPaybackDays = additiveTargetPaybackDays
+            }
             return dailyBenefit * targetPaybackDays
 
         case .daily:

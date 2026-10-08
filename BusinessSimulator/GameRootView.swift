@@ -63,7 +63,7 @@ struct GameRootView: View {
         RelocationRequest(
             destination: location,
             requirements: RelocationRequirements(
-                storageLevel: 0,
+                storageLevel: 1,
                 transportationLevel: 0,
                 equipmentLevel: 3,
                 laborLevel: 1,
@@ -212,9 +212,9 @@ struct GameRootView: View {
             if currentScreen == .neighborhood {
                 currentScreen = .prep
             }
-        case .production, .marketing:
+        case .production, .distribution, .marketing:
             selectedArea = area
-        case .distribution, .finance:
+        case .finance:
             // These areas will be enabled when their views are implemented.
             return
         }
@@ -438,6 +438,15 @@ struct GameRootView: View {
                     advertisementState: advertisementState,
                     purchaseWorkflow: purchaseWorkflow,
                     simulationDay: gameState.calendar.simulationDay
+                )
+                .ignoresSafeArea()
+            }
+
+            if selectedArea == .distribution,
+                let storageState = gameState.storageState {
+                DistributionView(
+                    storageState: storageState,
+                    purchaseWorkflow: purchaseWorkflow
                 )
                 .ignoresSafeArea()
             }

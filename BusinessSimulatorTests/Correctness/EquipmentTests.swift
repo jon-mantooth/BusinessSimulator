@@ -310,7 +310,7 @@ extension EquipmentTests {
 extension EquipmentTests {
 
     @Test
-    func baselineCapacityHasNoCapacityPrice() throws {
+    func baselineReplacementPricesItsFullCapacity() throws {
         let product = try #require(
             ProductCatalog().products.first { $0.id == .pies }
         )
@@ -325,14 +325,19 @@ extension EquipmentTests {
         let price = UpgradePricing.calculatePrice(
             dailyBenefit: dailyBenefit,
             paymentSchedule: .oneTime,
-            tierLevel: 1
+            tierLevel: 1,
+            capacityEffect: .replacement(baselineCapacity)
         )
+        let expectedPrice = Double(baselineCapacity)
+            * product.baseIdealPrice
+            * (1.0 - UpgradePricing.ingredientCostRatio)
+            * UpgradePricing.replacementTargetPaybackDays
 
-        #expect(price == 0)
+        #expect(abs(price - expectedPrice) < 0.000_001)
     }
 
     @Test
-    func capacityPriceUsesOnlyCapacityAboveBaseline() throws {
+    func replacementCapacityPriceUsesTotalCapacity() throws {
         let product = try #require(
             ProductCatalog().products.first { $0.id == .pies }
         )
@@ -340,21 +345,21 @@ extension EquipmentTests {
         let baselineCapacity = ProductionCapacityBalance.baseCapacity(
             baseIdealUnitsSold: product.idealUnitsSold
         )
-        let expectedPrice = Double(addedCapacity)
+        let totalCapacity = baselineCapacity + addedCapacity
+        let expectedPrice = Double(totalCapacity)
             * product.baseIdealPrice
             * (1.0 - UpgradePricing.ingredientCostRatio)
-            * UpgradePricing.targetPaybackDays
+            * UpgradePricing.replacementTargetPaybackDays
         let dailyBenefit = UpgradePricing.calculateDailyBenefit(
             tierLevel: 1,
             product: product,
-            capacityEffect: .replacement(
-                baselineCapacity + addedCapacity
-            )
+            capacityEffect: .replacement(totalCapacity)
         )
         let price = UpgradePricing.calculatePrice(
             dailyBenefit: dailyBenefit,
             paymentSchedule: .oneTime,
-            tierLevel: 1
+            tierLevel: 1,
+            capacityEffect: .replacement(totalCapacity)
         )
 
         #expect(abs(price - expectedPrice) < 0.000_001)
@@ -381,12 +386,14 @@ extension EquipmentTests {
         let smallerPrice = UpgradePricing.calculatePrice(
             dailyBenefit: smallerBenefit,
             paymentSchedule: .oneTime,
-            tierLevel: 1
+            tierLevel: 1,
+            capacityEffect: .replacement(baselineCapacity + 5)
         )
         let largerPrice = UpgradePricing.calculatePrice(
             dailyBenefit: largerBenefit,
             paymentSchedule: .oneTime,
-            tierLevel: 1
+            tierLevel: 1,
+            capacityEffect: .replacement(baselineCapacity + 10)
         )
 
         #expect(largerPrice > smallerPrice)
@@ -439,7 +446,8 @@ extension EquipmentTests {
         let calculatedPrice = UpgradePricing.calculatePrice(
             dailyBenefit: dailyBenefit,
             paymentSchedule: equipment.paymentSchedule,
-            tierLevel: tier.level
+            tierLevel: tier.level,
+            capacityEffect: .replacement(equipment.capacity)
         )
 
         #expect(

@@ -91,6 +91,115 @@ extension PurchaseWorkflowTests {
     }
 }
 
+// MARK: - Storage Purchase Integration
+
+extension PurchaseWorkflowTests {
+
+    @Test
+    func storagePurchaseUsesSharedWorkflowAndPersistsActiveTier() throws {
+        let gameState = makeGameState()
+        let repository = TestGameSaveRepository()
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+        let storageState = try #require(gameState.storageState)
+        let nextTier = try #require(storageState.nextTier)
+        let startingBalance = gameState.finance.displayedBalance
+        let request = PurchaseRequest(
+            state: storageState,
+            item: nextTier.storage,
+            requiredLocationTier: nextTier.requiredLocationTier
+        )
+
+        let result = workflow.complete(request)
+
+        guard case .completed = result else {
+            Issue.record("Expected storage purchase to complete.")
+            return
+        }
+        #expect(storageState.activeStorage.tierLevel == 1)
+        #expect(
+            gameState.finance.displayedBalance
+                == startingBalance - nextTier.storage.price
+        )
+        let event = try #require(gameState.pendingBusinessEvents.last)
+        guard case let .purchase(purchaseEvent) = event.type else {
+            Issue.record("Expected a storage purchase event.")
+            return
+        }
+        #expect(purchaseEvent.category == .storage)
+        #expect(purchaseEvent.itemID == nextTier.storage.purchaseItemID)
+        #expect(
+            repository.savedGame?.storageState.activeStorage.tierLevel == 1
+        )
+    }
+
+    @Test
+    func failedStorageSaveRestoresTierAndSharedState() throws {
+        let gameState = makeGameState()
+        let repository = TestGameSaveRepository(shouldFailSave: true)
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+        let storageState = try #require(gameState.storageState)
+        let nextTier = try #require(storageState.nextTier)
+        let startingStorage = storageState.activeStorage
+        let startingBalance = gameState.finance.displayedBalance
+
+        let result = workflow.complete(
+            PurchaseRequest(
+                state: storageState,
+                item: nextTier.storage,
+                requiredLocationTier: nextTier.requiredLocationTier
+            )
+        )
+
+        guard case .saveFailed = result else {
+            Issue.record("Expected storage save to fail.")
+            return
+        }
+        #expect(storageState.activeStorage == startingStorage)
+        #expect(gameState.finance.displayedBalance == startingBalance)
+        #expect(gameState.pendingBusinessEvents.isEmpty)
+        #expect(
+            gameState.upgradeTracker.canUpgrade(
+                during: gameState.calendar.currentWeekStartDate
+            )
+        )
+    }
+
+    @Test
+    func laterStorageTiersAreLockedUntilLocationLevelTwo() throws {
+        let gameState = makeGameState()
+        let workflow = makeWorkflow(gameState: gameState)
+        let storageState = try #require(gameState.storageState)
+        let firstTier = try #require(storageState.nextTier)
+        storageState.applyUpgrade(firstTier.storage)
+        let secondTier = try #require(storageState.nextTier)
+        let request = PurchaseRequest(
+            state: storageState,
+            item: secondTier.storage,
+            requiredLocationTier: secondTier.requiredLocationTier
+        )
+
+        #expect(
+            workflow.itemAvailability(for: request)
+                == .locationLocked(requiredTier: .tierTwo)
+        )
+
+        let destination = try #require(
+            gameState.locationState!.tiers.first {
+                $0.level == .tierTwo
+            }?.locations.first
+        )
+        gameState.locationState!.relocate(to: destination.id)
+
+        #expect(workflow.itemAvailability(for: request) == .available)
+    }
+}
+
 // MARK: - Successful Purchase
 
 extension PurchaseWorkflowTests {

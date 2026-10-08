@@ -15,6 +15,7 @@ enum GameStateRestoreError: Error {
     case invalidAdvertisementData
     case invalidEquipmentData
     case invalidLaborData
+    case invalidStorageData
 }
 
 @Observable
@@ -31,8 +32,10 @@ final class GameState {
     var advertisementState: AdvertisementState?
     var equipmentState: EquipmentState?
     var laborState: LaborState?
+    var storageState: StorageState?
     var businessHours: BusinessHours?
     var production: Production?
+    var distribution: Distribution?
     var marketing: MarketingDepartment?
     var environment: EnvironmentDepartment?
     var pendingBusinessEvents: [BusinessEvent] = []
@@ -42,6 +45,7 @@ final class GameState {
 
     var departments: [any Department] {
         guard let production,
+              let distribution,
               let marketing,
               let environment else {
             preconditionFailure(
@@ -51,6 +55,7 @@ final class GameState {
 
         return [
             production,
+            distribution,
             marketing,
             environment
         ]
@@ -161,6 +166,11 @@ final class GameState {
             ),
             baseIdealUnitsSold: product.idealUnitsSold
         )
+
+        let storageCatalog = StorageCatalog()
+        self.storageState = StorageState(
+            tiers: storageCatalog.tiers(for: product)
+        )
         
         let dimensions = BusinessDimensions.create(
             gameState: self
@@ -168,6 +178,10 @@ final class GameState {
 
         let production = Production(
             dimensions: dimensions.production
+        )
+
+        let distribution = Distribution(
+            dimensions: dimensions.distribution
         )
 
         let marketing = MarketingDepartment(
@@ -179,6 +193,7 @@ final class GameState {
         )
 
         self.production = production
+        self.distribution = distribution
         self.marketing = marketing
         self.environment = environment
 
@@ -385,6 +400,20 @@ final class GameState {
             ownedLabor: savedOwnedLabor
         )
 
+        let storageTiers = StorageCatalog().tiers(for: product)
+        let savedActiveStorage = gameSave.storageState.activeStorage
+        guard storageTiers.contains(where: {
+            $0.level == savedActiveStorage.tierLevel
+                && $0.storage.id == savedActiveStorage.id
+        }) else {
+            throw GameStateRestoreError.invalidStorageData
+        }
+
+        storageState = StorageState(
+            tiers: storageTiers,
+            activeStorage: savedActiveStorage
+        )
+
         pendingBusinessEvents = gameSave.pendingBusinessEvents
         pendingUpgrades = gameSave.pendingUpgrades
 
@@ -433,6 +462,7 @@ final class GameState {
 
         let dimensions = BusinessDimensions.create(gameState: self)
         production = Production(dimensions: dimensions.production)
+        distribution = Distribution(dimensions: dimensions.distribution)
         marketing = MarketingDepartment(dimensions: dimensions.marketing)
         environment = EnvironmentDepartment(
             dimensions: dimensions.environment
