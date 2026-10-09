@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DistributionView: View {
+    let productID: ProductID
     let storageState: StorageState
     let purchaseWorkflow: PurchaseWorkflow
 
@@ -31,6 +32,38 @@ struct DistributionView: View {
                         height: renderedSize.height
                     )
 
+                if let storageAsset = DepartmentSceneCatalog.asset(
+                    for: productID,
+                    dimension: .storage,
+                    level: storageState.activeStorage.tierLevel
+                ) {
+                    distributionSceneAsset(
+                        named: storageAsset.imageName,
+                        sourceWidth: storageAsset.sourceWidth,
+                        scale: scale
+                    )
+                    .position(
+                        x: storageAsset.position.x * scale,
+                        y: storageAsset.position.y * scale
+                    )
+                }
+
+                // Visual-only transport prototypes remain static until the
+                // transport state and its scene catalog entries are built.
+                distributionSceneAsset(
+                    named: "smoothie_secondary_transport_1",
+                    sourceWidth: 195,
+                    scale: scale
+                )
+                .position(x: 522 * scale, y: 955 * scale)
+
+                distributionSceneAsset(
+                    named: "smoothie_truck",
+                    sourceWidth: 455,
+                    scale: scale
+                )
+                .position(x: 205 * scale, y: 955 * scale)
+
                 distributionButton(
                     title: "Storage",
                     systemImage: "shippingbox.fill",
@@ -44,7 +77,7 @@ struct DistributionView: View {
                         showingStorageUpgradeLimit = true
                     }
                 }
-                .position(x: 615 * scale, y: 635 * scale)
+                .position(x: 645 * scale, y: 765 * scale)
 
                 distributionButton(
                     title: "Transport",
@@ -52,7 +85,7 @@ struct DistributionView: View {
                     scale: scale,
                     action: {}
                 )
-                .position(x: 245 * scale, y: 915 * scale)
+                .position(x: 245 * scale, y: 1_145 * scale)
             }
             .frame(width: renderedSize.width, height: renderedSize.height)
             .position(
@@ -84,6 +117,17 @@ struct DistributionView: View {
                 )
             }
         }
+    }
+
+    private func distributionSceneAsset(
+        named imageName: String,
+        sourceWidth: CGFloat,
+        scale: CGFloat
+    ) -> some View {
+        Image(imageName)
+            .resizable()
+            .scaledToFit()
+            .frame(width: sourceWidth * scale)
     }
 
     private func distributionButton(
