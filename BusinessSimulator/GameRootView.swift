@@ -443,8 +443,10 @@ struct GameRootView: View {
             }
 
             if selectedArea == .distribution,
+                let productID = gameState.productState?.product.id,
                 let storageState = gameState.storageState {
                 DistributionView(
+                    productID: productID,
                     storageState: storageState,
                     purchaseWorkflow: purchaseWorkflow
                 )
