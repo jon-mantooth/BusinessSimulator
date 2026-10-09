@@ -29,31 +29,31 @@ struct StorageCatalog {
             Storage(
                 id: StorageID(rawValue: "insulated-pie-holding-rack"),
                 name: "Insulated Pie Holding Rack",
-                smallIcon: .system("shippingbox.fill"),
+                smallIcon: .asset("pie_storage_1"),
                 description: "A portable insulated rack for finished pies."
             ),
             Storage(
                 id: StorageID(rawValue: "heated-pie-display-cabinet"),
                 name: "Heated Pie Display Cabinet",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("pie_storage_2"),
                 description: "A compact heated cabinet for displaying pies."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-pie-warming-cabinet"),
                 name: "Commercial Pie Warming Cabinet",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("pie_storage_3"),
                 description: "A full-size warming cabinet with adjustable shelves."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-pie-holding-cabinet"),
                 name: "Dual-Zone Pie Holding Cabinet",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("pie_storage_4"),
                 description: "A warming cabinet with two temperature zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-roll-in-pie-warmer"),
                 name: "Commercial Roll-In Pie Warmer",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("pie_storage_5"),
                 description: "A commercial warmer built for full rolling racks."
             )
         ]
@@ -68,31 +68,31 @@ struct StorageCatalog {
             Storage(
                 id: StorageID(rawValue: "insulated-hot-dog-carrier"),
                 name: "Insulated Hot Dog Carrier",
-                smallIcon: .system("shippingbox.fill"),
+                smallIcon: .asset("hotdog_storage_1"),
                 description: "A portable insulated carrier for prepared hot dogs."
             ),
             Storage(
                 id: StorageID(rawValue: "hot-dog-and-bun-steamer"),
                 name: "Hot Dog and Bun Steamer",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("hotdog_storage_2"),
                 description: "A countertop steamer with separate bun storage."
             ),
             Storage(
                 id: StorageID(rawValue: "heated-hot-dog-holding-cabinet"),
                 name: "Heated Hot Dog Holding Cabinet",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("hotdog_storage_3"),
                 description: "A commercial heated cabinet for prepared hot dogs."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-hot-dog-holding-station"),
                 name: "Dual-Zone Hot Dog Holding Station",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("hotdog_storage_4"),
                 description: "A holding station with separate hot dog and bun zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-ballpark-holding-system"),
                 name: "Commercial Ballpark Holding System",
-                smallIcon: .system("cabinet.fill"),
+                smallIcon: .asset("hotdog_storage_5"),
                 description: "A high-volume holding system for ballpark service."
             )
         ]
@@ -107,31 +107,31 @@ struct StorageCatalog {
             Storage(
                 id: StorageID(rawValue: "insulated-smoothie-cooler"),
                 name: "Insulated Smoothie Cooler",
-                smallIcon: .system("snowflake"),
+                smallIcon: .asset("smoothie_storage_1"),
                 description: "A portable insulated cooler for prepared smoothies."
             ),
             Storage(
                 id: StorageID(rawValue: "portable-electric-cooler"),
                 name: "Portable Electric Cooler",
-                smallIcon: .system("snowflake"),
+                smallIcon: .asset("smoothie_storage_2"),
                 description: "A powered cooler for mobile beach service."
             ),
             Storage(
                 id: StorageID(rawValue: "glass-door-beverage-refrigerator"),
                 name: "Glass-Door Beverage Refrigerator",
-                smallIcon: .system("refrigerator.fill"),
+                smallIcon: .asset("smoothie_storage_3"),
                 description: "A commercial refrigerator with visible shelving."
             ),
             Storage(
                 id: StorageID(rawValue: "dual-zone-refrigerated-cabinet"),
                 name: "Dual-Zone Refrigerated Cabinet",
-                smallIcon: .system("refrigerator.fill"),
+                smallIcon: .asset("smoothie_storage_4"),
                 description: "A refrigerated cabinet with two cooling zones."
             ),
             Storage(
                 id: StorageID(rawValue: "commercial-roll-in-refrigerator"),
                 name: "Commercial Roll-In Refrigerator",
-                smallIcon: .system("refrigerator.fill"),
+                smallIcon: .asset("smoothie_storage_5"),
                 description: "A commercial refrigerator built for rolling racks."
             )
         ]
