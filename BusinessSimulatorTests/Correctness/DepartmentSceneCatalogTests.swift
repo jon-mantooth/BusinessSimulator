@@ -1,9 +1,11 @@
+import CoreGraphics
 import Testing
 @testable import BusinessSimulator
 
 // TODO: Once multiple department scene catalogs are populated, verify that the
 // merged catalog preserves every entry from each individual catalog and rejects
 // duplicate dimension registrations.
+@MainActor
 struct DepartmentSceneCatalogTests {
 
     private let configuredAsset = DepartmentSceneAsset(
