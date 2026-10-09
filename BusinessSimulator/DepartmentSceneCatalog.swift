@@ -47,6 +47,20 @@ enum DepartmentSceneCatalog {
         dimension: DepartmentSceneDimension,
         level: Int
     ) -> DepartmentSceneAsset? {
+        asset(
+            in: assets,
+            for: productID,
+            dimension: dimension,
+            level: level
+        )
+    }
+
+    static func asset(
+        in assets: SceneAssetsByDimension,
+        for productID: ProductID,
+        dimension: DepartmentSceneDimension,
+        level: Int
+    ) -> DepartmentSceneAsset? {
         assets[dimension]?[productID]?[level]
     }
 }
