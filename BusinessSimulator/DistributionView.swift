@@ -116,7 +116,6 @@ struct DistributionView: View {
             onDismiss: scheduleStorageSceneUpdate
         ) {
             StorageView(
-                productID: productID,
                 storageState: storageState,
                 purchaseWorkflow: purchaseWorkflow
             ) {
