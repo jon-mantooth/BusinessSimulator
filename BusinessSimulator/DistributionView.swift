@@ -7,11 +7,27 @@ struct DistributionView: View {
 
     @State private var showingStorage = false
     @State private var showingStorageUpgradeLimit = false
+    @State private var displayedStorageLevel: Int
+    @State private var storageAssetOpacity = 1.0
+    @State private var storageTransitionTask: Task<Void, Never>?
 
     private let sourceSize = CGSize(width: 852, height: 1_846)
     private let darkBrown = Color(red: 0.20, green: 0.12, blue: 0.06)
     private let warmGold = Color(red: 0.91, green: 0.65, blue: 0.25)
     private let paleGold = Color(red: 1.00, green: 0.91, blue: 0.60)
+
+    init(
+        productID: ProductID,
+        storageState: StorageState,
+        purchaseWorkflow: PurchaseWorkflow
+    ) {
+        self.productID = productID
+        self.storageState = storageState
+        self.purchaseWorkflow = purchaseWorkflow
+        _displayedStorageLevel = State(
+            initialValue: storageState.activeStorage.tierLevel
+        )
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -35,7 +51,7 @@ struct DistributionView: View {
                 if let storageAsset = DepartmentSceneCatalog.asset(
                     for: productID,
                     dimension: .storage,
-                    level: storageState.activeStorage.tierLevel
+                    level: displayedStorageLevel
                 ) {
                     distributionSceneAsset(
                         named: storageAsset.imageName,
@@ -46,6 +62,7 @@ struct DistributionView: View {
                         x: storageAsset.position.x * scale,
                         y: storageAsset.position.y * scale
                     )
+                    .opacity(storageAssetOpacity)
                 }
 
                 // Visual-only transport prototypes remain static until the
@@ -77,7 +94,7 @@ struct DistributionView: View {
                         showingStorageUpgradeLimit = true
                     }
                 }
-                .position(x: 645 * scale, y: 765 * scale)
+                .position(x: 645 * scale, y: 745 * scale)
 
                 distributionButton(
                     title: "Transport",
@@ -94,8 +111,12 @@ struct DistributionView: View {
             )
         }
         .clipped()
-        .sheet(isPresented: $showingStorage) {
+        .sheet(
+            isPresented: $showingStorage,
+            onDismiss: scheduleStorageSceneUpdate
+        ) {
             StorageView(
+                productID: productID,
                 storageState: storageState,
                 purchaseWorkflow: purchaseWorkflow
             ) {
@@ -115,6 +136,43 @@ struct DistributionView: View {
                         showingStorageUpgradeLimit = false
                     }
                 )
+            }
+        }
+        .onDisappear {
+            storageTransitionTask?.cancel()
+        }
+    }
+
+    private func scheduleStorageSceneUpdate() {
+        let actualLevel = storageState.activeStorage.tierLevel
+        guard actualLevel != displayedStorageLevel else { return }
+
+        storageTransitionTask?.cancel()
+        storageTransitionTask = Task {
+            do {
+                try await Task.sleep(for: .seconds(2))
+            } catch {
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            withAnimation(.easeOut(duration: 0.6)) {
+                storageAssetOpacity = 0
+            }
+
+            do {
+                try await Task.sleep(for: .seconds(0.6))
+            } catch {
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            displayedStorageLevel = actualLevel
+
+            withAnimation(.easeIn(duration: 0.6)) {
+                storageAssetOpacity = 1
             }
         }
     }
