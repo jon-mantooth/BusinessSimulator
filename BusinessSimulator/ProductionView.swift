@@ -14,11 +14,34 @@ struct ProductionView: View {
     @State private var selectedSecondaryEquipment: Equipment?
     @State private var equipmentPendingConfirmation: Equipment?
     @State private var purchaseWarning: GamePopupType?
+    @State private var displayedSceneLayers: [DepartmentSceneLayer]
+    @State private var incomingSceneLayers: [DepartmentSceneLayer]?
+    @State private var incomingProductionSceneOpacity = 0.0
+    @State private var productionSceneTransitionTask: Task<Void, Never>?
 
     private let sourceSize = CGSize(width: 851, height: 1_849)
     private let darkBrown = Color(red: 0.20, green: 0.12, blue: 0.06)
     private let warmGold = Color(red: 0.91, green: 0.65, blue: 0.25)
     private let paleGold = Color(red: 1.00, green: 0.91, blue: 0.60)
+
+    init(
+        product: Product,
+        equipmentState: EquipmentState,
+        laborState: LaborState,
+        purchaseWorkflow: PurchaseWorkflow
+    ) {
+        self.product = product
+        self.equipmentState = equipmentState
+        self.laborState = laborState
+        self.purchaseWorkflow = purchaseWorkflow
+        _displayedSceneLayers = State(
+            initialValue: Self.resolveSceneLayers(
+                productID: product.id,
+                equipmentState: equipmentState,
+                laborState: laborState
+            )
+        )
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -32,12 +55,20 @@ struct ProductionView: View {
             )
 
             ZStack(alignment: .topLeading) {
-                Image("production_background")
-                    .resizable()
-                    .frame(
-                        width: renderedSize.width,
-                        height: renderedSize.height
+                productionScene(
+                    layers: displayedSceneLayers,
+                    renderedSize: renderedSize,
+                    scale: scale
+                )
+
+                if let incomingSceneLayers {
+                    productionScene(
+                        layers: incomingSceneLayers,
+                        renderedSize: renderedSize,
+                        scale: scale
                     )
+                    .opacity(incomingProductionSceneOpacity)
+                }
 
                 productionButton(
                     title: "Equipment",
@@ -88,13 +119,19 @@ struct ProductionView: View {
             )
         }
         .clipped()
-        .sheet(isPresented: $showingEquipment) {
+        .sheet(
+            isPresented: $showingEquipment,
+            onDismiss: scheduleProductionSceneUpdate
+        ) {
             equipmentSheet
                 .presentationDetents([.fraction(0.9)])
                 .presentationDragIndicator(.hidden)
                 .presentationCornerRadius(28)
         }
-        .sheet(isPresented: $showingLabor) {
+        .sheet(
+            isPresented: $showingLabor,
+            onDismiss: scheduleProductionSceneUpdate
+        ) {
             LaborView(
                 laborState: laborState,
                 purchaseWorkflow: purchaseWorkflow
@@ -126,6 +163,126 @@ struct ProductionView: View {
                 )
             }
         }
+        .onDisappear {
+            productionSceneTransitionTask?.cancel()
+        }
+    }
+
+    @ViewBuilder
+    private func productionScene(
+        layers: [DepartmentSceneLayer],
+        renderedSize: CGSize,
+        scale: CGFloat
+    ) -> some View {
+        ForEach(layers) { layer in
+            ForEach(layer.assets) { asset in
+                sceneAsset(
+                    asset,
+                    renderedSize: renderedSize,
+                    scale: scale
+                )
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sceneAsset(
+        _ asset: DepartmentSceneAsset,
+        renderedSize: CGSize,
+        scale: CGFloat
+    ) -> some View {
+        switch asset.type {
+        case .background:
+            Image(asset.imageName)
+                .resizable()
+                .frame(
+                    width: renderedSize.width,
+                    height: renderedSize.height
+                )
+
+        case let .element(sourceWidth, position):
+            Image(asset.imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: sourceWidth * scale)
+                .position(
+                    x: position.x * scale,
+                    y: position.y * scale
+                )
+        }
+    }
+
+    private func scheduleProductionSceneUpdate() {
+        let updatedSceneLayers = Self.resolveSceneLayers(
+            productID: product.id,
+            equipmentState: equipmentState,
+            laborState: laborState
+        )
+        guard sceneAssetIDs(in: updatedSceneLayers)
+                != sceneAssetIDs(in: displayedSceneLayers) else {
+            return
+        }
+
+        productionSceneTransitionTask?.cancel()
+        productionSceneTransitionTask = Task {
+            incomingSceneLayers = updatedSceneLayers
+            incomingProductionSceneOpacity = 0
+
+            withAnimation(.easeInOut(duration: 0.45)) {
+                incomingProductionSceneOpacity = 1
+            }
+
+            do {
+                try await Task.sleep(for: .seconds(0.45))
+            } catch {
+                incomingSceneLayers = nil
+                incomingProductionSceneOpacity = 0
+                return
+            }
+
+            guard !Task.isCancelled else { return }
+
+            displayedSceneLayers = updatedSceneLayers
+            incomingSceneLayers = nil
+            incomingProductionSceneOpacity = 0
+        }
+    }
+
+    private func sceneAssetIDs(
+        in layers: [DepartmentSceneLayer]
+    ) -> [String] {
+        layers.flatMap(\.assets).map(\.id)
+    }
+
+    private static func resolveSceneLayers(
+        productID: ProductID,
+        equipmentState: EquipmentState,
+        laborState: LaborState
+    ) -> [DepartmentSceneLayer] {
+        let replacementAssetLevels = [
+            ReplacementSceneAssetLevel(
+                dimension: .primaryEquipment,
+                level: equipmentState.activePrimaryEquipment.tierLevel
+            )
+        ]
+        let cumulativeAssetItems = [
+            CumulativeSceneAssetItems(
+                dimension: .secondaryEquipment,
+                itemIDs: equipmentState.ownedSecondaryEquipment.equipment
+                    .map { $0.id.rawValue }
+            ),
+            CumulativeSceneAssetItems(
+                dimension: .labor,
+                itemIDs: laborState.ownedLabor.labor.map { $0.id.rawValue }
+            )
+        ]
+
+        return DepartmentSceneResolver.assets(
+            for: productID,
+            department: .production,
+            replacementAssetLevels: replacementAssetLevels,
+            cumulativeAssetItems: cumulativeAssetItems
+        )
     }
 
     private var equipmentSheet: some View {
