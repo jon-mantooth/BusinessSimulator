@@ -22,6 +22,34 @@ struct ProductionSceneCatalog: SceneCatalog {
         layerOrder: 0
     )
 
+    private let pieOvenLevelTwoBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-two-background",
+        imageName: "oven_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelThreeBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-three-background",
+        imageName: "oven_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelFourBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-four-background",
+        imageName: "oven_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelFiveBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-five-background",
+        imageName: "oven_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
     private let pieCenterCounter = DepartmentSceneAsset(
         id: "pie-center-counter",
         imageName: "center_counter",
@@ -43,10 +71,10 @@ struct ProductionSceneCatalog: SceneCatalog {
             .primaryEquipment: [
                 0: pieOvenLevelZeroBackground,
                 1: pieOvenLevelOneBackground,
-                2: pieOvenLevelOneBackground,
-                3: pieOvenLevelOneBackground,
-                4: pieOvenLevelOneBackground,
-                5: pieOvenLevelOneBackground
+                2: pieOvenLevelTwoBackground,
+                3: pieOvenLevelThreeBackground,
+                4: pieOvenLevelFourBackground,
+                5: pieOvenLevelFiveBackground
             ]
         ],
         .hotDogs: [
