@@ -151,7 +151,20 @@ enum DepartmentSceneResolver {
         replacementAssetLevels: [ReplacementSceneAssetLevel],
         cumulativeAssetItems: [CumulativeSceneAssetItems]
     ) -> [DepartmentSceneLayer] {
-        let sceneCatalog = sceneCatalog(for: department)
+        assets(
+            for: productID,
+            sceneCatalog: sceneCatalog(for: department),
+            replacementAssetLevels: replacementAssetLevels,
+            cumulativeAssetItems: cumulativeAssetItems
+        )
+    }
+
+    static func assets(
+        for productID: ProductID,
+        sceneCatalog: any SceneCatalog,
+        replacementAssetLevels: [ReplacementSceneAssetLevel],
+        cumulativeAssetItems: [CumulativeSceneAssetItems]
+    ) -> [DepartmentSceneLayer] {
         let productDependentAssets =
             sceneCatalog.productDependentAssets[productID] ?? []
         let replacementAssets = replacementAssetLevels.compactMap {
