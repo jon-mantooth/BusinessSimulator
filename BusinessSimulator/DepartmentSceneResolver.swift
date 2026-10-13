@@ -18,33 +18,11 @@ enum DepartmentSceneAssetType {
     )
 }
 
-// TODO: When DistributionSceneCatalog is refactored, remove the compatibility
-// sourceWidth/position properties and the legacy scene-element initializer.
 struct DepartmentSceneAsset: Identifiable {
     let id: String
     let imageName: String
     let type: DepartmentSceneAssetType
     let layerOrder: Int
-
-    var sourceWidth: CGFloat {
-        guard case let .element(sourceWidth, _) = type else {
-            preconditionFailure(
-                "A background does not have an element source width."
-            )
-        }
-
-        return sourceWidth
-    }
-
-    var position: CGPoint {
-        guard case let .element(_, position) = type else {
-            preconditionFailure(
-                "A background does not have an element position."
-            )
-        }
-
-        return position
-    }
 
     init(
         id: String,
@@ -82,30 +60,7 @@ struct DepartmentSceneAsset: Identifiable {
         self.layerOrder = layerOrder
     }
 
-    /// Compatibility initializer for existing positioned scene elements.
-    init(
-        imageName: String,
-        sourceWidth: CGFloat,
-        position: CGPoint,
-        layerOrder: Int
-    ) {
-        self.init(
-            id: imageName,
-            imageName: imageName,
-            type: .element(
-                sourceWidth: sourceWidth,
-                position: position
-            ),
-            layerOrder: layerOrder
-        )
-    }
 }
-
-typealias SceneAssetsByLevel = [Int: DepartmentSceneAsset]
-typealias SceneAssetsByProduct = [ProductID: SceneAssetsByLevel]
-typealias SceneAssetsByDimension = [
-    DepartmentSceneDimension: SceneAssetsByProduct
-]
 
 typealias ReplacementSceneAssets = [
     ProductID: [DepartmentSceneDimension: [Int: DepartmentSceneAsset]]
@@ -182,16 +137,6 @@ enum DepartmentSceneResolver {
             productDependentAssets + replacementAssets + cumulativeAssets
 
         return layers(from: allAssets)
-    }
-
-    // TODO: Remove this compatibility lookup when DistributionView is
-    // migrated to the layered resolver API.
-    static func asset(
-        for productID: ProductID,
-        dimension: DepartmentSceneDimension,
-        level: Int
-    ) -> DepartmentSceneAsset? {
-        DistributionSceneCatalog().replacementAssets[productID]?[dimension]?[level]
     }
 
     private static func layers(
