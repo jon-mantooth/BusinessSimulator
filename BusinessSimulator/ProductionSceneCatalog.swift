@@ -97,9 +97,109 @@ struct ProductionSceneCatalog: SceneCatalog {
         imageName: "center_counter",
         type: .element(
             sourceWidth: 840,
-            position: CGPoint(x: 425, y: 1_145)
+            position: CGPoint(x: 425, y: 1_245)
+        ),
+        layerOrder: 400
+    )
+
+    private let hotDogCenterIsland = DepartmentSceneAsset(
+        id: "hot-dog-center-island",
+        imageName: "center_island_hotdogs",
+        type: .element(
+            sourceWidth: 840,
+            position: CGPoint(x: 425, y: 1_245)
+        ),
+        layerOrder: 400
+    )
+
+    private let pieFoodProcessor = DepartmentSceneAsset(
+        id: "pie-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 77,
+            position: CGPoint(x: 570, y: 470)
         ),
         layerOrder: 100
+    )
+
+    private let pieStandMixer = DepartmentSceneAsset(
+        id: "pie-stand-mixer",
+        imageName: "stand_mixer_asset",
+        type: .element(
+            sourceWidth: 85,
+            position: CGPoint(x: 565, y: 375)
+        ),
+        layerOrder: 100
+    )
+
+    private let piePrepStation = DepartmentSceneAsset(
+        id: "pie-prep-station",
+        imageName: "pie_prep_station_asset",
+        type: .element(
+            sourceWidth: 250,
+            position: CGPoint(x: 400, y: 603)
+        ),
+        layerOrder: 100
+    )
+
+    private let pieDoughSheeter = DepartmentSceneAsset(
+        id: "pie-dough-sheeter",
+        imageName: "dough_sheeter_asset",
+        type: .element(
+            sourceWidth: 278,
+            position: CGPoint(x: 674, y: 1_075)
+        ),
+        layerOrder: 500
+    )
+
+    private let pieAppleCorer = DepartmentSceneAsset(
+        id: "pie-apple-corer",
+        imageName: "apple_corer_asset",
+        type: .element(
+            sourceWidth: 180,
+            position: CGPoint(x: 425, y: 1_305)
+        ),
+        layerOrder: 500
+    )
+
+    private let pieHeadChef = DepartmentSceneAsset(
+        id: "pie-head-chef",
+        imageName: "head_chef_asset",
+        type: .element(
+            sourceWidth: 500,
+            position: CGPoint(x: 535, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieLineCook = DepartmentSceneAsset(
+        id: "pie-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 450,
+            position: CGPoint(x: 300, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
+    private let piePrepSpecialist = DepartmentSceneAsset(
+        id: "pie-prep-specialist",
+        imageName: "prep_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 400, y: 700)
+        ),
+        layerOrder: 200
+    )
+
+    private let pieCleanupSpecialist = DepartmentSceneAsset(
+        id: "pie-cleanup-specialist",
+        imageName: "clean_up_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 625, y: 700)
+        ),
+        layerOrder: 200
     )
 
     /// Assets that always appear for a specific product whenever its Production
@@ -142,7 +242,21 @@ struct ProductionSceneCatalog: SceneCatalog {
         ]
     ] }
 
-    /// Cumulative production assets will be added here as secondary equipment
-    /// and labor scene elements are created.
-    let cumulativeAssets: CumulativeSceneAssets = [:]
+    var cumulativeAssets: CumulativeSceneAssets { [
+        .pies: [
+            .secondaryEquipment: [
+                "food-processor": pieFoodProcessor,
+                "stand-mixer": pieStandMixer,
+                "pie-prep-station": piePrepStation,
+                "dough-sheeter": pieDoughSheeter,
+                "apple-corer": pieAppleCorer
+            ],
+            .labor: [
+                "baker": pieHeadChef,
+                "line-cook": pieLineCook,
+                "prep-cook": piePrepSpecialist,
+                "cleanup-worker": pieCleanupSpecialist
+            ]
+        ]
+    ] }
 }
