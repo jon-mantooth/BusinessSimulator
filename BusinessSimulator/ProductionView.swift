@@ -86,8 +86,8 @@ struct ProductionView: View {
                     }
                 )
                 .position(
-                    x: 650 * scale,
-                    y: 550 * scale
+                    x: 145 * scale,
+                    y: 445 * scale
                 )
 
                 productionButton(
@@ -105,8 +105,8 @@ struct ProductionView: View {
                     }
                 )
                 .position(
-                    x: 555 * scale,
-                    y: 790 * scale
+                    x: 145 * scale,
+                    y: 890 * scale
                 )
             }
             .frame(
