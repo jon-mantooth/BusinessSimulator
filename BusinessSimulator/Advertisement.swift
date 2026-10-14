@@ -344,6 +344,7 @@ final class AdvertisementState: PurchasableState {
 
     let tiers: [AdvertisementTier]
     private(set) var activeAdvertisement: ActiveAdvertisement?
+    private(set) var purchasedAdvertisementIDs: [String]
 
     var dimensionID: PurchaseCategory {
         .advertisement
@@ -367,7 +368,8 @@ final class AdvertisementState: PurchasableState {
 
     init(
         tiers: [AdvertisementTier],
-        activeAdvertisement: ActiveAdvertisement? = nil
+        activeAdvertisement: ActiveAdvertisement? = nil,
+        purchasedAdvertisementIDs: [String] = []
     ) {
         let tierIDs = tiers.map(\.id)
         assert(
