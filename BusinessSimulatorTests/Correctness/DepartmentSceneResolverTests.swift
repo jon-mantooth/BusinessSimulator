@@ -239,6 +239,120 @@ struct DepartmentSceneResolverTests {
         }
     }
 
+    // MARK: - Marketing Scene
+
+    @Test
+    func everyPurchasableAdvertisementHasApplicableMarketingSceneAsset() throws {
+        let sceneCatalog = MarketingSceneCatalog()
+
+        for productID in productIDs {
+            let advertisementIDs = Set(
+                try advertisementTiers(for: productID)
+                    .filter { $0.level > 0 }
+                    .flatMap(\.advertisements)
+                    .map { $0.id.rawValue }
+            )
+            let assetsByAdvertisementID =
+                sceneCatalog.cumulativeAssets[productID]?[.advertisement]
+                    ?? [:]
+            let sceneAssetIDs = Set(assetsByAdvertisementID.keys)
+
+            #expect(advertisementIDs.isSubset(of: sceneAssetIDs))
+        }
+    }
+
+    @Test
+    func marketingResolverReturnsPurchasedAssetsWithProductBackground() throws {
+        let expectedBackgroundIDs: [ProductID: String] = [
+            .pies: "marketing-background-pies",
+            .hotDogs: "marketing-background-hotdogs",
+            .smoothies: "marketing-background-smoothies"
+        ]
+
+        for productID in productIDs {
+            let purchasedAdvertisementIDs = try advertisementTiers(
+                for: productID
+            )
+                .filter { $0.level > 0 }
+                .compactMap { $0.advertisements.first?.id.rawValue }
+            let layers = DepartmentSceneResolver.assets(
+                for: productID,
+                department: .marketing,
+                replacementAssetLevels: [],
+                cumulativeAssetItems: [
+                    CumulativeSceneAssetItems(
+                        dimension: .advertisement,
+                        itemIDs: purchasedAdvertisementIDs
+                    )
+                ]
+            )
+            let backgroundLayer = try #require(
+                layers.first { $0.layerOrder == 0 }
+            )
+            let resolvedAdvertisementIDs = Set(
+                layers
+                    .filter { $0.layerOrder > 0 }
+                    .flatMap(\.assets)
+                    .map(\.id)
+            )
+
+            #expect(
+                backgroundLayer.assets.map(\.id)
+                    == [expectedBackgroundIDs[productID]!]
+            )
+            #expect(
+                resolvedAdvertisementIDs
+                    == Set(purchasedAdvertisementIDs)
+            )
+        }
+    }
+
+    @Test
+    func levelFiveMarketingAssetSortsAboveEarlierLevels() throws {
+        let tiers = try advertisementTiers(for: .pies)
+        let levelOneAdvertisementID = try #require(
+            tiers.first { $0.level == 1 }?.advertisements.first?.id.rawValue
+        )
+        let levelFiveAdvertisementID = try #require(
+            tiers.first { $0.level == 5 }?.advertisements.first?.id.rawValue
+        )
+        let layers = DepartmentSceneResolver.assets(
+            for: .pies,
+            department: .marketing,
+            replacementAssetLevels: [],
+            cumulativeAssetItems: [
+                CumulativeSceneAssetItems(
+                    dimension: .advertisement,
+                    itemIDs: [
+                        levelOneAdvertisementID,
+                        levelFiveAdvertisementID
+                    ]
+                )
+            ]
+        )
+
+        #expect(layers.map(\.layerOrder) == [0, 100, 200])
+        #expect(
+            layers.first { $0.layerOrder == 100 }?.assets.map(\.id)
+                == [levelOneAdvertisementID]
+        )
+        #expect(
+            layers.first { $0.layerOrder == 200 }?.assets.map(\.id)
+                == [levelFiveAdvertisementID]
+        )
+    }
+
+    private var productIDs: [ProductID] {
+        [.pies, .hotDogs, .smoothies]
+    }
+
+    private func advertisementTiers(
+        for productID: ProductID
+    ) throws -> [AdvertisementTier] {
+        let catalog = AdvertisementCatalog(productID: productID)
+        return try #require(catalog.tiersByProduct[productID])
+    }
+
     private func resolve(
         productID: ProductID = .pies,
         replacementAssetLevels: [ReplacementSceneAssetLevel] = [],

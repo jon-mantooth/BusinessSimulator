@@ -49,6 +49,42 @@ extension AdvertisementTests {
     }
 
     @Test
+    func applyingUpgradeRecordsPurchasedAdvertisementID() throws {
+        let advertisementState = try makeAdvertisementState()
+        let selectedAdvertisement = try #require(
+            advertisementState.nextTier?.advertisements.first
+        )
+
+        advertisementState.applyUpgrade(selectedAdvertisement)
+
+        #expect(
+            Set(advertisementState.purchasedAdvertisementIDs)
+                == Set([selectedAdvertisement.id.rawValue])
+        )
+    }
+
+    @Test
+    func recordingPurchasedAdvertisementDoesNotAddDuplicateIDs() throws {
+        let advertisementState = try makeAdvertisementState()
+        let selectedAdvertisement = try #require(
+            advertisementState.nextTier?.advertisements.first
+        )
+
+        advertisementState.recordPurchasedAdvertisement(
+            selectedAdvertisement
+        )
+        advertisementState.recordPurchasedAdvertisement(
+            selectedAdvertisement
+        )
+
+        #expect(advertisementState.purchasedAdvertisementIDs.count == 1)
+        #expect(
+            Set(advertisementState.purchasedAdvertisementIDs)
+                == Set([selectedAdvertisement.id.rawValue])
+        )
+    }
+
+    @Test
     func captureRollbackStateReturnsActiveAdvertisement() throws {
         let advertisementState = try makeAdvertisementState()
         let activeAdvertisement = try #require(
@@ -307,11 +343,36 @@ extension AdvertisementTests {
     }
 
     @Test
-    func failedPurchaseSaveRestoresPreviousAdvertisement() throws {
+    func failedPurchaseSaveRestoresAdvertisementAndPurchaseHistory() throws {
         let gameState = makeInitializedGameState()
-        let advertisementState = try #require(gameState.advertisementState)
+        let initialAdvertisementState = try #require(
+            gameState.advertisementState
+        )
+        let tierOne = try #require(
+            initialAdvertisementState.tiers.first { $0.level == 1 }
+        )
+        let tierOneAdvertisement = try #require(
+            tierOne.advertisements.first
+        )
+        let advertisementState = AdvertisementState(
+            tiers: initialAdvertisementState.tiers,
+            activeAdvertisement: ActiveAdvertisement(
+                advertisement: tierOneAdvertisement,
+                tierLevel: tierOne.level
+            ),
+            purchasedAdvertisementIDs: [
+                tierOneAdvertisement.id.rawValue
+            ]
+        )
+        gameState.advertisementState = advertisementState
+        gameState.finance!.actualBalance = 1_000_000
+        gameState.finance!.displayedBalance = 1_000_000
+
         let previousAdvertisement = try #require(
             advertisementState.activeAdvertisement
+        )
+        let previousPurchasedAdvertisementIDs = Set(
+            advertisementState.purchasedAdvertisementIDs
         )
         let selectedAdvertisement = try #require(
             advertisementState.nextTier?.advertisements.first
@@ -335,6 +396,15 @@ extension AdvertisementTests {
         }
         #expect(
             advertisementState.activeAdvertisement == previousAdvertisement
+        )
+        #expect(
+            Set(advertisementState.purchasedAdvertisementIDs)
+                == previousPurchasedAdvertisementIDs
+        )
+        #expect(
+            !advertisementState.purchasedAdvertisementIDs.contains(
+                selectedAdvertisement.id.rawValue
+            )
         )
         #expect(gameState.pendingBusinessEvents.isEmpty)
         #expect(

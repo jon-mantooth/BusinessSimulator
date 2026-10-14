@@ -344,6 +344,7 @@ final class AdvertisementState: PurchasableState {
 
     let tiers: [AdvertisementTier]
     private(set) var activeAdvertisement: ActiveAdvertisement?
+    private(set) var purchasedAdvertisementIDs: [String]
 
     var dimensionID: PurchaseCategory {
         .advertisement
@@ -367,7 +368,8 @@ final class AdvertisementState: PurchasableState {
 
     init(
         tiers: [AdvertisementTier],
-        activeAdvertisement: ActiveAdvertisement? = nil
+        activeAdvertisement: ActiveAdvertisement? = nil,
+        purchasedAdvertisementIDs: [String] = []
     ) {
         let tierIDs = tiers.map(\.id)
         assert(
@@ -390,8 +392,27 @@ final class AdvertisementState: PurchasableState {
             )
         }
 
+        assert(
+            Set(purchasedAdvertisementIDs).count
+                == purchasedAdvertisementIDs.count,
+            "Advertisement purchase history cannot contain duplicates."
+        )
+
         self.tiers = tiers.sorted { $0.level < $1.level }
         self.activeAdvertisement = activeAdvertisement
+        self.purchasedAdvertisementIDs = purchasedAdvertisementIDs
+    }
+
+    func recordPurchasedAdvertisement(
+        _ advertisement: Advertisement
+    ) {
+        guard !purchasedAdvertisementIDs.contains(
+            advertisement.id.rawValue
+        ) else {
+            return
+        }
+
+        purchasedAdvertisementIDs.append(advertisement.id.rawValue)
     }
 
     func activateAdvertisement(
@@ -431,14 +452,20 @@ final class AdvertisementState: PurchasableState {
             )
         }
 
+        recordPurchasedAdvertisement(advertisement)
         activateAdvertisement(advertisement, from: nextTier)
     }
 
     func revertUpgrade(
-        to activeAdvertisement: ActiveAdvertisement
+        to previousActiveAdvertisement: ActiveAdvertisement
     ) {
+        if let purchasedAdvertisementID = activeAdvertisement?.id.rawValue,
+           purchasedAdvertisementIDs.last == purchasedAdvertisementID {
+            purchasedAdvertisementIDs.removeLast()
+        }
+
         guard let previousTier = tiers.first(
-            where: { $0.level == activeAdvertisement.tierLevel }
+            where: { $0.level == previousActiveAdvertisement.tierLevel }
         ) else {
             preconditionFailure(
                 "Cannot restore an advertisement outside this state."
@@ -446,7 +473,7 @@ final class AdvertisementState: PurchasableState {
         }
 
         activateAdvertisement(
-            activeAdvertisement.advertisement,
+            previousActiveAdvertisement.advertisement,
             from: previousTier
         )
     }

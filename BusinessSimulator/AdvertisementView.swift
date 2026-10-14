@@ -269,11 +269,18 @@ struct AdvertisementView: View {
     private func purchaseRequest(
         for advertisement: Advertisement
     ) -> PurchaseRequest {
-        PurchaseRequest(
+        guard let advertisementTier = advertisementState.tiers.first(
+            where: { $0.advertisements.contains(advertisement) }
+        ) else {
+            preconditionFailure(
+                "Cannot purchase an advertisement outside this state."
+            )
+        }
+
+        return PurchaseRequest(
             state: advertisementState,
             item: advertisement,
-            requiredLocationTier: advertisementState.nextTier!
-                .requiredLocationTier
+            requiredLocationTier: advertisementTier.requiredLocationTier
         )
     }
 

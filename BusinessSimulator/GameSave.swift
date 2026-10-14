@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 15
+    static let currentSchemaVersion = 16
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -69,6 +69,7 @@ struct ReputationSave: Codable {
 
 struct AdvertisementStateSave: Codable {
     let activeAdvertisement: ActiveAdvertisement
+    let purchasedAdvertisementIDs: [String]
 }
 
 struct EquipmentStateSave: Codable {
@@ -193,7 +194,9 @@ extension GameSave {
         )
 
         self.advertisementState = AdvertisementStateSave(
-            activeAdvertisement: activeAdvertisement
+            activeAdvertisement: activeAdvertisement,
+            purchasedAdvertisementIDs:
+                advertisementState.purchasedAdvertisementIDs
         )
 
         self.equipmentState = EquipmentStateSave(
