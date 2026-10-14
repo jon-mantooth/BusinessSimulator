@@ -333,16 +333,31 @@ final class GameState {
             advertisementCatalog.tiersByProduct[product.id]!
         let activeAdvertisement =
             gameSave.advertisementState.activeAdvertisement
+        let purchasedAdvertisementIDs =
+            gameSave.advertisementState.purchasedAdvertisementIDs
+        let catalogAdvertisementIDs = Set(
+            advertisementTiers.flatMap(\.advertisements).map {
+                $0.id.rawValue
+            }
+        )
 
-        guard advertisementTiers.contains(where: { tier in
-            tier.level == activeAdvertisement.tierLevel
-        }) else {
+        guard
+            advertisementTiers.contains(where: { tier in
+                tier.level == activeAdvertisement.tierLevel
+            }),
+            Set(purchasedAdvertisementIDs).count
+                == purchasedAdvertisementIDs.count,
+            purchasedAdvertisementIDs.allSatisfy(
+                catalogAdvertisementIDs.contains
+            )
+        else {
             throw GameStateRestoreError.invalidAdvertisementData
         }
 
         advertisementState = AdvertisementState(
             tiers: advertisementTiers,
-            activeAdvertisement: activeAdvertisement
+            activeAdvertisement: activeAdvertisement,
+            purchasedAdvertisementIDs: purchasedAdvertisementIDs
         )
 
         let equipmentCatalog = EquipmentCatalog()
