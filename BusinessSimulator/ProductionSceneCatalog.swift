@@ -132,6 +132,96 @@ struct ProductionSceneCatalog: SceneCatalog {
         layerOrder: 100
     )
 
+    private let hotDogFoodProcessor = DepartmentSceneAsset(
+        id: "hot-dog-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 70,
+            position: CGPoint(x: 650, y: 610)
+        ),
+        layerOrder: 100
+    )
+
+    private let hotDogProduceSlicer = DepartmentSceneAsset(
+        id: "hot-dog-produce-slicer",
+        imageName: "produce_slicer_asset",
+        type: .element(
+            sourceWidth: 120,
+            position: CGPoint(x: 550, y: 1410)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogPrepStation = DepartmentSceneAsset(
+        id: "hot-dog-prep-station",
+        imageName: "hotdog_prep_station_asset",
+        type: .element(
+            sourceWidth: 290,
+            position: CGPoint(x: 640, y: 750)
+        ),
+        layerOrder: 100
+    )
+
+    private let hotDogMeatGrinder = DepartmentSceneAsset(
+        id: "hot-dog-meat-grinder",
+        imageName: "meat_grinder_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 200, y: 1_080)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogBreadMaker = DepartmentSceneAsset(
+        id: "hot-dog-bread-maker",
+        imageName: "bread_maker_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 450, y: 1_080)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogGrillMaster = DepartmentSceneAsset(
+        id: "hot-dog-grill-master",
+        imageName: "grill_master_asset",
+        type: .element(
+            sourceWidth: 320,
+            position: CGPoint(x: 100, y: 800)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogPrepSpecialist = DepartmentSceneAsset(
+        id: "hot-dog-prep-specialist",
+        imageName: "prep_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 660, y: 800)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogCleanupSpecialist = DepartmentSceneAsset(
+        id: "hot-dog-cleanup-specialist",
+        imageName: "cleanup_specialist_hotdog",
+        type: .element(
+            sourceWidth: 360,
+            position: CGPoint(x: 700, y: 950)
+        ),
+        layerOrder: 300
+    )
+
+    private let hotDogLineCook = DepartmentSceneAsset(
+        id: "hot-dog-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 385,
+            position: CGPoint(x: 475, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
     private let piePrepStation = DepartmentSceneAsset(
         id: "pie-prep-station",
         imageName: "pie_prep_station_asset",
@@ -256,6 +346,21 @@ struct ProductionSceneCatalog: SceneCatalog {
                 "line-cook": pieLineCook,
                 "prep-cook": piePrepSpecialist,
                 "cleanup-worker": pieCleanupSpecialist
+            ]
+        ],
+        .hotDogs: [
+            .secondaryEquipment: [
+                "food-processor": hotDogFoodProcessor,
+                "produce-slicer": hotDogProduceSlicer,
+                "hot-dog-prep-station": hotDogPrepStation,
+                "meat-grinder": hotDogMeatGrinder,
+                "bread-maker": hotDogBreadMaker
+            ],
+            .labor: [
+                "grill-master": hotDogGrillMaster,
+                "prep-cook": hotDogPrepSpecialist,
+                "cleanup-worker": hotDogCleanupSpecialist,
+                "line-cook": hotDogLineCook
             ]
         ]
     ] }
