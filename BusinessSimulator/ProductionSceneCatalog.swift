@@ -50,6 +50,48 @@ struct ProductionSceneCatalog: SceneCatalog {
         layerOrder: 0
     )
 
+    private let hotDogGrillLevelZeroBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-zero-background",
+        imageName: "grill_level_0",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelOneBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-one-background",
+        imageName: "grill_level_1",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelTwoBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-two-background",
+        imageName: "grill_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelThreeBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-three-background",
+        imageName: "grill_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelFourBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-four-background",
+        imageName: "grill_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelFiveBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-five-background",
+        imageName: "grill_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
     private let pieCenterCounter = DepartmentSceneAsset(
         id: "pie-center-counter",
         imageName: "center_counter",
@@ -63,7 +105,8 @@ struct ProductionSceneCatalog: SceneCatalog {
     /// Assets that always appear for a specific product whenever its Production
     /// scene is open, independent of the player's owned upgrades.
     var productDependentAssets: ProductDependentSceneAssets { [
-        .pies: [pieCenterCounter]
+        .pies: [pieCenterCounter],
+        .hotDogs: [hotDogCenterIsland]
     ] }
 
     var replacementAssets: ReplacementSceneAssets { [
@@ -79,12 +122,12 @@ struct ProductionSceneCatalog: SceneCatalog {
         ],
         .hotDogs: [
             .primaryEquipment: [
-                0: genericProductionBackground,
-                1: genericProductionBackground,
-                2: genericProductionBackground,
-                3: genericProductionBackground,
-                4: genericProductionBackground,
-                5: genericProductionBackground
+                0: hotDogGrillLevelZeroBackground,
+                1: hotDogGrillLevelOneBackground,
+                2: hotDogGrillLevelTwoBackground,
+                3: hotDogGrillLevelThreeBackground,
+                4: hotDogGrillLevelFourBackground,
+                5: hotDogGrillLevelFiveBackground
             ]
         ],
         .smoothies: [
