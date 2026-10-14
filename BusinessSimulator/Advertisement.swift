@@ -452,14 +452,20 @@ final class AdvertisementState: PurchasableState {
             )
         }
 
+        recordPurchasedAdvertisement(advertisement)
         activateAdvertisement(advertisement, from: nextTier)
     }
 
     func revertUpgrade(
-        to activeAdvertisement: ActiveAdvertisement
+        to previousActiveAdvertisement: ActiveAdvertisement
     ) {
+        if let purchasedAdvertisementID = activeAdvertisement?.id.rawValue,
+           purchasedAdvertisementIDs.last == purchasedAdvertisementID {
+            purchasedAdvertisementIDs.removeLast()
+        }
+
         guard let previousTier = tiers.first(
-            where: { $0.level == activeAdvertisement.tierLevel }
+            where: { $0.level == previousActiveAdvertisement.tierLevel }
         ) else {
             preconditionFailure(
                 "Cannot restore an advertisement outside this state."
@@ -467,7 +473,7 @@ final class AdvertisementState: PurchasableState {
         }
 
         activateAdvertisement(
-            activeAdvertisement.advertisement,
+            previousActiveAdvertisement.advertisement,
             from: previousTier
         )
     }
