@@ -205,6 +205,40 @@ struct DepartmentSceneResolverTests {
         #expect(assetIDs(in: routedLayers) == assetIDs(in: directLayers))
     }
 
+    @Test
+    func productionCatalogProvidesOneBackgroundForEveryPrimaryLevel() throws {
+        let productIDs: [ProductID] = [.pies, .hotDogs, .smoothies]
+
+        for productID in productIDs {
+            for level in 0...5 {
+                let layers = DepartmentSceneResolver.assets(
+                    for: productID,
+                    sceneCatalog: ProductionSceneCatalog(),
+                    replacementAssetLevels: [
+                        ReplacementSceneAssetLevel(
+                            dimension: .primaryEquipment,
+                            level: level
+                        )
+                    ],
+                    cumulativeAssetItems: []
+                )
+                let backgroundLayer = try #require(
+                    layers.first { $0.layerOrder == 0 }
+                )
+
+                #expect(backgroundLayer.assets.count == 1)
+
+                let background = try #require(backgroundLayer.assets.first)
+                guard case .background = background.type else {
+                    Issue.record(
+                        "Expected a background for \(productID) level \(level)."
+                    )
+                    continue
+                }
+            }
+        }
+    }
+
     private func resolve(
         productID: ProductID = .pies,
         replacementAssetLevels: [ReplacementSceneAssetLevel] = [],
