@@ -154,6 +154,106 @@ struct ProductionSceneCatalog: SceneCatalog {
         layerOrder: 400
     )
 
+    private let smoothieCooler = DepartmentSceneAsset(
+        id: "smoothie-cooler",
+        imageName: "cooler_asset",
+        type: .element(
+            sourceWidth: 240,
+            position: CGPoint(x: 740, y: 565)
+        ),
+        layerOrder: 100
+    )
+
+    private let smoothieFoodProcessor = DepartmentSceneAsset(
+        id: "smoothie-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 77,
+            position: CGPoint(x: 650, y: 340)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieProduceSlicer = DepartmentSceneAsset(
+        id: "smoothie-produce-slicer",
+        imageName: "produce_slicer_asset",
+        type: .element(
+            sourceWidth: 80,
+            position: CGPoint(x: 600, y: 565)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieVacuumSealer = DepartmentSceneAsset(
+        id: "smoothie-vacuum-sealer",
+        imageName: "vacuum_sealer_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 430, y: 910)
+        ),
+        layerOrder: 600
+    )
+
+    private let smoothieIceCrusher = DepartmentSceneAsset(
+        id: "smoothie-ice-crusher",
+        imageName: "ice_crusher_asset",
+        type: .element(
+            sourceWidth: 210,
+            position: CGPoint(x: 425, y: 1_180)
+        ),
+        layerOrder: 600
+    )
+
+    private let smoothieCenterIsland = DepartmentSceneAsset(
+        id: "smoothie-center-island",
+        imageName: "center_island_smoothie",
+        type: .element(
+            sourceWidth: 840,
+            position: CGPoint(x: 425, y: 1_045)
+        ),
+        layerOrder: 500
+    )
+
+    private let smoothieCleanupSpecialist = DepartmentSceneAsset(
+        id: "smoothie-cleanup-specialist",
+        imageName: "clean_up_specialist_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 450, y: 620)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieMixologist = DepartmentSceneAsset(
+        id: "smoothie-mixologist",
+        imageName: "mixologist_asset",
+        type: .element(
+            sourceWidth: 250,
+            position: CGPoint(x: 285, y: 700)
+        ),
+        layerOrder: 300
+    )
+
+    private let smoothieLineCook = DepartmentSceneAsset(
+        id: "smoothie-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 370,
+            position: CGPoint(x: 360, y: 950)
+        ),
+        layerOrder: 400
+    )
+
+    private let smoothiePrepWorker = DepartmentSceneAsset(
+        id: "smoothie-prep-worker",
+        imageName: "prep_worker_smoothie",
+        type: .element(
+            sourceWidth: 340,
+            position: CGPoint(x: 550, y: 820)
+        ),
+        layerOrder: 300
+    )
+
     private let pieFoodProcessor = DepartmentSceneAsset(
         id: "pie-food-processor",
         imageName: "food_processor_asset",
@@ -338,7 +438,8 @@ struct ProductionSceneCatalog: SceneCatalog {
     /// scene is open, independent of the player's owned upgrades.
     var productDependentAssets: ProductDependentSceneAssets { [
         .pies: [pieCenterCounter],
-        .hotDogs: [hotDogCenterIsland]
+        .hotDogs: [hotDogCenterIsland],
+        .smoothies: [smoothieCenterIsland]
     ] }
 
     var replacementAssets: ReplacementSceneAssets { [
@@ -403,6 +504,21 @@ struct ProductionSceneCatalog: SceneCatalog {
                 "prep-cook": hotDogPrepSpecialist,
                 "cleanup-worker": hotDogCleanupSpecialist,
                 "line-cook": hotDogLineCook
+            ]
+        ],
+        .smoothies: [
+            .secondaryEquipment: [
+                "produce-cooler": smoothieCooler,
+                "food-processor": smoothieFoodProcessor,
+                "produce-slicer": smoothieProduceSlicer,
+                "vacuum-sealer": smoothieVacuumSealer,
+                "ice-crusher": smoothieIceCrusher
+            ],
+            .labor: [
+                "cleanup-worker": smoothieCleanupSpecialist,
+                "mixologist": smoothieMixologist,
+                "line-cook": smoothieLineCook,
+                "prep-cook": smoothiePrepWorker
             ]
         ]
     ] }
