@@ -392,8 +392,27 @@ final class AdvertisementState: PurchasableState {
             )
         }
 
+        assert(
+            Set(purchasedAdvertisementIDs).count
+                == purchasedAdvertisementIDs.count,
+            "Advertisement purchase history cannot contain duplicates."
+        )
+
         self.tiers = tiers.sorted { $0.level < $1.level }
         self.activeAdvertisement = activeAdvertisement
+        self.purchasedAdvertisementIDs = purchasedAdvertisementIDs
+    }
+
+    func recordPurchasedAdvertisement(
+        _ advertisement: Advertisement
+    ) {
+        guard !purchasedAdvertisementIDs.contains(
+            advertisement.id.rawValue
+        ) else {
+            return
+        }
+
+        purchasedAdvertisementIDs.append(advertisement.id.rawValue)
     }
 
     func activateAdvertisement(
