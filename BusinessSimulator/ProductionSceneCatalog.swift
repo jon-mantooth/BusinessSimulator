@@ -1,0 +1,525 @@
+import SwiftUI
+
+struct ProductionSceneCatalog: SceneCatalog {
+    private let genericProductionBackground = DepartmentSceneAsset(
+        id: "generic-production-background",
+        imageName: "production_background",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelZeroBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-zero-background",
+        imageName: "oven_level_0",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelOneBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-one-background",
+        imageName: "oven_level_1",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelTwoBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-two-background",
+        imageName: "oven_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelThreeBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-three-background",
+        imageName: "oven_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelFourBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-four-background",
+        imageName: "oven_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieOvenLevelFiveBackground = DepartmentSceneAsset(
+        id: "pie-oven-level-five-background",
+        imageName: "oven_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelZeroBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-zero-background",
+        imageName: "grill_level_0",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelOneBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-one-background",
+        imageName: "grill_level_1",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelTwoBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-two-background",
+        imageName: "grill_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelThreeBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-three-background",
+        imageName: "grill_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelFourBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-four-background",
+        imageName: "grill_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let hotDogGrillLevelFiveBackground = DepartmentSceneAsset(
+        id: "hot-dog-grill-level-five-background",
+        imageName: "grill_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelZeroBackground = DepartmentSceneAsset(
+        id: "smoothie-level-zero-background",
+        imageName: "smoothie_level_0",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelOneBackground = DepartmentSceneAsset(
+        id: "smoothie-level-one-background",
+        imageName: "smoothie_level_1",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelTwoBackground = DepartmentSceneAsset(
+        id: "smoothie-level-two-background",
+        imageName: "smoothie_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelThreeBackground = DepartmentSceneAsset(
+        id: "smoothie-level-three-background",
+        imageName: "smoothie_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelFourBackground = DepartmentSceneAsset(
+        id: "smoothie-level-four-background",
+        imageName: "smoothie_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelFiveBackground = DepartmentSceneAsset(
+        id: "smoothie-level-five-background",
+        imageName: "smoothie_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let pieCenterCounter = DepartmentSceneAsset(
+        id: "pie-center-counter",
+        imageName: "center_counter",
+        type: .element(
+            sourceWidth: 840,
+            position: CGPoint(x: 425, y: 1_245)
+        ),
+        layerOrder: 400
+    )
+
+    private let hotDogCenterIsland = DepartmentSceneAsset(
+        id: "hot-dog-center-island",
+        imageName: "center_island_hotdogs",
+        type: .element(
+            sourceWidth: 840,
+            position: CGPoint(x: 425, y: 1_245)
+        ),
+        layerOrder: 400
+    )
+
+    private let smoothieCooler = DepartmentSceneAsset(
+        id: "smoothie-cooler",
+        imageName: "cooler_asset",
+        type: .element(
+            sourceWidth: 240,
+            position: CGPoint(x: 740, y: 565)
+        ),
+        layerOrder: 100
+    )
+
+    private let smoothieFoodProcessor = DepartmentSceneAsset(
+        id: "smoothie-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 77,
+            position: CGPoint(x: 650, y: 340)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieProduceSlicer = DepartmentSceneAsset(
+        id: "smoothie-produce-slicer",
+        imageName: "produce_slicer_asset",
+        type: .element(
+            sourceWidth: 80,
+            position: CGPoint(x: 600, y: 565)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieVacuumSealer = DepartmentSceneAsset(
+        id: "smoothie-vacuum-sealer",
+        imageName: "vacuum_sealer_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 430, y: 910)
+        ),
+        layerOrder: 600
+    )
+
+    private let smoothieIceCrusher = DepartmentSceneAsset(
+        id: "smoothie-ice-crusher",
+        imageName: "ice_crusher_asset",
+        type: .element(
+            sourceWidth: 210,
+            position: CGPoint(x: 425, y: 1_180)
+        ),
+        layerOrder: 600
+    )
+
+    private let smoothieCenterIsland = DepartmentSceneAsset(
+        id: "smoothie-center-island",
+        imageName: "center_island_smoothie",
+        type: .element(
+            sourceWidth: 840,
+            position: CGPoint(x: 425, y: 1_045)
+        ),
+        layerOrder: 500
+    )
+
+    private let smoothieCleanupSpecialist = DepartmentSceneAsset(
+        id: "smoothie-cleanup-specialist",
+        imageName: "clean_up_specialist_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 450, y: 620)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieMixologist = DepartmentSceneAsset(
+        id: "smoothie-mixologist",
+        imageName: "mixologist_asset",
+        type: .element(
+            sourceWidth: 250,
+            position: CGPoint(x: 285, y: 700)
+        ),
+        layerOrder: 300
+    )
+
+    private let smoothieLineCook = DepartmentSceneAsset(
+        id: "smoothie-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 370,
+            position: CGPoint(x: 360, y: 950)
+        ),
+        layerOrder: 400
+    )
+
+    private let smoothiePrepWorker = DepartmentSceneAsset(
+        id: "smoothie-prep-worker",
+        imageName: "prep_worker_smoothie",
+        type: .element(
+            sourceWidth: 340,
+            position: CGPoint(x: 550, y: 820)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieFoodProcessor = DepartmentSceneAsset(
+        id: "pie-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 77,
+            position: CGPoint(x: 570, y: 470)
+        ),
+        layerOrder: 100
+    )
+
+    private let pieStandMixer = DepartmentSceneAsset(
+        id: "pie-stand-mixer",
+        imageName: "stand_mixer_asset",
+        type: .element(
+            sourceWidth: 85,
+            position: CGPoint(x: 565, y: 375)
+        ),
+        layerOrder: 100
+    )
+
+    private let hotDogFoodProcessor = DepartmentSceneAsset(
+        id: "hot-dog-food-processor",
+        imageName: "food_processor_asset",
+        type: .element(
+            sourceWidth: 70,
+            position: CGPoint(x: 650, y: 610)
+        ),
+        layerOrder: 100
+    )
+
+    private let hotDogProduceSlicer = DepartmentSceneAsset(
+        id: "hot-dog-produce-slicer",
+        imageName: "produce_slicer_asset",
+        type: .element(
+            sourceWidth: 120,
+            position: CGPoint(x: 550, y: 1410)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogPrepStation = DepartmentSceneAsset(
+        id: "hot-dog-prep-station",
+        imageName: "hotdog_prep_station_asset",
+        type: .element(
+            sourceWidth: 290,
+            position: CGPoint(x: 640, y: 750)
+        ),
+        layerOrder: 100
+    )
+
+    private let hotDogMeatGrinder = DepartmentSceneAsset(
+        id: "hot-dog-meat-grinder",
+        imageName: "meat_grinder_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 200, y: 1_080)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogBreadMaker = DepartmentSceneAsset(
+        id: "hot-dog-bread-maker",
+        imageName: "bread_maker_asset",
+        type: .element(
+            sourceWidth: 170,
+            position: CGPoint(x: 450, y: 1_080)
+        ),
+        layerOrder: 500
+    )
+
+    private let hotDogGrillMaster = DepartmentSceneAsset(
+        id: "hot-dog-grill-master",
+        imageName: "grill_master_asset",
+        type: .element(
+            sourceWidth: 320,
+            position: CGPoint(x: 100, y: 800)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogPrepSpecialist = DepartmentSceneAsset(
+        id: "hot-dog-prep-specialist",
+        imageName: "prep_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 660, y: 800)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogCleanupSpecialist = DepartmentSceneAsset(
+        id: "hot-dog-cleanup-specialist",
+        imageName: "cleanup_specialist_hotdog",
+        type: .element(
+            sourceWidth: 360,
+            position: CGPoint(x: 700, y: 950)
+        ),
+        layerOrder: 300
+    )
+
+    private let hotDogLineCook = DepartmentSceneAsset(
+        id: "hot-dog-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 385,
+            position: CGPoint(x: 475, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
+    private let piePrepStation = DepartmentSceneAsset(
+        id: "pie-prep-station",
+        imageName: "pie_prep_station_asset",
+        type: .element(
+            sourceWidth: 250,
+            position: CGPoint(x: 400, y: 603)
+        ),
+        layerOrder: 100
+    )
+
+    private let pieDoughSheeter = DepartmentSceneAsset(
+        id: "pie-dough-sheeter",
+        imageName: "dough_sheeter_asset",
+        type: .element(
+            sourceWidth: 278,
+            position: CGPoint(x: 674, y: 1_075)
+        ),
+        layerOrder: 500
+    )
+
+    private let pieAppleCorer = DepartmentSceneAsset(
+        id: "pie-apple-corer",
+        imageName: "apple_corer_asset",
+        type: .element(
+            sourceWidth: 180,
+            position: CGPoint(x: 425, y: 1_305)
+        ),
+        layerOrder: 500
+    )
+
+    private let pieHeadChef = DepartmentSceneAsset(
+        id: "pie-head-chef",
+        imageName: "head_chef_asset",
+        type: .element(
+            sourceWidth: 500,
+            position: CGPoint(x: 535, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieLineCook = DepartmentSceneAsset(
+        id: "pie-line-cook",
+        imageName: "line_cook_asset",
+        type: .element(
+            sourceWidth: 450,
+            position: CGPoint(x: 300, y: 1_050)
+        ),
+        layerOrder: 300
+    )
+
+    private let piePrepSpecialist = DepartmentSceneAsset(
+        id: "pie-prep-specialist",
+        imageName: "prep_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 400, y: 700)
+        ),
+        layerOrder: 200
+    )
+
+    private let pieCleanupSpecialist = DepartmentSceneAsset(
+        id: "pie-cleanup-specialist",
+        imageName: "clean_up_specialist_asset",
+        type: .element(
+            sourceWidth: 220,
+            position: CGPoint(x: 625, y: 700)
+        ),
+        layerOrder: 200
+    )
+
+    /// Assets that always appear for a specific product whenever its Production
+    /// scene is open, independent of the player's owned upgrades.
+    var productDependentAssets: ProductDependentSceneAssets { [
+        .pies: [pieCenterCounter],
+        .hotDogs: [hotDogCenterIsland],
+        .smoothies: [smoothieCenterIsland]
+    ] }
+
+    var replacementAssets: ReplacementSceneAssets { [
+        .pies: [
+            .primaryEquipment: [
+                0: pieOvenLevelZeroBackground,
+                1: pieOvenLevelOneBackground,
+                2: pieOvenLevelTwoBackground,
+                3: pieOvenLevelThreeBackground,
+                4: pieOvenLevelFourBackground,
+                5: pieOvenLevelFiveBackground
+            ]
+        ],
+        .hotDogs: [
+            .primaryEquipment: [
+                0: hotDogGrillLevelZeroBackground,
+                1: hotDogGrillLevelOneBackground,
+                2: hotDogGrillLevelTwoBackground,
+                3: hotDogGrillLevelThreeBackground,
+                4: hotDogGrillLevelFourBackground,
+                5: hotDogGrillLevelFiveBackground
+            ]
+        ],
+        .smoothies: [
+            .primaryEquipment: [
+                0: smoothieLevelZeroBackground,
+                1: smoothieLevelOneBackground,
+                2: smoothieLevelTwoBackground,
+                3: smoothieLevelThreeBackground,
+                4: smoothieLevelFourBackground,
+                5: smoothieLevelFiveBackground
+            ]
+        ]
+    ] }
+
+    var cumulativeAssets: CumulativeSceneAssets { [
+        .pies: [
+            .secondaryEquipment: [
+                "food-processor": pieFoodProcessor,
+                "stand-mixer": pieStandMixer,
+                "pie-prep-station": piePrepStation,
+                "dough-sheeter": pieDoughSheeter,
+                "apple-corer": pieAppleCorer
+            ],
+            .labor: [
+                "baker": pieHeadChef,
+                "line-cook": pieLineCook,
+                "prep-cook": piePrepSpecialist,
+                "cleanup-worker": pieCleanupSpecialist
+            ]
+        ],
+        .hotDogs: [
+            .secondaryEquipment: [
+                "food-processor": hotDogFoodProcessor,
+                "produce-slicer": hotDogProduceSlicer,
+                "hot-dog-prep-station": hotDogPrepStation,
+                "meat-grinder": hotDogMeatGrinder,
+                "bread-maker": hotDogBreadMaker
+            ],
+            .labor: [
+                "grill-master": hotDogGrillMaster,
+                "prep-cook": hotDogPrepSpecialist,
+                "cleanup-worker": hotDogCleanupSpecialist,
+                "line-cook": hotDogLineCook
+            ]
+        ],
+        .smoothies: [
+            .secondaryEquipment: [
+                "produce-cooler": smoothieCooler,
+                "food-processor": smoothieFoodProcessor,
+                "produce-slicer": smoothieProduceSlicer,
+                "vacuum-sealer": smoothieVacuumSealer,
+                "ice-crusher": smoothieIceCrusher
+            ],
+            .labor: [
+                "cleanup-worker": smoothieCleanupSpecialist,
+                "mixologist": smoothieMixologist,
+                "line-cook": smoothieLineCook,
+                "prep-cook": smoothiePrepWorker
+            ]
+        ]
+    ] }
+}

@@ -198,7 +198,7 @@ struct EquipmentCatalog {
         basicHomeOven = Equipment(
             id: EquipmentID(rawValue: "basic-home-oven"),
             name: "Basic Home Oven",
-            smallIcon: .asset("tier0_oven"),
+            smallIcon: .asset("Tier0_oven"),
             description: "A dependable household oven with enough capacity to get your pie business started.",
             category: .primary,
             demandLevel: 0,
@@ -208,7 +208,7 @@ struct EquipmentCatalog {
         doubleRangeOven = Equipment(
             id: EquipmentID(rawValue: "double-range-oven"),
             name: "Double Range Oven",
-            smallIcon: .asset("tier1_oven"),
+            smallIcon: .asset("Tier1_oven"),
             description: "A double-oven range that lets you bake more pies at the same time.",
             category: .primary,
             demandLevel: 1,
@@ -218,7 +218,7 @@ struct EquipmentCatalog {
         convectionOven = Equipment(
             id: EquipmentID(rawValue: "convection-oven"),
             name: "Convection Oven",
-            smallIcon: .asset("tier2_oven"),
+            smallIcon: .asset("Tier2_oven"),
             description: "Circulating heat delivers faster, more consistent bakes with evenly browned crusts.",
             category: .primary,
             demandLevel: 2,
@@ -228,7 +228,7 @@ struct EquipmentCatalog {
         doubleConvectionOven = Equipment(
             id: EquipmentID(rawValue: "double-convection-oven"),
             name: "Double Convection Oven",
-            smallIcon: .asset("tier3_oven"),
+            smallIcon: .asset("Tier3_oven"),
             description: "Dual convection chambers expand production while preserving an even, reliable bake.",
             category: .primary,
             demandLevel: 2,
@@ -238,7 +238,7 @@ struct EquipmentCatalog {
         commercialDeckOven = Equipment(
             id: EquipmentID(rawValue: "commercial-deck-oven"),
             name: "Commercial Deck Oven",
-            smallIcon: .asset("tier4_oven"),
+            smallIcon: .asset("Tier4_oven"),
             description: "A professional deck oven built for high-volume production and consistently crisp crusts.",
             category: .primary,
             demandLevel: 3,
@@ -248,7 +248,7 @@ struct EquipmentCatalog {
         commercialRackOven = Equipment(
             id: EquipmentID(rawValue: "commercial-rack-oven"),
             name: "Commercial Rack Oven",
-            smallIcon: .asset("tier5_oven"),
+            smallIcon: .asset("Tier5_oven"),
             description: "A high-capacity rotating rack oven designed for efficient, uniform commercial baking.",
             category: .primary,
             demandLevel: 3,

@@ -7,9 +7,10 @@ struct DistributionView: View {
 
     @State private var showingStorage = false
     @State private var showingStorageUpgradeLimit = false
-    @State private var displayedStorageLevel: Int
-    @State private var storageAssetOpacity = 1.0
-    @State private var storageTransitionTask: Task<Void, Never>?
+    @State private var displayedSceneLayers: [DepartmentSceneLayer]
+    @State private var incomingSceneLayers: [DepartmentSceneLayer]?
+    @State private var incomingSceneOpacity = 0.0
+    @State private var sceneTransitionTask: Task<Void, Never>?
 
     private let sourceSize = CGSize(width: 852, height: 1_846)
     private let darkBrown = Color(red: 0.20, green: 0.12, blue: 0.06)
@@ -24,8 +25,11 @@ struct DistributionView: View {
         self.productID = productID
         self.storageState = storageState
         self.purchaseWorkflow = purchaseWorkflow
-        _displayedStorageLevel = State(
-            initialValue: storageState.activeStorage.tierLevel
+        _displayedSceneLayers = State(
+            initialValue: Self.resolveSceneLayers(
+                productID: productID,
+                storageLevel: storageState.activeStorage.tierLevel
+            )
         )
     }
 
@@ -41,45 +45,20 @@ struct DistributionView: View {
             )
 
             ZStack(alignment: .topLeading) {
-                Image("distribution_background")
-                    .resizable()
-                    .frame(
-                        width: renderedSize.width,
-                        height: renderedSize.height
-                    )
+                distributionScene(
+                    layers: displayedSceneLayers,
+                    renderedSize: renderedSize,
+                    scale: scale
+                )
 
-                if let storageAsset = DepartmentSceneCatalog.asset(
-                    for: productID,
-                    dimension: .storage,
-                    level: displayedStorageLevel
-                ) {
-                    distributionSceneAsset(
-                        named: storageAsset.imageName,
-                        sourceWidth: storageAsset.sourceWidth,
+                if let incomingSceneLayers {
+                    distributionScene(
+                        layers: incomingSceneLayers,
+                        renderedSize: renderedSize,
                         scale: scale
                     )
-                    .position(
-                        x: storageAsset.position.x * scale,
-                        y: storageAsset.position.y * scale
-                    )
-                    .opacity(storageAssetOpacity)
+                    .opacity(incomingSceneOpacity)
                 }
-
-                // Visual-only transport prototypes remain static until the
-                // transport state and its scene catalog entries are built.
-                distributionSceneAsset(
-                    named: "smoothie_secondary_transport_1",
-                    sourceWidth: 195,
-                    scale: scale
-                )
-                .position(x: 522 * scale, y: 955 * scale)
-
-                distributionSceneAsset(
-                    named: "smoothie_truck",
-                    sourceWidth: 455,
-                    scale: scale
-                )
-                .position(x: 205 * scale, y: 955 * scale)
 
                 distributionButton(
                     title: "Storage",
@@ -138,53 +117,110 @@ struct DistributionView: View {
             }
         }
         .onDisappear {
-            storageTransitionTask?.cancel()
+            sceneTransitionTask?.cancel()
         }
     }
 
     private func scheduleStorageSceneUpdate() {
-        let actualLevel = storageState.activeStorage.tierLevel
-        guard actualLevel != displayedStorageLevel else { return }
+        let updatedSceneLayers = Self.resolveSceneLayers(
+            productID: productID,
+            storageLevel: storageState.activeStorage.tierLevel
+        )
+        guard sceneAssetIDs(in: updatedSceneLayers)
+                != sceneAssetIDs(in: displayedSceneLayers) else {
+            return
+        }
 
-        storageTransitionTask?.cancel()
-        storageTransitionTask = Task {
+        sceneTransitionTask?.cancel()
+        sceneTransitionTask = Task {
+            incomingSceneLayers = updatedSceneLayers
+            incomingSceneOpacity = 0
+
+            withAnimation(.easeInOut(duration: 0.45)) {
+                incomingSceneOpacity = 1
+            }
+
             do {
-                try await Task.sleep(for: .seconds(2))
+                try await Task.sleep(for: .seconds(0.45))
             } catch {
+                incomingSceneLayers = nil
+                incomingSceneOpacity = 0
                 return
             }
 
             guard !Task.isCancelled else { return }
 
-            withAnimation(.easeOut(duration: 0.6)) {
-                storageAssetOpacity = 0
-            }
+            displayedSceneLayers = updatedSceneLayers
+            incomingSceneLayers = nil
+            incomingSceneOpacity = 0
+        }
+    }
 
-            do {
-                try await Task.sleep(for: .seconds(0.6))
-            } catch {
-                return
-            }
-
-            guard !Task.isCancelled else { return }
-
-            displayedStorageLevel = actualLevel
-
-            withAnimation(.easeIn(duration: 0.6)) {
-                storageAssetOpacity = 1
+    @ViewBuilder
+    private func distributionScene(
+        layers: [DepartmentSceneLayer],
+        renderedSize: CGSize,
+        scale: CGFloat
+    ) -> some View {
+        ForEach(layers) { layer in
+            ForEach(layer.assets) { asset in
+                sceneAsset(
+                    asset,
+                    renderedSize: renderedSize,
+                    scale: scale
+                )
             }
         }
     }
 
-    private func distributionSceneAsset(
-        named imageName: String,
-        sourceWidth: CGFloat,
+    @ViewBuilder
+    private func sceneAsset(
+        _ asset: DepartmentSceneAsset,
+        renderedSize: CGSize,
         scale: CGFloat
     ) -> some View {
-        Image(imageName)
-            .resizable()
-            .scaledToFit()
-            .frame(width: sourceWidth * scale)
+        switch asset.type {
+        case .background:
+            Image(asset.imageName)
+                .resizable()
+                .frame(
+                    width: renderedSize.width,
+                    height: renderedSize.height
+                )
+
+        case let .element(sourceWidth, position):
+            Image(asset.imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(width: sourceWidth * scale)
+                .position(
+                    x: position.x * scale,
+                    y: position.y * scale
+                )
+        }
+    }
+
+    private func sceneAssetIDs(
+        in layers: [DepartmentSceneLayer]
+    ) -> [String] {
+        layers.flatMap(\.assets).map(\.id)
+    }
+
+    private static func resolveSceneLayers(
+        productID: ProductID,
+        storageLevel: Int
+    ) -> [DepartmentSceneLayer] {
+        DepartmentSceneResolver.assets(
+            for: productID,
+            department: .distribution,
+            replacementAssetLevels: [
+                ReplacementSceneAssetLevel(
+                    dimension: .storage,
+                    level: storageLevel
+                )
+            ],
+            cumulativeAssetItems: []
+        )
     }
 
     private func distributionButton(
