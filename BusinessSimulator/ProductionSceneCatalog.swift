@@ -1,13 +1,6 @@
 import SwiftUI
 
 struct ProductionSceneCatalog: SceneCatalog {
-    private let genericProductionBackground = DepartmentSceneAsset(
-        id: "generic-production-background",
-        imageName: "production_background",
-        type: .background,
-        layerOrder: 0
-    )
-
     private let pieOvenLevelZeroBackground = DepartmentSceneAsset(
         id: "pie-oven-level-zero-background",
         imageName: "oven_level_0",
