@@ -92,6 +92,48 @@ struct ProductionSceneCatalog: SceneCatalog {
         layerOrder: 0
     )
 
+    private let smoothieLevelZeroBackground = DepartmentSceneAsset(
+        id: "smoothie-level-zero-background",
+        imageName: "smoothie_level_0",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelOneBackground = DepartmentSceneAsset(
+        id: "smoothie-level-one-background",
+        imageName: "smoothie_level_1",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelTwoBackground = DepartmentSceneAsset(
+        id: "smoothie-level-two-background",
+        imageName: "smoothie_level_2",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelThreeBackground = DepartmentSceneAsset(
+        id: "smoothie-level-three-background",
+        imageName: "smoothie_level_3",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelFourBackground = DepartmentSceneAsset(
+        id: "smoothie-level-four-background",
+        imageName: "smoothie_level_4",
+        type: .background,
+        layerOrder: 0
+    )
+
+    private let smoothieLevelFiveBackground = DepartmentSceneAsset(
+        id: "smoothie-level-five-background",
+        imageName: "smoothie_level_5",
+        type: .background,
+        layerOrder: 0
+    )
+
     private let pieCenterCounter = DepartmentSceneAsset(
         id: "pie-center-counter",
         imageName: "center_counter",
@@ -322,12 +364,12 @@ struct ProductionSceneCatalog: SceneCatalog {
         ],
         .smoothies: [
             .primaryEquipment: [
-                0: genericProductionBackground,
-                1: genericProductionBackground,
-                2: genericProductionBackground,
-                3: genericProductionBackground,
-                4: genericProductionBackground,
-                5: genericProductionBackground
+                0: smoothieLevelZeroBackground,
+                1: smoothieLevelOneBackground,
+                2: smoothieLevelTwoBackground,
+                3: smoothieLevelThreeBackground,
+                4: smoothieLevelFourBackground,
+                5: smoothieLevelFiveBackground
             ]
         ]
     ] }
