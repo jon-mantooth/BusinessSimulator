@@ -24,6 +24,64 @@ struct FinancialTransaction: Codable {
     let direction: CashFlowDirection
 }
 
+/// One operating day's normalized inputs for price analysis.
+struct PriceAnalyticsRow {
+    let day: Int
+    let locationID: LocationID
+    let price: Double
+    let idealPrice: Double
+    let highTemperature: Int
+    let businessReputation: Double
+    let equipmentLevel: Int
+    let advertisementLevel: Int
+
+    var priceDeviation: Double {
+        (price / idealPrice) - 1.0
+    }
+}
+
+/// Derived, in-memory reporting data rebuilt from persisted day summaries.
+struct FinancialAnalytics {
+    private(set) var priceAnalytics: [PriceAnalyticsRow] = []
+
+    mutating func appendPriceAnalytics(
+        from summary: DaySummary
+    ) {
+        guard summary.type == .operating else {
+            return
+        }
+
+        guard let price = summary.price,
+              let idealPrice = summary.idealPrice,
+              let highTemperature = summary.highTemperature,
+              let businessReputation = summary.businessReputation,
+              let equipmentLevel = summary.equipmentLevel,
+              let advertisementLevel = summary.advertisementLevel else {
+            preconditionFailure(
+                "An operating summary must contain all price-analysis factors."
+            )
+        }
+
+        precondition(
+            idealPrice > 0,
+            "Ideal price must be greater than zero for price analysis."
+        )
+
+        priceAnalytics.append(
+            PriceAnalyticsRow(
+                day: summary.day,
+                locationID: summary.locationID,
+                price: price,
+                idealPrice: idealPrice,
+                highTemperature: highTemperature,
+                businessReputation: businessReputation,
+                equipmentLevel: equipmentLevel,
+                advertisementLevel: advertisementLevel
+            )
+        )
+    }
+}
+
 struct Finance {
     var actualBalance: Double
     var displayedBalance: Double
