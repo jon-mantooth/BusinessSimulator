@@ -34,6 +34,12 @@ final class DaySummary {
     var demandedSales: Int = 0
     var sales: Int = 0
     var revenue: Double = 0
+    var price: Double?
+    var idealPrice: Double?
+    var highTemperature: Int?
+    var businessReputation: Double?
+    var equipmentLevel: Int?
+    var advertisementLevel: Int?
     var economicCosts: [Cost] = []
     var cashFlowCosts: [Cost] = []
     var businessEvents: [BusinessEvent] = []

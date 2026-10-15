@@ -453,6 +453,12 @@ final class GameState {
             summary.demandedSales = savedSummary.demandedSales
             summary.sales = savedSummary.sales
             summary.revenue = savedSummary.revenue
+            summary.price = savedSummary.price
+            summary.idealPrice = savedSummary.idealPrice
+            summary.highTemperature = savedSummary.highTemperature
+            summary.businessReputation = savedSummary.businessReputation
+            summary.equipmentLevel = savedSummary.equipmentLevel
+            summary.advertisementLevel = savedSummary.advertisementLevel
             summary.economicCosts = savedSummary.economicCosts.map {
                 Cost(name: $0.name, amount: $0.amount)
             }

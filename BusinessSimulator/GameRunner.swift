@@ -39,6 +39,8 @@ struct GameRunner {
             demand: demand
         )
 
+        addPriceAnalysisFactorsToSummary()
+
         let baselineRevenue =
             gameState.productState!.calculateBaselineRevenue()
 
@@ -171,6 +173,31 @@ struct GameRunner {
         demandedSales > 0
             ? Double(actualSales) / Double(demandedSales)
             : 1.0
+    }
+
+    private func addPriceAnalysisFactorsToSummary() {
+        guard let productState = gameState.productState,
+              let reputation = gameState.reputation,
+              let equipmentState = gameState.equipmentState,
+              let advertisementState = gameState.advertisementState,
+              let activeAdvertisement =
+                advertisementState.activeAdvertisement else {
+            preconditionFailure(
+                "Price analysis factors require an initialized business."
+            )
+        }
+
+        let dailyWeather = gameState.weather.weather(
+            for: gameState.calendar.currentDate
+        )
+
+        summary.price = productState.price
+        summary.idealPrice = productState.currentIdealPrice
+        summary.highTemperature = dailyWeather.highTemperature
+        summary.businessReputation = reputation.overallReputation
+        summary.equipmentLevel =
+            equipmentState.activePrimaryEquipment.tierLevel
+        summary.advertisementLevel = activeAdvertisement.tierLevel
     }
 
     /// Applies natural daily variance to baseline revenue using a normal
