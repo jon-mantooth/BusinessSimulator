@@ -26,7 +26,11 @@ struct FinancialTransaction: Codable {
 
 /// One operating day's normalized inputs for price analysis.
 struct PriceAnalyticsRow {
-    let day: Int
+    /// The actual simulation day retained for historical traceability.
+    let simulationDay: Int
+    /// Consecutive position among operating days. Charts use this value so
+    /// relocation and other non-operating days do not create visual gaps.
+    let operatingDay: Int
     let locationID: LocationID
     let price: Double
     let idealPrice: Double
@@ -47,7 +51,7 @@ struct FinancialAnalytics {
     init(
         summaries: [DaySummary] = []
     ) {
-        for summary in summaries {
+        for summary in summaries.sorted(by: { $0.day < $1.day }) {
             appendPriceAnalytics(from: summary)
         }
     }
@@ -74,10 +78,17 @@ struct FinancialAnalytics {
             idealPrice > 0,
             "Ideal price must be greater than zero for price analysis."
         )
+        precondition(
+            priceAnalytics.last.map {
+                $0.simulationDay < summary.day
+            } ?? true,
+            "Price-analysis rows must be appended in chronological order."
+        )
 
         priceAnalytics.append(
             PriceAnalyticsRow(
-                day: summary.day,
+                simulationDay: summary.day,
+                operatingDay: priceAnalytics.count + 1,
                 locationID: summary.locationID,
                 price: price,
                 idealPrice: idealPrice,
