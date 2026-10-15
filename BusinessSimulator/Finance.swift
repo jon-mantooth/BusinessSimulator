@@ -44,6 +44,14 @@ struct PriceAnalyticsRow {
 struct FinancialAnalytics {
     private(set) var priceAnalytics: [PriceAnalyticsRow] = []
 
+    init(
+        summaries: [DaySummary] = []
+    ) {
+        for summary in summaries {
+            appendPriceAnalytics(from: summary)
+        }
+    }
+
     mutating func appendPriceAnalytics(
         from summary: DaySummary
     ) {

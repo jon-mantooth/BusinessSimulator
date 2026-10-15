@@ -23,6 +23,7 @@ final class GameState {
     private static let startingDay = 1
 
     var finance: Finance!
+    var financialAnalytics = FinancialAnalytics()
     var calendar: GameCalendar!
     var weather: WeatherState!
     var locationState: LocationState?
@@ -118,6 +119,7 @@ final class GameState {
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
+        self.financialAnalytics = FinancialAnalytics()
 
         let locationCatalog = LocationCatalog()
         let locationTiers = locationCatalog.tiersByProduct[product.id]!
@@ -217,6 +219,9 @@ final class GameState {
         }
     }
 
+    // TODO: Refactor restoration into focused validation/build helpers. Build
+    // all restored components before assigning them so a thrown error cannot
+    // leave GameState partially restored.
     func restoreBusiness(
         from gameSave: GameSave
     ) throws {
@@ -480,6 +485,10 @@ final class GameState {
 
             return summary
         }
+
+        financialAnalytics = FinancialAnalytics(
+            summaries: simulationSummary.daySummaries
+        )
 
         let dimensions = BusinessDimensions.create(gameState: self)
         production = Production(dimensions: dimensions.production)
