@@ -212,11 +212,8 @@ struct GameRootView: View {
             if currentScreen == .neighborhood {
                 currentScreen = .prep
             }
-        case .production, .distribution, .marketing:
+        case .production, .distribution, .marketing, .finance:
             selectedArea = area
-        case .finance:
-            // These areas will be enabled when their views are implemented.
-            return
         }
     }
 
@@ -449,6 +446,13 @@ struct GameRootView: View {
                     productID: productID,
                     storageState: storageState,
                     purchaseWorkflow: purchaseWorkflow
+                )
+                .ignoresSafeArea()
+            }
+
+            if selectedArea == .finance {
+                FinanceView(
+                    summaries: gameState.simulationSummary.daySummaries
                 )
                 .ignoresSafeArea()
             }
