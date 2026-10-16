@@ -287,13 +287,8 @@ final class WeatherDimension: Dimension {
 
     func calculateDemand() -> Double {
         let weather = weatherState.weather(for: calendar.currentDate)
-        let effectScore = product.temperatureInterpolationFormula.effectScore(
+        return product.temperatureInterpolationFormula.demandMultiplier(
             for: weather.demandTemperature
-        )
-
-        return SimulationBalance.demand.multiplier(
-            weight: Self.demandWeight,
-            effectScore: effectScore
         )
     }
 
@@ -349,44 +344,13 @@ enum TemperatureInterpolationFormula {
             }
         }
     }
-}
 
-enum WeatherQuality: String, CaseIterable {
-    case bad
-    case poor
-    case fair
-    case good
-    case great
-}
-
-/// Classifies the same temperature differently depending on which product is
-/// being sold. For example, a hot day can be good for smoothies while being
-/// poor for pies.
-struct WeatherQualityClassifier {
-    let product: Product
-
-    func quality(
+    func demandMultiplier(
         for temperature: Double
-    ) -> WeatherQuality {
-        let effectScore = product.temperatureInterpolationFormula.effectScore(
-            for: temperature
-        )
-        let demandMultiplier = SimulationBalance.demand.multiplier(
+    ) -> Double {
+        SimulationBalance.demand.multiplier(
             weight: WeatherDimension.demandWeight,
-            effectScore: effectScore
+            effectScore: effectScore(for: temperature)
         )
-
-        switch demandMultiplier {
-        case ..<0.95:
-            return .bad
-        case ..<0.99:
-            return .poor
-        case ...1.01:
-            return .fair
-        case ...1.05:
-            return .good
-        default:
-            return .great
-        }
     }
 }
