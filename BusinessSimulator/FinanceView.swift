@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct FinanceView: View {
-    let summaries: [DaySummary]
+    let financialAnalytics: FinancialAnalytics
+
+    @State private var showingPriceAnalysis = false
 
     private let sourceSize = CGSize(width: 853, height: 1_844)
 
@@ -16,18 +18,52 @@ struct FinanceView: View {
                 height: sourceSize.height * scale
             )
 
-            Image("finance_background")
-                .resizable()
-                .scaledToFill()
+            let renderedOrigin = CGPoint(
+                x: (geometry.size.width - renderedSize.width) / 2,
+                y: (geometry.size.height - renderedSize.height) / 2
+            )
+
+            ZStack {
+                Image("finance_background")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        width: renderedSize.width,
+                        height: renderedSize.height
+                    )
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: geometry.size.height / 2
+                    )
+
+                Button {
+                    showingPriceAnalysis = true
+                } label: {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.001))
+                        .contentShape(Rectangle())
+                }
                 .frame(
-                    width: renderedSize.width,
-                    height: renderedSize.height
+                    width: renderedSize.width * 0.39,
+                    height: renderedSize.height * 0.08
                 )
                 .position(
-                    x: geometry.size.width / 2,
-                    y: geometry.size.height / 2
+                    x: renderedOrigin.x + renderedSize.width * 0.30,
+                    y: renderedOrigin.y + renderedSize.height * 0.27
                 )
+                .buttonStyle(.plain)
+                .accessibilityLabel("Price Analysis")
+                .zIndex(1)
+            }
         }
         .clipped()
+        .fullScreenCover(isPresented: $showingPriceAnalysis) {
+            PriceAnalysisView(
+                rows: financialAnalytics.priceAnalytics,
+                onClose: {
+                    showingPriceAnalysis = false
+                }
+            )
+        }
     }
 }
