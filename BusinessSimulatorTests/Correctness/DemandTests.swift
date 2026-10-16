@@ -701,27 +701,28 @@ extension DemandTests {
     }
 
     @Test
-    func weatherLowTemperatureDoesNotAffectDemand() {
-        let demandWithLowLow = weatherDemand(
+    func weatherDemandUsesSixtyPercentOfDailyTemperatureRange() {
+        let demand = weatherDemand(
             productID: "smoothies",
-            highTemperature: 79,
-            lowTemperature: 30
+            highTemperature: 90,
+            lowTemperature: 50
         )
-        let demandWithHighLow = weatherDemand(
-            productID: "smoothies",
-            highTemperature: 79,
-            lowTemperature: 70
+        let expectedTemperature = 50.0 + ((90.0 - 50.0) * 0.60)
+        let expectedEffectScore = (expectedTemperature - 68.0) / 22.0
+        let expectedDemand = SimulationBalance.demand.multiplier(
+            weight: WeatherDimension.demandWeight,
+            effectScore: expectedEffectScore
         )
 
         #expect(
-            abs(demandWithLowLow - demandWithHighLow) < 0.000_001
+            abs(demand - expectedDemand) < 0.000_001
         )
     }
 
     private func weatherDemand(
         productID: String,
         highTemperature: Int,
-        lowTemperature: Int = 50,
+        lowTemperature: Int? = nil,
         condition: WeatherCondition = .cloudy
     ) -> Double {
         let productID = ProductID(rawValue: productID)!
@@ -734,7 +735,7 @@ extension DemandTests {
                 DailyWeather(
                     date: calendar.currentDate,
                     highTemperature: highTemperature,
-                    lowTemperature: lowTemperature,
+                    lowTemperature: lowTemperature ?? highTemperature,
                     condition: condition
                 )
             ]
