@@ -20,6 +20,16 @@ struct DailyWeather: Identifiable {
     let lowTemperature: Int
     let condition: WeatherCondition
 
+    /// Approximates the temperature during operating hours. Businesses are
+    /// open during the warmer portion of the day, but not exclusively at the
+    /// daily high.
+    var demandTemperature: Double {
+        let low = Double(lowTemperature)
+        let temperatureRange = Double(highTemperature - lowTemperature)
+
+        return low + (temperatureRange * 0.60)
+    }
+
     var id: Date {
         date
     }
