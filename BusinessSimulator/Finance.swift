@@ -24,10 +24,39 @@ struct FinancialTransaction: Codable {
     let direction: CashFlowDirection
 }
 
+enum PriceAnalysisPeriod: String, CaseIterable, Identifiable {
+    case tenDays
+    case thirtyDays
+    case allTime
+
+    var id: Self { self }
+
+    func rows(
+        from rows: [PriceAnalyticsRow]
+    ) -> [PriceAnalyticsRow] {
+        switch self {
+        case .tenDays:
+            return Array(rows.suffix(10))
+        case .thirtyDays:
+            return Array(rows.suffix(30))
+        case .allTime:
+            return rows
+        }
+    }
+}
+
 enum WeatherAnalysisGroup: String, CaseIterable {
     case fairOrWorse
     case good
     case great
+}
+
+struct WeatherPriceAnalysisResult: Identifiable {
+    let group: WeatherAnalysisGroup
+    let averagePriceRatio: Double?
+    let observationCount: Int
+
+    var id: WeatherAnalysisGroup { group }
 }
 
 /// Finance owns these boundaries because they describe how reports group the
@@ -78,6 +107,33 @@ struct FinancialAnalytics {
     ) {
         for summary in summaries.sorted(by: { $0.day < $1.day }) {
             appendPriceAnalytics(from: summary)
+        }
+    }
+
+    func weatherAnalysis(
+        for period: PriceAnalysisPeriod
+    ) -> [WeatherPriceAnalysisResult] {
+        let rowsForPeriod = period.rows(from: priceAnalytics)
+        let classifier = WeatherAnalysisClassifier()
+        let rowsByGroup = Dictionary(grouping: rowsForPeriod) {
+            classifier.analysisGroup(
+                for: $0.weatherDemandMultiplier
+            )
+        }
+
+        return WeatherAnalysisGroup.allCases.map { group in
+            let groupRows = rowsByGroup[group] ?? []
+            let averagePriceRatio = groupRows.isEmpty
+                ? nil
+                : groupRows.reduce(0.0) {
+                    $0 + $1.priceDeviation
+                } / Double(groupRows.count)
+
+            return WeatherPriceAnalysisResult(
+                group: group,
+                averagePriceRatio: averagePriceRatio,
+                observationCount: groupRows.count
+            )
         }
     }
 
