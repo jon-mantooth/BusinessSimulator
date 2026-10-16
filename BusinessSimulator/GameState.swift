@@ -461,6 +461,9 @@ final class GameState {
             summary.price = savedSummary.price
             summary.idealPrice = savedSummary.idealPrice
             summary.highTemperature = savedSummary.highTemperature
+            summary.lowTemperature = savedSummary.lowTemperature
+            summary.weatherDemandMultiplier =
+                savedSummary.weatherDemandMultiplier
             summary.businessReputation = savedSummary.businessReputation
             summary.equipmentLevel = savedSummary.equipmentLevel
             summary.advertisementLevel = savedSummary.advertisementLevel

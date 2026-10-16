@@ -195,6 +195,10 @@ struct GameRunner {
         summary.price = productState.price
         summary.idealPrice = productState.currentIdealPrice
         summary.highTemperature = dailyWeather.highTemperature
+        summary.lowTemperature = dailyWeather.lowTemperature
+        summary.weatherDemandMultiplier =
+            productState.product.temperatureInterpolationFormula
+                .demandMultiplier(for: dailyWeather.demandTemperature)
         summary.businessReputation = reputation.overallReputation
         summary.equipmentLevel =
             equipmentState.activePrimaryEquipment.tierLevel

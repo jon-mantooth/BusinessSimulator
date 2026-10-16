@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 17
+    static let currentSchemaVersion = 18
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -101,6 +101,8 @@ struct DaySummarySave: Codable {
     let price: Double?
     let idealPrice: Double?
     let highTemperature: Int?
+    let lowTemperature: Int?
+    let weatherDemandMultiplier: Double?
     let businessReputation: Double?
     let equipmentLevel: Int?
     let advertisementLevel: Int?
@@ -241,6 +243,8 @@ extension GameSave {
                 price: summary.price,
                 idealPrice: summary.idealPrice,
                 highTemperature: summary.highTemperature,
+                lowTemperature: summary.lowTemperature,
+                weatherDemandMultiplier: summary.weatherDemandMultiplier,
                 businessReputation: summary.businessReputation,
                 equipmentLevel: summary.equipmentLevel,
                 advertisementLevel: summary.advertisementLevel,

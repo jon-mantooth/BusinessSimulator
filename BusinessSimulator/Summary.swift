@@ -37,6 +37,8 @@ final class DaySummary {
     var price: Double?
     var idealPrice: Double?
     var highTemperature: Int?
+    var lowTemperature: Int?
+    var weatherDemandMultiplier: Double?
     var businessReputation: Double?
     var equipmentLevel: Int?
     var advertisementLevel: Int?
