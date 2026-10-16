@@ -46,9 +46,9 @@ enum PriceAnalysisPeriod: String, CaseIterable, Identifiable {
 }
 
 enum WeatherAnalysisGroup: String, CaseIterable {
-    case fairOrWorse
-    case good
     case great
+    case good
+    case fairOrWorse
 }
 
 struct WeatherPriceAnalysisResult: Identifiable {
