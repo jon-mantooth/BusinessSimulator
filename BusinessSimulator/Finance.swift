@@ -24,6 +24,29 @@ struct FinancialTransaction: Codable {
     let direction: CashFlowDirection
 }
 
+enum WeatherAnalysisGroup: String, CaseIterable {
+    case fairOrWorse
+    case good
+    case great
+}
+
+/// Finance owns these boundaries because they describe how reports group the
+/// historical weather effect, not how weather affects gameplay.
+struct WeatherAnalysisClassifier {
+    func analysisGroup(
+        for demandMultiplier: Double
+    ) -> WeatherAnalysisGroup {
+        switch demandMultiplier {
+        case ...1.01:
+            return .fairOrWorse
+        case ...1.05:
+            return .good
+        default:
+            return .great
+        }
+    }
+}
+
 /// One operating day's normalized inputs for price analysis.
 struct PriceAnalyticsRow {
     /// The actual simulation day retained for historical traceability.
@@ -35,6 +58,8 @@ struct PriceAnalyticsRow {
     let price: Double
     let idealPrice: Double
     let highTemperature: Int
+    let lowTemperature: Int
+    let weatherDemandMultiplier: Double
     let businessReputation: Double
     let equipmentLevel: Int
     let advertisementLevel: Int
@@ -66,6 +91,9 @@ struct FinancialAnalytics {
         guard let price = summary.price,
               let idealPrice = summary.idealPrice,
               let highTemperature = summary.highTemperature,
+              let lowTemperature = summary.lowTemperature,
+              let weatherDemandMultiplier =
+                summary.weatherDemandMultiplier,
               let businessReputation = summary.businessReputation,
               let equipmentLevel = summary.equipmentLevel,
               let advertisementLevel = summary.advertisementLevel else {
@@ -93,6 +121,8 @@ struct FinancialAnalytics {
                 price: price,
                 idealPrice: idealPrice,
                 highTemperature: highTemperature,
+                lowTemperature: lowTemperature,
+                weatherDemandMultiplier: weatherDemandMultiplier,
                 businessReputation: businessReputation,
                 equipmentLevel: equipmentLevel,
                 advertisementLevel: advertisementLevel
