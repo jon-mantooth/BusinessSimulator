@@ -5,7 +5,7 @@ struct PriceAnalysisView: View {
     let priceAnalytics: PriceAnalytics
     let onClose: () -> Void
 
-    @State private var selectedPeriod: PriceAnalysisPeriod = .allTime
+    @State private var selectedPeriod: AnalysisPeriod = .allTime
     @State private var selectedAnalysis: PriceAnalysisGrouping = .overall
 
     private let sourceSize = CGSize(width: 853, height: 1_844)
@@ -109,7 +109,7 @@ struct PriceAnalysisView: View {
                         .padding(.horizontal, 5)
 
                     HStack(spacing: 0) {
-                        ForEach(PriceAnalysisPeriod.allCases) { period in
+                        ForEach(AnalysisPeriod.allCases) { period in
                             Button {
                                 selectedPeriod = period
                             } label: {
@@ -693,7 +693,7 @@ struct PriceAnalysisView: View {
     }
 }
 
-private extension PriceAnalysisPeriod {
+private extension AnalysisPeriod {
     var title: String {
         switch self {
         case .tenDays:

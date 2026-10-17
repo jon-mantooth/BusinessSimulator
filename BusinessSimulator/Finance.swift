@@ -24,16 +24,14 @@ struct FinancialTransaction: Codable {
     let direction: CashFlowDirection
 }
 
-enum PriceAnalysisPeriod: String, CaseIterable, Identifiable {
+enum AnalysisPeriod: String, CaseIterable, Identifiable {
     case tenDays
     case thirtyDays
     case allTime
 
     var id: Self { self }
 
-    func rows(
-        from rows: [PriceAnalyticsRow]
-    ) -> [PriceAnalyticsRow] {
+    func rows<Row>(from rows: [Row]) -> [Row] {
         switch self {
         case .tenDays:
             return Array(rows.suffix(10))
@@ -172,7 +170,7 @@ struct PriceAnalytics {
     }
 
     func weatherAnalysis(
-        for period: PriceAnalysisPeriod
+        for period: AnalysisPeriod
     ) -> [WeatherPriceAnalysisResult] {
         let rowsForPeriod = period.rows(from: rows)
         let classifier = WeatherAnalysisClassifier()
@@ -199,7 +197,7 @@ struct PriceAnalytics {
     }
 
     func businessReputationAnalysis(
-        for period: PriceAnalysisPeriod
+        for period: AnalysisPeriod
     ) -> [BusinessReputationPriceAnalysisResult] {
         let rowsForPeriod = period.rows(from: rows)
         let classifier = BusinessReputationAnalysisClassifier()
@@ -226,7 +224,7 @@ struct PriceAnalytics {
     }
 
     func equipmentLevelAnalysis(
-        for period: PriceAnalysisPeriod
+        for period: AnalysisPeriod
     ) -> [LevelPriceAnalysisResult] {
         levelAnalysis(
             for: period,
@@ -235,7 +233,7 @@ struct PriceAnalytics {
     }
 
     func advertisementLevelAnalysis(
-        for period: PriceAnalysisPeriod
+        for period: AnalysisPeriod
     ) -> [LevelPriceAnalysisResult] {
         levelAnalysis(
             for: period,
@@ -244,7 +242,7 @@ struct PriceAnalytics {
     }
 
     func locationAnalysis(
-        for period: PriceAnalysisPeriod
+        for period: AnalysisPeriod
     ) -> [LocationPriceAnalysisResult] {
         let rowsForPeriod = period.rows(from: rows)
         let rowsByLocation = Dictionary(grouping: rowsForPeriod) {
@@ -279,7 +277,7 @@ struct PriceAnalytics {
     }
 
     private func levelAnalysis(
-        for period: PriceAnalysisPeriod,
+        for period: AnalysisPeriod,
         level: KeyPath<PriceAnalyticsRow, Int>
     ) -> [LevelPriceAnalysisResult] {
         let rowsForPeriod = period.rows(from: rows)
@@ -351,6 +349,203 @@ struct PriceAnalytics {
                 advertisementLevel: advertisementLevel
             )
         )
+    }
+}
+
+/// One operating day's normalized inputs for sales analysis.
+struct SalesAnalyticsRow {
+    /// The actual simulation day retained for historical traceability.
+    let simulationDay: Int
+    /// Consecutive position among operating days. Charts use this value so
+    /// relocation and other non-operating days do not create visual gaps.
+    let operatingDay: Int
+    let actualSales: Int
+    let operationalCapacity: Int
+    let operationalCapacityLimiters: [SalesLimit]
+    let didSellOut: Bool
+    let selloutCause: SelloutCause?
+    let consumedIngredientCost: Double
+    let expiredIngredientCost: Double
+}
+
+struct SalesCapacityAnalysisPoint: Identifiable {
+    let operatingDay: Int
+    let actualSales: Int
+    let potentialSalesCapacity: Int
+
+    var id: Int { operatingDay }
+}
+
+enum SalesOutcome: String, CaseIterable, Identifiable {
+    case didNotSellOut
+    case ingredients
+    case labor
+    case equipment
+    case storage
+
+    var id: Self { self }
+}
+
+struct SelloutAnalysisResult: Identifiable {
+    let outcome: SalesOutcome
+    let dayCount: Int
+    let percentage: Double?
+
+    var id: SalesOutcome { outcome }
+}
+
+struct IngredientUsageAnalysisResult {
+    let consumedCost: Double
+    let expiredCost: Double
+
+    var totalCost: Double {
+        consumedCost + expiredCost
+    }
+
+    var consumedPercentage: Double? {
+        guard totalCost > 0 else { return nil }
+        return consumedCost / totalCost
+    }
+
+    var expiredPercentage: Double? {
+        guard totalCost > 0 else { return nil }
+        return expiredCost / totalCost
+    }
+}
+
+/// Derived, in-memory reporting data rebuilt from persisted day summaries.
+struct SalesAnalytics {
+    private(set) var rows: [SalesAnalyticsRow] = []
+    let maximumOperationalCapacity: Int
+
+    var currentOperationalCapacity: Int? {
+        rows.last?.operationalCapacity
+    }
+
+    var currentOperationalCapacityLimiters: [SalesLimit] {
+        rows.last?.operationalCapacityLimiters ?? []
+    }
+
+    init(
+        product: Product,
+        summaries: [DaySummary] = []
+    ) {
+        maximumOperationalCapacity = ProductionCapacityBalance.schedule
+            .capacity(
+                for: .tier(.tierFive),
+                product: product
+            )
+
+        for summary in summaries.sorted(by: { $0.day < $1.day }) {
+            append(from: summary)
+        }
+    }
+
+    func salesCapacityAnalysis(
+        for period: AnalysisPeriod
+    ) -> [SalesCapacityAnalysisPoint] {
+        period.rows(from: rows).map { row in
+            SalesCapacityAnalysisPoint(
+                operatingDay: row.operatingDay,
+                actualSales: row.actualSales,
+                potentialSalesCapacity: row.operationalCapacity
+            )
+        }
+    }
+
+    func selloutAnalysis(
+        for period: AnalysisPeriod
+    ) -> [SelloutAnalysisResult] {
+        let rowsForPeriod = period.rows(from: rows)
+        let rowsByOutcome = Dictionary(grouping: rowsForPeriod) {
+            salesOutcome(for: $0)
+        }
+
+        return SalesOutcome.allCases.map { outcome in
+            let dayCount = rowsByOutcome[outcome]?.count ?? 0
+            let percentage = rowsForPeriod.isEmpty
+                ? nil
+                : Double(dayCount) / Double(rowsForPeriod.count)
+
+            return SelloutAnalysisResult(
+                outcome: outcome,
+                dayCount: dayCount,
+                percentage: percentage
+            )
+        }
+    }
+
+    func ingredientUsageAnalysis(
+        for period: AnalysisPeriod
+    ) -> IngredientUsageAnalysisResult {
+        let rowsForPeriod = period.rows(from: rows)
+
+        return IngredientUsageAnalysisResult(
+            consumedCost: rowsForPeriod.reduce(0.0) {
+                $0 + $1.consumedIngredientCost
+            },
+            expiredCost: rowsForPeriod.reduce(0.0) {
+                $0 + $1.expiredIngredientCost
+            }
+        )
+    }
+
+    mutating func append(
+        from summary: DaySummary
+    ) {
+        guard summary.type == .operating else {
+            return
+        }
+
+        guard let operationalCapacity = summary.operationalCapacity else {
+            preconditionFailure(
+                "An operating summary must contain operational capacity."
+            )
+        }
+        precondition(
+            rows.last.map {
+                $0.simulationDay < summary.day
+            } ?? true,
+            "Sales-analytics rows must be appended in chronological order."
+        )
+
+        rows.append(
+            SalesAnalyticsRow(
+                simulationDay: summary.day,
+                operatingDay: rows.count + 1,
+                actualSales: summary.sales,
+                operationalCapacity: operationalCapacity,
+                operationalCapacityLimiters:
+                    summary.operationalCapacityLimiters,
+                didSellOut: summary.didSellOut,
+                selloutCause: summary.selloutCause,
+                consumedIngredientCost: summary.consumedIngredientCost,
+                expiredIngredientCost: summary.expiredIngredientCost
+            )
+        )
+    }
+
+    private func salesOutcome(
+        for row: SalesAnalyticsRow
+    ) -> SalesOutcome {
+        guard row.didSellOut else {
+            return .didNotSellOut
+        }
+
+        switch row.selloutCause {
+        case .ingredients:
+            return .ingredients
+        case .labor:
+            return .labor
+        case .equipment:
+            return .equipment
+        case .storage:
+            return .storage
+        case nil:
+            preconditionFailure(
+                "A sellout must have a binding sales-limit cause."
+            )
+        }
     }
 }
 

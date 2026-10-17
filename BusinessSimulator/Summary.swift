@@ -25,14 +25,13 @@ enum SalesLimitType: Codable {
     case equipment
     case labor
     case storage
-    case transportation
     case ingredient(type: InventoryType, name: String)
 
     var isOperationalCapacity: Bool {
         switch self {
         case .ingredient:
             return false
-        case .equipment, .labor, .storage, .transportation:
+        case .equipment, .labor, .storage:
             return true
         }
     }
@@ -45,8 +44,6 @@ enum SalesLimitType: Codable {
             return .labor
         case .storage:
             return .storage
-        case .transportation:
-            return .transportation
         case .ingredient:
             return .ingredients
         }
@@ -67,13 +64,12 @@ struct SalesLimit: Codable {
     }
 }
 
-enum SelloutCause: String, Codable, Hashable {
-    case equipment
-    case labor
-    case storage
-    case transportation
+enum SelloutCause: String, Codable, Hashable, CaseIterable {
+    // Case order is the analytics priority used when multiple limits bind.
     case ingredients
-    case multipleConstraints
+    case labor
+    case equipment
+    case storage
 }
 
 enum DaySummaryType: String, Codable {
@@ -130,6 +126,15 @@ final class DaySummary {
             .min()
     }
 
+    var operationalCapacityLimiters: [SalesLimit] {
+        guard let operationalCapacity else { return [] }
+
+        return salesLimits.filter {
+            $0.type.isOperationalCapacity
+                && $0.units == operationalCapacity
+        }
+    }
+
     var bindingSalesLimits: [SalesLimit] {
         guard didSellOut else { return [] }
         return salesLimits.filter { $0.units == sales }
@@ -140,11 +145,7 @@ final class DaySummary {
             bindingSalesLimits.map { $0.type.selloutCause }
         )
 
-        guard let onlyCause = causes.first else {
-            return nil
-        }
-
-        return causes.count == 1 ? onlyCause : .multipleConstraints
+        return SelloutCause.allCases.first { causes.contains($0) }
     }
 
     /// Combines persisted notes with notes derived from structured sales-limit
@@ -201,11 +202,6 @@ final class DaySummary {
                 addGeneratedNote(
                     sectionName: "Sales",
                     note: "Sales were limited by storage capacity."
-                )
-            case .transportation:
-                addGeneratedNote(
-                    sectionName: "Sales",
-                    note: "Sales were limited by transportation capacity."
                 )
             case let .ingredient(_, name):
                 guard !ingredientNames.contains(name) else { continue }
