@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FinanceView: View {
-    let financialAnalytics: FinancialAnalytics
+    let priceAnalytics: PriceAnalytics
 
     @State private var showingPriceAnalysis = false
 
@@ -59,7 +59,7 @@ struct FinanceView: View {
         .clipped()
         .fullScreenCover(isPresented: $showingPriceAnalysis) {
             PriceAnalysisView(
-                rows: financialAnalytics.priceAnalytics,
+                priceAnalytics: priceAnalytics,
                 onClose: {
                     showingPriceAnalysis = false
                 }
