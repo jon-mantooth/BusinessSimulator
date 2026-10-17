@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 18
+    static let currentSchemaVersion = 19
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -106,6 +106,7 @@ struct DaySummarySave: Codable {
     let businessReputation: Double?
     let equipmentLevel: Int?
     let advertisementLevel: Int?
+    let salesLimits: [SalesLimit]
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
     let businessEvents: [BusinessEvent]
@@ -248,6 +249,7 @@ extension GameSave {
                 businessReputation: summary.businessReputation,
                 equipmentLevel: summary.equipmentLevel,
                 advertisementLevel: summary.advertisementLevel,
+                salesLimits: summary.salesLimits,
                 economicCosts: summary.economicCosts.map { cost in
                     CostSave(
                         name: cost.name,

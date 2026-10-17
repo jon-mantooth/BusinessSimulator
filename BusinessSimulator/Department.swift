@@ -11,10 +11,7 @@ protocol Department {
 
     func calculateMarketSize() -> Double
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int
+    func calculateSalesLimits() -> [SalesLimit]
     
     func calculateDailyCosts(
         sales: Int,
@@ -42,12 +39,8 @@ extension Department {
         return 1.0
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-
-        return sales
+    func calculateSalesLimits() -> [SalesLimit] {
+        []
     }
     
     func calculateDailyCosts(

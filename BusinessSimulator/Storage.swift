@@ -246,21 +246,16 @@ final class StorageDimension: Dimension {
         self.locationState = locationState
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
+    func calculateSalesLimits() -> [SalesLimit] {
         guard locationState.activeTier.level >= .tierTwo else {
-            return sales
+            return []
         }
 
-        let limitedSales = min(sales, storageState.totalCapacity)
-        if limitedSales < sales {
-            summary.addNote(
-                sectionName: "Distribution",
-                note: "Sales were limited by storage capacity."
+        return [
+            SalesLimit(
+                type: .storage,
+                units: storageState.totalCapacity
             )
-        }
-        return limitedSales
+        ]
     }
 }

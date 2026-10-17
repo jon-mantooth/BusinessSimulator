@@ -23,16 +23,8 @@ final class Distribution: Department {
         dimensions.reduce(1.0) { $0 * $1.calculateMarketSize() }
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-        dimensions.reduce(sales) { currentSales, dimension in
-            dimension.applySalesLimits(
-                sales: currentSales,
-                summary: summary
-            )
-        }
+    func calculateSalesLimits() -> [SalesLimit] {
+        dimensions.flatMap { $0.calculateSalesLimits() }
     }
 
     func calculateDailyCosts(

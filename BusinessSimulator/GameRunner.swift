@@ -53,14 +53,16 @@ struct GameRunner {
             predictedRevenue: predictedRevenue)
         summary.demandedSales = predictedSales
 
-        var actualSales = predictedSales
-        
-        for department in departments{
-            actualSales = department.applySalesLimits(
-                sales: actualSales,
-                summary: summary
-            )
+        summary.salesLimits = departments.flatMap {
+            $0.calculateSalesLimits()
         }
+
+        let lowestSalesLimit = summary.salesLimits
+            .map(\.units)
+            .min()
+            ?? predictedSales
+        let actualSales = min(predictedSales, lowestSalesLimit)
+        summary.sales = actualSales
 
         let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
             demandedSales: predictedSales,
@@ -113,7 +115,6 @@ struct GameRunner {
         }
 
         let actualRevenue = Double(actualSales) * gameState.productState!.price
-        summary.sales = actualSales
         summary.revenue = actualRevenue
         
         return summary

@@ -360,20 +360,13 @@ final class EquipmentDimension: Dimension {
         return primaryMultiplier * secondaryMultiplier
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-        let limitedSales = min(sales, equipmentState.totalCapacity)
-
-        if limitedSales < sales {
-            summary.addNote(
-                sectionName: "Production",
-                note: "Sales were limited by equipment capacity."
+    func calculateSalesLimits() -> [SalesLimit] {
+        [
+            SalesLimit(
+                type: .equipment,
+                units: equipmentState.totalCapacity
             )
-        }
-
-        return limitedSales
+        ]
     }
 
     func calculateDailyCosts(

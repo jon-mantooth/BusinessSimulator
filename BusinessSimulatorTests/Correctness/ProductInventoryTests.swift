@@ -68,15 +68,12 @@ extension ProductInventoryTests {
         ingredientState.recipeAmountMultiplier = 0.5
         ingredientState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         let dimension = InventoryDimension(productState: productState)
-        let summary = DaySummary(day: 1, startingBalance: 100)
 
-        let sales = dimension.applySalesLimits(
-            sales: 10,
-            summary: summary
-        )
+        let limits = dimension.calculateSalesLimits()
+        let limit = limits.first
 
-        #expect(sales == 10)
-        #expect(summary.sections.isEmpty)
+        #expect(limits.count == 1)
+        #expect(limit?.units == 10)
     }
 
     @Test
@@ -218,25 +215,17 @@ extension ProductInventoryTests {
             EquipmentCatalog().meatGrinder.ingredientUpgrade
         )
         productState.applyIngredientUpgrade(upgrade)
-        let summary = DaySummary(day: 1, startingBalance: 100)
-
-        let sales = dimension.applySalesLimits(
-            sales: 10,
-            summary: summary
-        )
-
-        #expect(sales == 0)
-        #expect(
-            summary.sections.contains { section in
-                section.name == "Inventory"
-                    && section.notes.contains {
-                        $0.contains("Beef")
-                    }
-                    && section.notes.contains {
-                        $0.contains("Spices")
-                    }
+        let limits = dimension.calculateSalesLimits()
+        let limitingIngredientNames: [String] = limits.compactMap { limit in
+            guard limit.units == 0,
+                  case let .ingredient(_, name) = limit.type else {
+                return nil
             }
-        )
+            return name
+        }
+
+        #expect(limitingIngredientNames.contains("Beef"))
+        #expect(limitingIngredientNames.contains("Spices"))
     }
 }
 

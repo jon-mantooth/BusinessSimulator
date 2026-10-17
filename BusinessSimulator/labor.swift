@@ -245,20 +245,13 @@ final class LaborDimension: Dimension {
         )
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-        let limitedSales = min(sales, laborState.totalCapacity)
-
-        if limitedSales < sales {
-            summary.addNote(
-                sectionName: "Production",
-                note: "Sales were limited by labor capacity."
+    func calculateSalesLimits() -> [SalesLimit] {
+        [
+            SalesLimit(
+                type: .labor,
+                units: laborState.totalCapacity
             )
-        }
-
-        return limitedSales
+        ]
     }
 
     func calculateDailyCosts(
