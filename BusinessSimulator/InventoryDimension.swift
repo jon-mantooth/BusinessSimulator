@@ -128,6 +128,7 @@ final class InventoryDimension: Dimension {
         }
         
         if totalCosts > 0 {
+            summary.consumedIngredientCost += totalCosts
             summary.economicCosts.append(
                 Cost(name: "Ingredients", amount: totalCosts)
             )
@@ -164,6 +165,7 @@ final class InventoryDimension: Dimension {
             }
         }
         if totalCost > 0 {
+            summary.expiredIngredientCost += totalCost
             summary.economicCosts.append(
                 Cost(name: "Expired Inventory", amount: totalCost)
             )

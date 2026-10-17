@@ -95,6 +95,7 @@ extension ProductInventoryTests {
         )
 
         #expect(abs(cost - 4.0) < 0.000_001)
+        #expect(abs(summary.consumedIngredientCost - 4.0) < 0.000_001)
         #expect(
             abs(ingredientState.inventoryByAge.totalInventory - 0.6)
                 < 0.000_001
@@ -168,18 +169,22 @@ extension ProductInventoryTests {
         baseState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         upgradedState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         upgradedState.lifespanMultiplier = 2.0
+        let baseSummary = DaySummary(day: 6, startingBalance: 100)
+        let upgradedSummary = DaySummary(day: 6, startingBalance: 100)
 
         InventoryDimension(productState: baseProductState).prepForNextDay(
             currentDay: 7,
-            summary: DaySummary(day: 6, startingBalance: 100)
+            summary: baseSummary
         )
         InventoryDimension(productState: upgradedProductState).prepForNextDay(
             currentDay: 7,
-            summary: DaySummary(day: 6, startingBalance: 100)
+            summary: upgradedSummary
         )
 
         #expect(baseState.inventoryByAge.totalInventory == 0)
         #expect(upgradedState.inventoryByAge.totalInventory == 1)
+        #expect(baseSummary.expiredIngredientCost == 1)
+        #expect(upgradedSummary.expiredIngredientCost == 0)
     }
 
     @Test

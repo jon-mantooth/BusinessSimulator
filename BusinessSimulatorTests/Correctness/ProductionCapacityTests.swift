@@ -90,45 +90,30 @@ extension ProductionCapacityTests {
 extension ProductionCapacityTests {
 
     @Test
-    func equipmentCapacityLimitsSalesAndAddsProductionNote() throws {
+    func equipmentReportsItsCapacityAsASalesLimit() throws {
+        let context = try makeCapacityLimitContext()
+        let capacity = context.state.totalCapacity
+
+        let limits = context.dimension.calculateSalesLimits()
+
+        #expect(limits.count == 1)
+        #expect(limits.first?.units == capacity)
+        guard case .equipment = limits.first?.type else {
+            Issue.record("Expected an equipment sales limit")
+            return
+        }
+    }
+
+    @Test
+    func equipmentReportsTheSameCapacityWithoutMutatingASummary() throws {
         let context = try makeCapacityLimitContext()
         let capacity = context.state.totalCapacity
         let summary = DaySummary(day: 1, startingBalance: 500)
 
-        let limitedSales = context.dimension.applySalesLimits(
-            sales: capacity + 10,
-            summary: summary
-        )
+        let limits = context.dimension.calculateSalesLimits()
 
-        #expect(limitedSales == capacity)
-        #expect(
-            summary.sections.contains { section in
-                section.name == "Production"
-                    && section.notes.contains(
-                        "Sales were limited by equipment capacity."
-                    )
-            }
-        )
-    }
-
-    @Test
-    func equipmentCapacityDoesNotChangeSalesAtOrBelowLimit() throws {
-        let context = try makeCapacityLimitContext()
-        let capacity = context.state.totalCapacity
-
-        for sales in [capacity - 1, capacity] {
-            let summary = DaySummary(day: 1, startingBalance: 500)
-
-            let limitedSales = context.dimension.applySalesLimits(
-                sales: sales,
-                summary: summary
-            )
-
-            #expect(limitedSales == sales)
-            #expect(
-                !summary.sections.contains { $0.name == "Production" }
-            )
-        }
+        #expect(limits.first?.units == capacity)
+        #expect(summary.sections.isEmpty)
     }
 }
 
@@ -161,45 +146,30 @@ private func makeCapacityLimitContext() throws -> CapacityLimitContext {
 extension ProductionCapacityTests {
 
     @Test
-    func laborCapacityLimitsSalesAndAddsProductionNote() {
+    func laborReportsItsCapacityAsASalesLimit() {
+        let context = makeLaborCapacityLimitContext()
+        let capacity = context.state.totalCapacity
+
+        let limits = context.dimension.calculateSalesLimits()
+
+        #expect(limits.count == 1)
+        #expect(limits.first?.units == capacity)
+        guard case .labor = limits.first?.type else {
+            Issue.record("Expected a labor sales limit")
+            return
+        }
+    }
+
+    @Test
+    func laborReportsTheSameCapacityWithoutMutatingASummary() {
         let context = makeLaborCapacityLimitContext()
         let capacity = context.state.totalCapacity
         let summary = DaySummary(day: 1, startingBalance: 500)
 
-        let limitedSales = context.dimension.applySalesLimits(
-            sales: capacity + 10,
-            summary: summary
-        )
+        let limits = context.dimension.calculateSalesLimits()
 
-        #expect(limitedSales == capacity)
-        #expect(
-            summary.sections.contains { section in
-                section.name == "Production"
-                    && section.notes.contains(
-                        "Sales were limited by labor capacity."
-                    )
-            }
-        )
-    }
-
-    @Test
-    func laborCapacityDoesNotChangeSalesAtOrBelowLimit() {
-        let context = makeLaborCapacityLimitContext()
-        let capacity = context.state.totalCapacity
-
-        for sales in [capacity - 1, capacity] {
-            let summary = DaySummary(day: 1, startingBalance: 500)
-
-            let limitedSales = context.dimension.applySalesLimits(
-                sales: sales,
-                summary: summary
-            )
-
-            #expect(limitedSales == sales)
-            #expect(
-                !summary.sections.contains { $0.name == "Production" }
-            )
-        }
+        #expect(limits.first?.units == capacity)
+        #expect(summary.sections.isEmpty)
     }
 }
 

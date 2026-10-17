@@ -468,6 +468,10 @@ final class GameState {
             summary.equipmentLevel = savedSummary.equipmentLevel
             summary.advertisementLevel = savedSummary.advertisementLevel
             summary.salesLimits = savedSummary.salesLimits
+            summary.consumedIngredientCost =
+                savedSummary.consumedIngredientCost
+            summary.expiredIngredientCost =
+                savedSummary.expiredIngredientCost
             summary.economicCosts = savedSummary.economicCosts.map {
                 Cost(name: $0.name, amount: $0.amount)
             }

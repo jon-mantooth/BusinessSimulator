@@ -100,6 +100,8 @@ final class DaySummary {
     var equipmentLevel: Int?
     var advertisementLevel: Int?
     var salesLimits: [SalesLimit] = []
+    var consumedIngredientCost: Double = 0
+    var expiredIngredientCost: Double = 0
     var economicCosts: [Cost] = []
     var cashFlowCosts: [Cost] = []
     var businessEvents: [BusinessEvent] = []

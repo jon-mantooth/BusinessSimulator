@@ -133,15 +133,13 @@ extension StorageTests {
         let storageState = StorageState(
             tiers: StorageCatalog().tiers(for: product)
         )
-        let summary = DaySummary(day: 1, startingBalance: 0)
 
-        let sales = StorageDimension(
+        let limits = StorageDimension(
             storageState: storageState,
             locationState: locationState
-        ).applySalesLimits(sales: 500, summary: summary)
+        ).calculateSalesLimits()
 
-        #expect(sales == 500)
-        #expect(summary.sections.isEmpty)
+        #expect(limits.isEmpty)
     }
 
     @Test
@@ -154,29 +152,22 @@ extension StorageTests {
         let firstTier = try #require(storageState.nextTier)
         storageState.applyUpgrade(firstTier.storage)
         relocateToLevelTwo(locationState)
-        let summary = DaySummary(day: 1, startingBalance: 0)
 
-        let sales = StorageDimension(
+        let limits = StorageDimension(
             storageState: storageState,
             locationState: locationState
-        ).applySalesLimits(
-            sales: storageState.totalCapacity + 10,
-            summary: summary
-        )
+        ).calculateSalesLimits()
 
-        #expect(sales == storageState.totalCapacity)
-        #expect(
-            summary.sections.contains { section in
-                section.name == "Distribution"
-                    && section.notes.contains(
-                        "Sales were limited by storage capacity."
-                    )
-            }
-        )
+        #expect(limits.count == 1)
+        #expect(limits.first?.units == storageState.totalCapacity)
+        guard case .storage = limits.first?.type else {
+            Issue.record("Expected a storage sales limit")
+            return
+        }
     }
 
     @Test
-    func doesNotChangeSalesAtOrBelowCapacity() throws {
+    func reportsCurrentStorageCapacityWithoutMutatingASummary() throws {
         let product = ProductCatalog().product(for: .pies)
         let locationState = makeLocationState(product: product)
         let storageState = StorageState(
@@ -189,15 +180,13 @@ extension StorageTests {
             storageState: storageState,
             locationState: locationState
         )
+        let summary = DaySummary(day: 1, startingBalance: 0)
 
-        for sales in [storageState.totalCapacity - 1, storageState.totalCapacity] {
-            let summary = DaySummary(day: 1, startingBalance: 0)
-            #expect(
-                dimension.applySalesLimits(sales: sales, summary: summary)
-                    == sales
-            )
-            #expect(summary.sections.isEmpty)
-        }
+        #expect(
+            dimension.calculateSalesLimits().first?.units
+                == storageState.totalCapacity
+        )
+        #expect(summary.sections.isEmpty)
     }
 
     @Test
