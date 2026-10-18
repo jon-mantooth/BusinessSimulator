@@ -300,7 +300,7 @@ extension RelocationWorkflowTests {
 
         #expect(summary.type == .relocation)
         #expect(summary.day == startingDay)
-        #expect(summary.locationID == startingLocation)
+        #expect(summary.locationID == request.destination.id)
         #expect(summary.startingBalance == startingBalance)
         #expect(summary.businessEvents.count == 1)
         #expect(
@@ -375,7 +375,11 @@ extension RelocationWorkflowTests {
         )
         #expect(
             summary.cashFlowCosts.contains {
-                $0.name.contains("Prorated")
+                $0.category == .advertising
+                    && $0.name == weeklyAdvertisement.name
+                    && $0.displaySuffix == "Prorated"
+                    && $0.displayName
+                        == "\(weeklyAdvertisement.name) (Prorated)"
                     && $0.amount == expectedProratedCost
             }
         )
@@ -403,8 +407,8 @@ extension RelocationWorkflowTests {
         #expect(summary.dailyReputationResult == nil)
         #expect(
             !summary.cashFlowCosts.contains {
-                $0.name == "Labor"
-                    || $0.name == "Equipment"
+                $0.category == .labor
+                    || $0.category == .equipment
             }
         )
     }

@@ -142,10 +142,20 @@ extension CostsTests {
         )
 
         #expect(cost == expectedCost)
-        let cashFlowCost = try #require(summary.cashFlowCosts.first)
-        #expect(summary.cashFlowCosts.count == 1)
-        #expect(cashFlowCost.name == "Labor")
-        #expect(cashFlowCost.amount == expectedCost)
+        #expect(summary.cashFlowCosts.count == 2)
+        #expect(
+            summary.cashFlowCosts.map(\.name)
+                == Array(context.state.ownedLabor.labor.prefix(2)).map(\.name)
+        )
+        #expect(
+            summary.cashFlowCosts.allSatisfy {
+                $0.category == .labor
+            }
+        )
+        #expect(
+            summary.cashFlowCosts.reduce(0.0) { $0 + $1.amount }
+                == expectedCost
+        )
     }
 
     @MainActor
