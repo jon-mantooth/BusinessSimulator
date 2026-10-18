@@ -396,26 +396,26 @@ final class EquipmentDimension: Dimension {
         multiplier: Double = 1.0
     ) -> Double {
         let primaryEquipment = equipmentState.activePrimaryEquipment.equipment
-        let primaryCost = primaryEquipment.paymentSchedule == paymentSchedule
-            ? primaryEquipment.price
-            : 0.0
-        let secondaryCost = equipmentState
-            .ownedSecondaryEquipment
-            .totalCosts[paymentSchedule, default: 0.0]
-        let totalCost = (primaryCost + secondaryCost) * multiplier
+        let applicableEquipment = [primaryEquipment]
+            + equipmentState.ownedSecondaryEquipment.equipment
+        let chargedEquipment = applicableEquipment.filter {
+            $0.paymentSchedule == paymentSchedule && $0.price > 0
+        }
 
-        if totalCost > 0 {
+        for equipment in chargedEquipment {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: multiplier == 1.0
-                        ? "Equipment"
-                        : "Equipment (Prorated)",
-                    amount: totalCost
+                    category: .equipment,
+                    displaySuffix: multiplier == 1.0 ? nil : "Prorated",
+                    name: equipment.name,
+                    amount: equipment.price * multiplier
                 )
             )
         }
 
-        return totalCost
+        return chargedEquipment.reduce(0.0) {
+            $0 + $1.price * multiplier
+        }
     }
 }
 

@@ -183,13 +183,14 @@ struct RelocationWorkflow {
 
         let relocationSummary = DaySummary(
             day: gameState.calendar.simulationDay,
-            locationID: rollbackSnapshot.activeLocationID,
+            locationID: request.destination.id,
             startingBalance: gameState.finance.actualBalance,
             type: .relocation
         )
         relocationSummary.businessEvents.append(relocationEvent)
         relocationSummary.cashFlowCosts.append(
             Cost(
+                category: .relocation,
                 name: "Relocation",
                 amount: request.relocationPrice
             )
@@ -212,6 +213,8 @@ struct RelocationWorkflow {
             try saveRepository.save(
                 GameSave(gameState: gameState)
             )
+
+            gameState.financialSummary.append(from: relocationSummary)
 
             return .completed(relocationSummary)
         } catch {

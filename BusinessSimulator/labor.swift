@@ -280,20 +280,23 @@ final class LaborDimension: Dimension {
         summary: DaySummary,
         multiplier: Double = 1.0
     ) -> Double {
-        let totalCost = laborState
-            .totalCosts[paymentSchedule, default: 0] * multiplier
+        let chargedWorkers = laborState.ownedLabor.labor.filter {
+            $0.paymentSchedule == paymentSchedule && $0.price > 0
+        }
 
-        if totalCost > 0 {
+        for worker in chargedWorkers {
             summary.cashFlowCosts.append(
                 Cost(
-                    name: multiplier == 1.0
-                        ? "Labor"
-                        : "Labor (Prorated)",
-                    amount: totalCost
+                    category: .labor,
+                    displaySuffix: multiplier == 1.0 ? nil : "Prorated",
+                    name: worker.name,
+                    amount: worker.price * multiplier
                 )
             )
         }
 
-        return totalCost
+        return chargedWorkers.reduce(0.0) {
+            $0 + $1.price * multiplier
+        }
     }
 }

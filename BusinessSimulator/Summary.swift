@@ -7,11 +7,62 @@ import Foundation
 //  Created by jon mantooth on 7/29/26.
 //
 
+enum CostCategory: String, Codable, CaseIterable {
+    case ingredients
+    case equipment
+    case labor
+    case advertising
+    case storage
+    case transportation
+    case relocation
+    /// Supports historical saves created before costs stored categories.
+    case other
+}
+
 struct Cost {
-
+    let category: CostCategory
+    let displaySuffix: String?
     let name: String
-
     let amount: Double
+
+    var displayName: String {
+        guard let displaySuffix, !displaySuffix.isEmpty else {
+            return name
+        }
+
+        return "\(name) (\(displaySuffix))"
+    }
+
+    init(
+        category: CostCategory,
+        displaySuffix: String? = nil,
+        name: String,
+        amount: Double
+    ) {
+        self.category = category
+        self.displaySuffix = displaySuffix
+        self.name = name
+        self.amount = amount
+    }
+}
+
+extension PurchaseCategory {
+    var costCategory: CostCategory {
+        switch self {
+        case .inventory:
+            return .ingredients
+        case .advertisement:
+            return .advertising
+        case .equipment:
+            return .equipment
+        case .labor:
+            return .labor
+        case .transportation:
+            return .transportation
+        case .storage:
+            return .storage
+        }
+    }
 }
 
 struct SummarySection {

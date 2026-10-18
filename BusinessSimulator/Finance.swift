@@ -24,6 +24,72 @@ struct FinancialTransaction: Codable {
     let direction: CashFlowDirection
 }
 
+extension CostCategory {
+    /// Best-effort categorization for saves written before `Cost` persisted a
+    /// category. All newly recorded costs carry an explicit category.
+    static func legacyCategory(
+        for name: String
+    ) -> CostCategory {
+        let normalizedName = name.lowercased()
+
+        if normalizedName.contains("labor") {
+            return .labor
+        }
+        if normalizedName.contains("equipment") {
+            return .equipment
+        }
+        if normalizedName.contains("relocation") {
+            return .relocation
+        }
+        if normalizedName.contains("ingredient") {
+            return .ingredients
+        }
+
+        return .other
+    }
+}
+
+/// One simulation day's cash-flow inputs for financial reporting.
+struct FinancialSummaryRow {
+    let day: Int
+    let locationID: LocationID
+    let revenue: Double
+    let costs: [Cost]
+}
+
+/// Derived, in-memory financial reporting data rebuilt from persisted day
+/// summaries. It includes both operating and non-operating days because costs
+/// such as relocation remain financially meaningful when revenue is zero.
+struct FinancialSummary {
+    private(set) var rows: [FinancialSummaryRow] = []
+
+    init(
+        summaries: [DaySummary] = []
+    ) {
+        for summary in summaries.sorted(by: { $0.day < $1.day }) {
+            append(from: summary)
+        }
+    }
+
+    mutating func append(
+        from summary: DaySummary
+    ) {
+        precondition(
+            rows.last.map { $0.day < summary.day } ?? true,
+            "Financial-summary rows must be appended in chronological order."
+        )
+
+        rows.append(
+            FinancialSummaryRow(
+                day: summary.day,
+                locationID: summary.locationID,
+                revenue: summary.revenue,
+                costs: summary.cashFlowCosts
+            )
+        )
+    }
+}
+
 enum AnalysisPeriod: String, CaseIterable, Identifiable {
     case tenDays
     case thirtyDays

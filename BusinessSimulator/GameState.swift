@@ -25,6 +25,7 @@ final class GameState {
     var finance: Finance!
     var priceAnalytics = PriceAnalytics()
     var salesAnalytics: SalesAnalytics!
+    var financialSummary = FinancialSummary()
     var calendar: GameCalendar!
     var weather: WeatherState!
     var locationState: LocationState?
@@ -88,6 +89,7 @@ final class GameState {
                transaction.direction == .outflow {
                 summary.cashFlowCosts.append(
                     Cost(
+                        category: businessEvent.costCategory,
                         name: businessEvent.title,
                         amount: transaction.amount
                     )
@@ -122,6 +124,7 @@ final class GameState {
         self.upgradeTracker = UpgradeTracker()
         self.priceAnalytics = PriceAnalytics()
         self.salesAnalytics = SalesAnalytics(product: product)
+        self.financialSummary = FinancialSummary()
 
         let locationCatalog = LocationCatalog()
         let locationTiers = locationCatalog.tiersByProduct[product.id]!
@@ -475,10 +478,22 @@ final class GameState {
             summary.expiredIngredientCost =
                 savedSummary.expiredIngredientCost
             summary.economicCosts = savedSummary.economicCosts.map {
-                Cost(name: $0.name, amount: $0.amount)
+                Cost(
+                    category: $0.category ?? .ingredients,
+                    displaySuffix: $0.displaySuffix,
+                    name: $0.name,
+                    amount: $0.amount
+                )
             }
             summary.cashFlowCosts = savedSummary.cashFlowCosts.map {
-                Cost(name: $0.name, amount: $0.amount)
+                Cost(
+                    category: $0.category ?? .legacyCategory(
+                        for: $0.name
+                    ),
+                    displaySuffix: $0.displaySuffix,
+                    name: $0.name,
+                    amount: $0.amount
+                )
             }
             summary.businessEvents = savedSummary.businessEvents
             summary.dailyReputationResult =
@@ -501,6 +516,9 @@ final class GameState {
         )
         salesAnalytics = SalesAnalytics(
             product: product,
+            summaries: simulationSummary.daySummaries
+        )
+        financialSummary = FinancialSummary(
             summaries: simulationSummary.daySummaries
         )
 

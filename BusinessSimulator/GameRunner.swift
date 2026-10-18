@@ -143,6 +143,7 @@ struct GameRunner {
         gameState.simulationSummary.daySummaries.append(summary)
         gameState.priceAnalytics.append(from: summary)
         gameState.salesAnalytics.append(from: summary)
+        gameState.financialSummary.append(from: summary)
     }
 
     static func prepForNextDay(

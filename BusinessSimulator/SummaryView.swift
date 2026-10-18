@@ -145,7 +145,7 @@ struct SummaryView: View {
                     id: \.offset
                 ) { index, cost in
                     summaryRow(
-                        label: cost.name,
+                        label: cost.displayName,
                         value: currency(cost.amount)
                     )
 

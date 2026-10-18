@@ -117,6 +117,9 @@ struct DaySummarySave: Codable {
 }
 
 struct CostSave: Codable {
+    /// Optional so saves created before financial reporting remain restorable.
+    let category: CostCategory?
+    let displaySuffix: String?
     let name: String
     let amount: Double
 }
@@ -256,12 +259,16 @@ extension GameSave {
                 expiredIngredientCost: summary.expiredIngredientCost,
                 economicCosts: summary.economicCosts.map { cost in
                     CostSave(
+                        category: cost.category,
+                        displaySuffix: cost.displaySuffix,
                         name: cost.name,
                         amount: cost.amount
                     )
                 },
                 cashFlowCosts: summary.cashFlowCosts.map { cost in
                     CostSave(
+                        category: cost.category,
+                        displaySuffix: cost.displaySuffix,
                         name: cost.name,
                         amount: cost.amount
                     )
