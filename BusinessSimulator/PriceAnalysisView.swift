@@ -693,7 +693,7 @@ struct PriceAnalysisView: View {
     }
 }
 
-private extension AnalysisPeriod {
+extension AnalysisPeriod {
     var title: String {
         switch self {
         case .tenDays:

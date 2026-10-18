@@ -452,7 +452,8 @@ struct GameRootView: View {
 
             if selectedArea == .finance {
                 FinanceView(
-                    priceAnalytics: gameState.priceAnalytics
+                    priceAnalytics: gameState.priceAnalytics,
+                    salesAnalytics: gameState.salesAnalytics
                 )
                 .ignoresSafeArea()
             }
