@@ -57,6 +57,43 @@ struct FinancialSummaryRow {
     let costs: [Cost]
 }
 
+/// One itemized cost total within a financial-report category.
+struct FinancialCostItem: Identifiable {
+    var id: String { name }
+
+    let name: String
+    let total: Double
+}
+
+/// All itemized costs and their combined total for one cost category.
+struct FinancialCostCategory: Identifiable {
+    var id: CostCategory { category }
+
+    let category: CostCategory
+    let items: [FinancialCostItem]
+    let total: Double
+}
+
+/// One chronological point used by the revenue-trend graph.
+struct FinancialRevenuePoint: Identifiable {
+    var id: Int { day }
+
+    let day: Int
+    let revenue: Double
+}
+
+/// Display-ready financial results for all locations or one selected location.
+struct FinancialReport {
+    let locationID: LocationID?
+    let totalDays: Int
+    let totalRevenue: Double
+    let revenuePerDay: Double
+    let revenueByDay: [FinancialRevenuePoint]
+    let costCategories: [FinancialCostCategory]
+    let totalCosts: Double
+    let netProfit: Double
+}
+
 /// Derived, in-memory financial reporting data rebuilt from persisted day
 /// summaries. It includes both operating and non-operating days because costs
 /// such as relocation remain financially meaningful when revenue is zero.
@@ -86,6 +123,67 @@ struct FinancialSummary {
                 revenue: summary.revenue,
                 costs: summary.cashFlowCosts
             )
+        )
+    }
+
+    /// Builds a report from all rows when `locationID` is nil, or only rows
+    /// belonging to the requested location otherwise.
+    func report(
+        for locationID: LocationID?
+    ) -> FinancialReport {
+        let filteredRows = rows.filter { row in
+            locationID.map { row.locationID == $0 } ?? true
+        }
+        let totalRevenue = filteredRows.reduce(0.0) {
+            $0 + $1.revenue
+        }
+        let allCosts = filteredRows.flatMap(\.costs)
+
+        let costsByCategory = Dictionary(
+            grouping: allCosts,
+            by: \.category
+        )
+        let costCategories = CostCategory.allCases.map { category in
+            let categoryCosts = costsByCategory[category, default: []]
+            let itemTotals = categoryCosts.reduce(into: [String: Double]()) {
+                totals,
+                cost in
+                totals[cost.name, default: 0] += cost.amount
+            }
+            let items = itemTotals.map { name, total in
+                FinancialCostItem(name: name, total: total)
+            }
+            .sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name)
+                    == .orderedAscending
+            }
+
+            return FinancialCostCategory(
+                category: category,
+                items: items,
+                total: categoryCosts.reduce(0.0) {
+                    $0 + $1.amount
+                }
+            )
+        }
+        let totalCosts = allCosts.reduce(0.0) {
+            $0 + $1.amount
+        }
+        let totalDays = filteredRows.count
+
+        return FinancialReport(
+            locationID: locationID,
+            totalDays: totalDays,
+            totalRevenue: totalRevenue,
+            revenuePerDay: totalDays == 0
+                ? 0
+                : totalRevenue / Double(totalDays),
+            revenueByDay: filteredRows.map {
+                FinancialRevenuePoint(day: $0.day, revenue: $0.revenue)
+            },
+            costCategories: costCategories,
+            totalCosts: totalCosts,
+            netProfit: totalRevenue - totalCosts
         )
     }
 }
