@@ -300,7 +300,7 @@ extension RelocationWorkflowTests {
 
         #expect(summary.type == .relocation)
         #expect(summary.day == startingDay)
-        #expect(summary.locationID == request.destination.id)
+        #expect(summary.locationID == startingLocation)
         #expect(summary.startingBalance == startingBalance)
         #expect(summary.businessEvents.count == 1)
         #expect(

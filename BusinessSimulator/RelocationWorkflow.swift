@@ -183,7 +183,9 @@ struct RelocationWorkflow {
 
         let relocationSummary = DaySummary(
             day: gameState.calendar.simulationDay,
-            locationID: request.destination.id,
+            // Relocation consumes the current location's operating day. The
+            // destination begins on the following simulation day.
+            locationID: rollbackSnapshot.activeLocationID,
             startingBalance: gameState.finance.actualBalance,
             type: .relocation
         )
