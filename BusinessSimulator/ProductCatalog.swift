@@ -334,8 +334,8 @@ struct ProductCatalog {
                 idealUnitsSold: 141,
                 priceSensitivity: 6.0,
                 temperatureInterpolationFormula: .warmWeather,
-                recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 6, day: 1),
-                recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 8, day: 31)
+                recurringOperatingPeriodStartDate: OperatingPeriodCalendarDate(month: 5, day: 1),
+                recurringOperatingPeriodEndDate: OperatingPeriodCalendarDate(month: 7, day: 31)
             ),
             Product(
                 id: .hotDogs,

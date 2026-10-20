@@ -79,6 +79,7 @@ struct HeaderView: View {
         Text(
             gameState.finance.displayedBalance,
             format: .currency(code: "USD")
+                .precision(.fractionLength(2))
         )
         .font(.system(size: 14, weight: .bold))
         .foregroundStyle(darkBrown)
@@ -90,6 +91,7 @@ struct HeaderView: View {
         .accessibilityValue(
             gameState.finance.displayedBalance.formatted(
                 .currency(code: "USD")
+                    .precision(.fractionLength(2))
             )
         )
     }

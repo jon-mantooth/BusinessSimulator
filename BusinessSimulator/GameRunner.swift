@@ -39,6 +39,8 @@ struct GameRunner {
             demand: demand
         )
 
+        addPriceAnalysisFactorsToSummary()
+
         let baselineRevenue =
             gameState.productState!.calculateBaselineRevenue()
 
@@ -51,14 +53,16 @@ struct GameRunner {
             predictedRevenue: predictedRevenue)
         summary.demandedSales = predictedSales
 
-        var actualSales = predictedSales
-        
-        for department in departments{
-            actualSales = department.applySalesLimits(
-                sales: actualSales,
-                summary: summary
-            )
+        summary.salesLimits = departments.flatMap {
+            $0.calculateSalesLimits()
         }
+
+        let lowestSalesLimit = summary.salesLimits
+            .map(\.units)
+            .min()
+            ?? predictedSales
+        let actualSales = min(predictedSales, lowestSalesLimit)
+        summary.sales = actualSales
 
         let demandFulfillmentRate = Self.calculateDemandFulfillmentRate(
             demandedSales: predictedSales,
@@ -111,7 +115,6 @@ struct GameRunner {
         }
 
         let actualRevenue = Double(actualSales) * gameState.productState!.price
-        summary.sales = actualSales
         summary.revenue = actualRevenue
         
         return summary
@@ -138,6 +141,7 @@ struct GameRunner {
         gameState.finance.displayedBalance = summary.balance
 
         gameState.simulationSummary.daySummaries.append(summary)
+        gameState.businessAnalytics.append(from: summary)
     }
 
     static func prepForNextDay(
@@ -171,6 +175,35 @@ struct GameRunner {
         demandedSales > 0
             ? Double(actualSales) / Double(demandedSales)
             : 1.0
+    }
+
+    private func addPriceAnalysisFactorsToSummary() {
+        guard let productState = gameState.productState,
+              let reputation = gameState.reputation,
+              let equipmentState = gameState.equipmentState,
+              let advertisementState = gameState.advertisementState,
+              let activeAdvertisement =
+                advertisementState.activeAdvertisement else {
+            preconditionFailure(
+                "Price analysis factors require an initialized business."
+            )
+        }
+
+        let dailyWeather = gameState.weather.weather(
+            for: gameState.calendar.currentDate
+        )
+
+        summary.price = productState.price
+        summary.idealPrice = productState.currentIdealPrice
+        summary.highTemperature = dailyWeather.highTemperature
+        summary.lowTemperature = dailyWeather.lowTemperature
+        summary.weatherDemandMultiplier =
+            productState.product.temperatureInterpolationFormula
+                .demandMultiplier(for: dailyWeather.demandTemperature)
+        summary.businessReputation = reputation.overallReputation
+        summary.equipmentLevel =
+            equipmentState.activePrimaryEquipment.tierLevel
+        summary.advertisementLevel = activeAdvertisement.tierLevel
     }
 
     /// Applies natural daily variance to baseline revenue using a normal

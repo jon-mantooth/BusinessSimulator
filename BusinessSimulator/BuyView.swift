@@ -159,6 +159,7 @@ struct BuyView: View {
                     title: "Unit Cost",
                     value: inventory.pricePerUnit.formatted(
                         .currency(code: "USD")
+                            .precision(.fractionLength(2))
                     ),
                     systemName: "tag"
                 )
@@ -227,6 +228,7 @@ struct BuyView: View {
                         Text(
                             purchaseCost,
                             format: .currency(code: "USD")
+                                .precision(.fractionLength(2))
                         )
                         .font(.title3)
                         .fontWeight(.bold)

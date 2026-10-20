@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameSave: Codable {
-    static let currentSchemaVersion = 16
+    static let currentSchemaVersion = 20
 
     let schemaVersion: Int
     let finance: FinanceSave
@@ -98,6 +98,17 @@ struct DaySummarySave: Codable {
     let demandedSales: Int
     let sales: Int
     let revenue: Double
+    let price: Double?
+    let idealPrice: Double?
+    let highTemperature: Int?
+    let lowTemperature: Int?
+    let weatherDemandMultiplier: Double?
+    let businessReputation: Double?
+    let equipmentLevel: Int?
+    let advertisementLevel: Int?
+    let salesLimits: [SalesLimit]
+    let consumedIngredientCost: Double
+    let expiredIngredientCost: Double
     let economicCosts: [CostSave]
     let cashFlowCosts: [CostSave]
     let businessEvents: [BusinessEvent]
@@ -106,6 +117,9 @@ struct DaySummarySave: Codable {
 }
 
 struct CostSave: Codable {
+    /// Optional so saves created before financial reporting remain restorable.
+    let category: CostCategory?
+    let displaySuffix: String?
     let name: String
     let amount: Double
 }
@@ -232,14 +246,29 @@ extension GameSave {
                 demandedSales: summary.demandedSales,
                 sales: summary.sales,
                 revenue: summary.revenue,
+                price: summary.price,
+                idealPrice: summary.idealPrice,
+                highTemperature: summary.highTemperature,
+                lowTemperature: summary.lowTemperature,
+                weatherDemandMultiplier: summary.weatherDemandMultiplier,
+                businessReputation: summary.businessReputation,
+                equipmentLevel: summary.equipmentLevel,
+                advertisementLevel: summary.advertisementLevel,
+                salesLimits: summary.salesLimits,
+                consumedIngredientCost: summary.consumedIngredientCost,
+                expiredIngredientCost: summary.expiredIngredientCost,
                 economicCosts: summary.economicCosts.map { cost in
                     CostSave(
+                        category: cost.category,
+                        displaySuffix: cost.displaySuffix,
                         name: cost.name,
                         amount: cost.amount
                     )
                 },
                 cashFlowCosts: summary.cashFlowCosts.map { cost in
                     CostSave(
+                        category: cost.category,
+                        displaySuffix: cost.displaySuffix,
                         name: cost.name,
                         amount: cost.amount
                     )

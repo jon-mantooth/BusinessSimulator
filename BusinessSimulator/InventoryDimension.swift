@@ -21,6 +21,7 @@ final class InventoryDimension: Dimension {
         let productInventoryState: ProductInventoryState
 
         let name: String
+        let type: InventoryType
         let purchaseUnitPrice: Double
         let purchaseUnitAmount: Double
         var recipeUnitAmount: Double {
@@ -37,6 +38,7 @@ final class InventoryDimension: Dimension {
             let inventory = productInventory.inventory
 
             self.name = inventory.name
+            self.type = inventory.type
             self.purchaseUnitPrice = inventory.pricePerUnit
             self.purchaseUnitAmount = Double(inventory.purchaseAmount)
             self.freshnessCoefficient =
@@ -84,24 +86,11 @@ final class InventoryDimension: Dimension {
         return demand
     }
 
-    ///Based on demand and variance we calculate total sales. However it is possible
-    ///that the sales driven by demand are greater than the amoint we can produce
-    ///This function determines the amount we can possibly produce and compares to unsure
-    ///we can meet the demand
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-
-        //maps the potential sales for each ingredient amount to the ingredient
-        //for every ingredient in the product. Allows us to determine which ingredient/s
-        //are the limiting factor and what that limit is
-        var inventoryLimits: [
-            (inventory: InventoryItem, unitsPossible: Int)
-        ] = []
-
-        for inventory in inventories {
-
+    /// Returns the number of complete products supported by every active
+    /// ingredient. GameRunner compares these limits with infrastructure
+    /// capacity and predicted demand after all departments report their data.
+    func calculateSalesLimits() -> [SalesLimit] {
+        inventories.map { inventory in
             // Inventory is stored in purchase units.
             // Convert the total inventory into recipe units so it can
             // be compared with the amount required for one product.
@@ -114,33 +103,14 @@ final class InventoryDimension: Dimension {
                 inventory.recipeUnitAmount
             )
 
-            inventoryLimits.append(
-                (
-                    inventory: inventory,
-                    unitsPossible: unitsPossible
-                )
+            return SalesLimit(
+                type: .ingredient(
+                    type: inventory.type,
+                    name: inventory.name
+                ),
+                units: unitsPossible
             )
         }
-
-        // Sales cannot exceed predicted demand or any inventory limit.
-        let salesLimit = inventoryLimits.reduce(sales) {
-            min($0, $1.unitsPossible)
-        }
-
-        // Record every inventory item that caused the final limit.
-        if salesLimit < sales {
-
-            for inventoryLimit in inventoryLimits
-            where inventoryLimit.unitsPossible == salesLimit {
-
-                summary.addNote(
-                    sectionName: "Inventory",
-                    note: "Sales were limited by a shortage of \(inventoryLimit.inventory.name)."
-                )
-            }
-        }
-
-        return salesLimit
     }
     
     func calculateDailyCosts(sales: Int, summary: DaySummary) -> Double {
@@ -158,8 +128,13 @@ final class InventoryDimension: Dimension {
         }
         
         if totalCosts > 0 {
+            summary.consumedIngredientCost += totalCosts
             summary.economicCosts.append(
-                Cost(name: "Ingredients", amount: totalCosts)
+                Cost(
+                    category: .ingredients,
+                    name: "Ingredients",
+                    amount: totalCosts
+                )
             )
         }
         return totalCosts
@@ -194,8 +169,13 @@ final class InventoryDimension: Dimension {
             }
         }
         if totalCost > 0 {
+            summary.expiredIngredientCost += totalCost
             summary.economicCosts.append(
-                Cost(name: "Expired Inventory", amount: totalCost)
+                Cost(
+                    category: .ingredients,
+                    name: "Expired Inventory",
+                    amount: totalCost
+                )
             )
         }
     }

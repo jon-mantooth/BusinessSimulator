@@ -275,7 +275,7 @@ struct EquipmentViewPrimary: View {
     ) -> String {
         price.formatted(
             .currency(code: "USD")
-                .precision(.fractionLength(0))
+                .precision(.fractionLength(2))
         )
     }
 }

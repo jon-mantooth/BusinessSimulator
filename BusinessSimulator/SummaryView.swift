@@ -21,6 +21,10 @@ struct SummaryView: View {
         summary.cashFlowCosts.reduce(0) { $0 + $1.amount }
     }
 
+    private var noteSections: [SummarySection] {
+        summary.presentedSections
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -30,7 +34,7 @@ struct SummaryView: View {
                 resultsSection
                 balanceSection
 
-                if !summary.sections.isEmpty {
+                if !noteSections.isEmpty {
                     notesSection
                 }
 
@@ -141,7 +145,7 @@ struct SummaryView: View {
                     id: \.offset
                 ) { index, cost in
                     summaryRow(
-                        label: cost.name,
+                        label: cost.displayName,
                         value: currency(cost.amount)
                     )
 
@@ -209,7 +213,7 @@ struct SummaryView: View {
             contentColor: blue.opacity(0.08)
         ) {
             ForEach(
-                Array(summary.sections.enumerated()),
+                Array(noteSections.enumerated()),
                 id: \.offset
             ) { sectionIndex, noteSection in
                 VStack(alignment: .leading, spacing: 5) {
@@ -229,7 +233,7 @@ struct SummaryView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if sectionIndex < summary.sections.count - 1 {
+                if sectionIndex < noteSections.count - 1 {
                     Divider()
                 }
             }
@@ -338,7 +342,10 @@ struct SummaryView: View {
     }
 
     private func currency(_ amount: Double) -> String {
-        amount.formatted(.currency(code: "USD"))
+        amount.formatted(
+            .currency(code: "USD")
+                .precision(.fractionLength(2))
+        )
     }
 
     private func signedCurrency(_ amount: Double) -> String {

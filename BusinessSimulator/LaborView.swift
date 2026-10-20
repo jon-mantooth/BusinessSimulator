@@ -200,7 +200,9 @@ struct LaborView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 } else {
                     HStack(spacing: 5) {
-                        Text("$\(Int(employee.price)) / day")
+                        Text(
+                            "\(currency(employee.price)) / day"
+                        )
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(ink)
 
@@ -303,5 +305,12 @@ struct LaborView: View {
                     .foregroundStyle(star <= min(level, 5) ? .orange : .brown)
             }
         }
+    }
+
+    private func currency(_ value: Double) -> String {
+        value.formatted(
+            .currency(code: "USD")
+                .precision(.fractionLength(2))
+        )
     }
 }

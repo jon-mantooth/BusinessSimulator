@@ -183,6 +183,8 @@ struct RelocationWorkflow {
 
         let relocationSummary = DaySummary(
             day: gameState.calendar.simulationDay,
+            // Relocation consumes the current location's operating day. The
+            // destination begins on the following simulation day.
             locationID: rollbackSnapshot.activeLocationID,
             startingBalance: gameState.finance.actualBalance,
             type: .relocation
@@ -190,6 +192,7 @@ struct RelocationWorkflow {
         relocationSummary.businessEvents.append(relocationEvent)
         relocationSummary.cashFlowCosts.append(
             Cost(
+                category: .relocation,
                 name: "Relocation",
                 amount: request.relocationPrice
             )
@@ -212,6 +215,8 @@ struct RelocationWorkflow {
             try saveRepository.save(
                 GameSave(gameState: gameState)
             )
+
+            gameState.businessAnalytics.append(from: relocationSummary)
 
             return .completed(relocationSummary)
         } catch {

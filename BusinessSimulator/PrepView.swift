@@ -384,6 +384,7 @@ struct PrepView: View {
                     Text(
                         price,
                         format: .currency(code: "USD")
+                            .precision(.fractionLength(2))
                     )
                         .font(.title3)
                         .fontWeight(.bold)
@@ -398,7 +399,10 @@ struct PrepView: View {
                         .tint(.clear)
                         .accessibilityLabel("Unit price")
                         .accessibilityValue(
-                            price.formatted(.currency(code: "USD"))
+                            price.formatted(
+                                .currency(code: "USD")
+                                    .precision(.fractionLength(2))
+                            )
                         )
                         .padding(.horizontal, 10)
 

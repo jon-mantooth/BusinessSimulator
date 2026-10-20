@@ -51,3 +51,14 @@ struct BusinessEvent: Identifiable, Codable {
         self.financialTransaction = financialTransaction
     }
 }
+
+extension BusinessEvent {
+    var costCategory: CostCategory {
+        switch type {
+        case let .purchase(purchaseEvent):
+            return purchaseEvent.category.costCategory
+        case .relocation:
+            return .relocation
+        }
+    }
+}

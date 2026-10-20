@@ -400,7 +400,7 @@ struct AdvertisementView: View {
         }
 
         return advertisement.price.formatted(
-            .currency(code: "USD").precision(.fractionLength(0))
+            .currency(code: "USD").precision(.fractionLength(2))
         )
     }
 

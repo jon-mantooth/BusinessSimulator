@@ -68,15 +68,12 @@ extension ProductInventoryTests {
         ingredientState.recipeAmountMultiplier = 0.5
         ingredientState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         let dimension = InventoryDimension(productState: productState)
-        let summary = DaySummary(day: 1, startingBalance: 100)
 
-        let sales = dimension.applySalesLimits(
-            sales: 10,
-            summary: summary
-        )
+        let limits = dimension.calculateSalesLimits()
+        let limit = limits.first
 
-        #expect(sales == 10)
-        #expect(summary.sections.isEmpty)
+        #expect(limits.count == 1)
+        #expect(limit?.units == 10)
     }
 
     @Test
@@ -98,6 +95,7 @@ extension ProductInventoryTests {
         )
 
         #expect(abs(cost - 4.0) < 0.000_001)
+        #expect(abs(summary.consumedIngredientCost - 4.0) < 0.000_001)
         #expect(
             abs(ingredientState.inventoryByAge.totalInventory - 0.6)
                 < 0.000_001
@@ -171,18 +169,22 @@ extension ProductInventoryTests {
         baseState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         upgradedState.inventoryByAge.inventoryByPurchaseDay = [1: 1]
         upgradedState.lifespanMultiplier = 2.0
+        let baseSummary = DaySummary(day: 6, startingBalance: 100)
+        let upgradedSummary = DaySummary(day: 6, startingBalance: 100)
 
         InventoryDimension(productState: baseProductState).prepForNextDay(
             currentDay: 7,
-            summary: DaySummary(day: 6, startingBalance: 100)
+            summary: baseSummary
         )
         InventoryDimension(productState: upgradedProductState).prepForNextDay(
             currentDay: 7,
-            summary: DaySummary(day: 6, startingBalance: 100)
+            summary: upgradedSummary
         )
 
         #expect(baseState.inventoryByAge.totalInventory == 0)
         #expect(upgradedState.inventoryByAge.totalInventory == 1)
+        #expect(baseSummary.expiredIngredientCost == 1)
+        #expect(upgradedSummary.expiredIngredientCost == 0)
     }
 
     @Test
@@ -218,23 +220,33 @@ extension ProductInventoryTests {
             EquipmentCatalog().meatGrinder.ingredientUpgrade
         )
         productState.applyIngredientUpgrade(upgrade)
-        let summary = DaySummary(day: 1, startingBalance: 100)
+        let limits = dimension.calculateSalesLimits()
+        let reportedIngredientNames: [String] = limits.compactMap { limit in
+            guard case let .ingredient(_, name) = limit.type else {
+                return nil
+            }
+            return name
+        }.sorted()
+        let activeIngredientNames = productState.productInventoryStates.map {
+            $0.productInventory.inventory.name
+        }.sorted()
+        let inactiveIngredientNames = productState.allProductInventoryStates
+            .filter { !$0.isActive }
+            .map { $0.productInventory.inventory.name }
+        let limitingIngredientNames: [String] = limits.compactMap { limit in
+            guard limit.units == 0,
+                  case let .ingredient(_, name) = limit.type else {
+                return nil
+            }
+            return name
+        }
 
-        let sales = dimension.applySalesLimits(
-            sales: 10,
-            summary: summary
-        )
-
-        #expect(sales == 0)
+        #expect(limitingIngredientNames.contains("Beef"))
+        #expect(limitingIngredientNames.contains("Spices"))
+        #expect(reportedIngredientNames == activeIngredientNames)
         #expect(
-            summary.sections.contains { section in
-                section.name == "Inventory"
-                    && section.notes.contains {
-                        $0.contains("Beef")
-                    }
-                    && section.notes.contains {
-                        $0.contains("Spices")
-                    }
+            inactiveIngredientNames.allSatisfy {
+                !reportedIngredientNames.contains($0)
             }
         )
     }

@@ -32,20 +32,8 @@ final class MarketingDepartment: Department {
         return marketSize
     }
 
-    func applySalesLimits(
-        sales: Int,
-        summary: DaySummary
-    ) -> Int {
-        var sales = sales
-
-        for dimension in dimensions {
-            sales = dimension.applySalesLimits(
-                sales: sales,
-                summary: summary
-            )
-        }
-
-        return sales
+    func calculateSalesLimits() -> [SalesLimit] {
+        dimensions.flatMap { $0.calculateSalesLimits() }
     }
 
     func calculateDailyCosts(

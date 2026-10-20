@@ -23,6 +23,7 @@ final class GameState {
     private static let startingDay = 1
 
     var finance: Finance!
+    var businessAnalytics: BusinessAnalytics!
     var calendar: GameCalendar!
     var weather: WeatherState!
     var locationState: LocationState?
@@ -86,6 +87,7 @@ final class GameState {
                transaction.direction == .outflow {
                 summary.cashFlowCosts.append(
                     Cost(
+                        category: businessEvent.costCategory,
                         name: businessEvent.title,
                         amount: transaction.amount
                     )
@@ -118,6 +120,7 @@ final class GameState {
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
+        self.businessAnalytics = BusinessAnalytics(product: product)
 
         let locationCatalog = LocationCatalog()
         let locationTiers = locationCatalog.tiersByProduct[product.id]!
@@ -217,6 +220,9 @@ final class GameState {
         }
     }
 
+    // TODO: Refactor restoration into focused validation/build helpers. Build
+    // all restored components before assigning them so a thrown error cannot
+    // leave GameState partially restored.
     func restoreBusiness(
         from gameSave: GameSave
     ) throws {
@@ -453,11 +459,37 @@ final class GameState {
             summary.demandedSales = savedSummary.demandedSales
             summary.sales = savedSummary.sales
             summary.revenue = savedSummary.revenue
+            summary.price = savedSummary.price
+            summary.idealPrice = savedSummary.idealPrice
+            summary.highTemperature = savedSummary.highTemperature
+            summary.lowTemperature = savedSummary.lowTemperature
+            summary.weatherDemandMultiplier =
+                savedSummary.weatherDemandMultiplier
+            summary.businessReputation = savedSummary.businessReputation
+            summary.equipmentLevel = savedSummary.equipmentLevel
+            summary.advertisementLevel = savedSummary.advertisementLevel
+            summary.salesLimits = savedSummary.salesLimits
+            summary.consumedIngredientCost =
+                savedSummary.consumedIngredientCost
+            summary.expiredIngredientCost =
+                savedSummary.expiredIngredientCost
             summary.economicCosts = savedSummary.economicCosts.map {
-                Cost(name: $0.name, amount: $0.amount)
+                Cost(
+                    category: $0.category ?? .ingredients,
+                    displaySuffix: $0.displaySuffix,
+                    name: $0.name,
+                    amount: $0.amount
+                )
             }
             summary.cashFlowCosts = savedSummary.cashFlowCosts.map {
-                Cost(name: $0.name, amount: $0.amount)
+                Cost(
+                    category: $0.category ?? .legacyCategory(
+                        for: $0.name
+                    ),
+                    displaySuffix: $0.displaySuffix,
+                    name: $0.name,
+                    amount: $0.amount
+                )
             }
             summary.businessEvents = savedSummary.businessEvents
             summary.dailyReputationResult =
@@ -474,6 +506,11 @@ final class GameState {
 
             return summary
         }
+
+        businessAnalytics = BusinessAnalytics(
+            product: product,
+            summaries: simulationSummary.daySummaries
+        )
 
         let dimensions = BusinessDimensions.create(gameState: self)
         production = Production(dimensions: dimensions.production)

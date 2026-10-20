@@ -20,6 +20,16 @@ struct DailyWeather: Identifiable {
     let lowTemperature: Int
     let condition: WeatherCondition
 
+    /// Approximates the temperature during operating hours. Businesses are
+    /// open during the warmer portion of the day, but not exclusively at the
+    /// daily high.
+    var demandTemperature: Double {
+        let low = Double(lowTemperature)
+        let temperatureRange = Double(highTemperature - lowTemperature)
+
+        return low + (temperatureRange * 0.60)
+    }
+
     var id: Date {
         date
     }
@@ -277,38 +287,8 @@ final class WeatherDimension: Dimension {
 
     func calculateDemand() -> Double {
         let weather = weatherState.weather(for: calendar.currentDate)
-        let temperature = Double(weather.highTemperature)
-        let effectScore: Double
-
-        switch product.temperatureInterpolationFormula {
-        case .warmWeather:
-            effectScore = min(
-                (temperature - 68) / 22,
-                1.0
-            )
-
-        case .coldWeather:
-            effectScore = min(
-                (65 - temperature) / 20,
-                1.0
-            )
-
-        case .temperateWeather:
-            switch temperature {
-            case ..<50:
-                effectScore = (temperature - 50) / (50.0 / 3.0)
-            case 50..<70:
-                effectScore = (temperature - 50) / 20
-            case 70...80:
-                effectScore = 1.0
-            default:
-                effectScore = (95 - temperature) / 15
-            }
-        }
-
-        return SimulationBalance.demand.multiplier(
-            weight: Self.demandWeight,
-            effectScore: effectScore
+        return product.temperatureInterpolationFormula.demandMultiplier(
+            for: weather.demandTemperature
         )
     }
 
@@ -334,4 +314,43 @@ enum TemperatureInterpolationFormula {
     case warmWeather
     case coldWeather
     case temperateWeather
+
+    func effectScore(
+        for temperature: Double
+    ) -> Double {
+        switch self {
+        case .warmWeather:
+            return min(
+                (temperature - 68) / 22,
+                1.0
+            )
+
+        case .coldWeather:
+            return min(
+                (65 - temperature) / 20,
+                1.0
+            )
+
+        case .temperateWeather:
+            switch temperature {
+            case ..<50:
+                return (temperature - 50) / (50.0 / 3.0)
+            case 50..<70:
+                return (temperature - 50) / 20
+            case 70...80:
+                return 1.0
+            default:
+                return (95 - temperature) / 15
+            }
+        }
+    }
+
+    func demandMultiplier(
+        for temperature: Double
+    ) -> Double {
+        SimulationBalance.demand.multiplier(
+            weight: WeatherDimension.demandWeight,
+            effectScore: effectScore(for: temperature)
+        )
+    }
 }
