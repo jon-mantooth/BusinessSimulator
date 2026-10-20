@@ -736,6 +736,36 @@ struct SalesAnalytics {
     }
 }
 
+/// Coordinates the reporting datasets that are derived from day summaries.
+/// Each specialized analytics type remains responsible for deciding which
+/// summary types it accepts and how its reporting data is calculated.
+struct BusinessAnalytics {
+    private(set) var priceAnalytics: PriceAnalytics
+    private(set) var salesAnalytics: SalesAnalytics
+    private(set) var financialSummary: FinancialSummary
+
+    init(
+        product: Product,
+        summaries: [DaySummary] = []
+    ) {
+        priceAnalytics = PriceAnalytics()
+        salesAnalytics = SalesAnalytics(product: product)
+        financialSummary = FinancialSummary()
+
+        for summary in summaries.sorted(by: { $0.day < $1.day }) {
+            append(from: summary)
+        }
+    }
+
+    mutating func append(
+        from summary: DaySummary
+    ) {
+        priceAnalytics.append(from: summary)
+        salesAnalytics.append(from: summary)
+        financialSummary.append(from: summary)
+    }
+}
+
 struct Finance {
     var actualBalance: Double
     var displayedBalance: Double

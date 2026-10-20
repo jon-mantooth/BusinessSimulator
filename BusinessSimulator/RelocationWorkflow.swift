@@ -216,7 +216,7 @@ struct RelocationWorkflow {
                 GameSave(gameState: gameState)
             )
 
-            gameState.financialSummary.append(from: relocationSummary)
+            gameState.businessAnalytics.append(from: relocationSummary)
 
             return .completed(relocationSummary)
         } catch {

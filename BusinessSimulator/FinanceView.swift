@@ -1,9 +1,7 @@
 import SwiftUI
 
 struct FinanceView: View {
-    let priceAnalytics: PriceAnalytics
-    let salesAnalytics: SalesAnalytics
-    let financialSummary: FinancialSummary
+    let businessAnalytics: BusinessAnalytics
 
     @State private var showingPriceAnalysis = false
     @State private var showingSalesAnalysis = false
@@ -101,7 +99,7 @@ struct FinanceView: View {
         .clipped()
         .fullScreenCover(isPresented: $showingPriceAnalysis) {
             PriceAnalysisView(
-                priceAnalytics: priceAnalytics,
+                priceAnalytics: businessAnalytics.priceAnalytics,
                 onClose: {
                     showingPriceAnalysis = false
                 }
@@ -109,7 +107,7 @@ struct FinanceView: View {
         }
         .fullScreenCover(isPresented: $showingSalesAnalysis) {
             SalesAnalysisView(
-                salesAnalytics: salesAnalytics,
+                salesAnalytics: businessAnalytics.salesAnalytics,
                 onClose: {
                     showingSalesAnalysis = false
                 }
@@ -117,7 +115,7 @@ struct FinanceView: View {
         }
         .fullScreenCover(isPresented: $showingFinancialSummary) {
             FinancialSummaryView(
-                financialSummary: financialSummary,
+                financialSummary: businessAnalytics.financialSummary,
                 onClose: {
                     showingFinancialSummary = false
                 }

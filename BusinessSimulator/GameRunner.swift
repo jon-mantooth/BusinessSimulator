@@ -141,9 +141,7 @@ struct GameRunner {
         gameState.finance.displayedBalance = summary.balance
 
         gameState.simulationSummary.daySummaries.append(summary)
-        gameState.priceAnalytics.append(from: summary)
-        gameState.salesAnalytics.append(from: summary)
-        gameState.financialSummary.append(from: summary)
+        gameState.businessAnalytics.append(from: summary)
     }
 
     static func prepForNextDay(

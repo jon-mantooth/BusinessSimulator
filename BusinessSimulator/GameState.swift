@@ -23,9 +23,7 @@ final class GameState {
     private static let startingDay = 1
 
     var finance: Finance!
-    var priceAnalytics = PriceAnalytics()
-    var salesAnalytics: SalesAnalytics!
-    var financialSummary = FinancialSummary()
+    var businessAnalytics: BusinessAnalytics!
     var calendar: GameCalendar!
     var weather: WeatherState!
     var locationState: LocationState?
@@ -122,9 +120,7 @@ final class GameState {
         self.calendar = GameCalendar(simulationDay: Self.startingDay)
         self.weather = WeatherState()
         self.upgradeTracker = UpgradeTracker()
-        self.priceAnalytics = PriceAnalytics()
-        self.salesAnalytics = SalesAnalytics(product: product)
-        self.financialSummary = FinancialSummary()
+        self.businessAnalytics = BusinessAnalytics(product: product)
 
         let locationCatalog = LocationCatalog()
         let locationTiers = locationCatalog.tiersByProduct[product.id]!
@@ -511,14 +507,8 @@ final class GameState {
             return summary
         }
 
-        priceAnalytics = PriceAnalytics(
-            summaries: simulationSummary.daySummaries
-        )
-        salesAnalytics = SalesAnalytics(
+        businessAnalytics = BusinessAnalytics(
             product: product,
-            summaries: simulationSummary.daySummaries
-        )
-        financialSummary = FinancialSummary(
             summaries: simulationSummary.daySummaries
         )
 
