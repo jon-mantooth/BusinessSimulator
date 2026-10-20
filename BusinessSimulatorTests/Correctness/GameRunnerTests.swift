@@ -115,6 +115,8 @@ extension GameRunnerTests {
         let summary = GameRunner(gameState: gameState).simulateDay()
         let lowestLimit = expectedLimits.map(\.units).min()
             ?? summary.demandedSales
+        let highestLimit = expectedLimits.map(\.units).max()
+            ?? lowestLimit
 
         #expect(summary.demandedSales >= summary.sales)
         #expect(
@@ -125,6 +127,8 @@ extension GameRunnerTests {
             salesLimitsByIdentity(summary.salesLimits)
                 == salesLimitsByIdentity(expectedLimits)
         )
+        #expect(highestLimit > lowestLimit)
+        #expect(summary.salesLimits.contains { $0.units == highestLimit })
 
         for inventoryState in gameState.productState!.productInventoryStates {
             let inventory = inventoryState.productInventory.inventory

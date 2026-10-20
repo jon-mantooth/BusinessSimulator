@@ -221,6 +221,18 @@ extension ProductInventoryTests {
         )
         productState.applyIngredientUpgrade(upgrade)
         let limits = dimension.calculateSalesLimits()
+        let reportedIngredientNames = limits.compactMap { limit in
+            guard case let .ingredient(_, name) = limit.type else {
+                return nil
+            }
+            return name
+        }.sorted()
+        let activeIngredientNames = productState.productInventoryStates.map {
+            $0.productInventory.inventory.name
+        }.sorted()
+        let inactiveIngredientNames = productState.allProductInventoryStates
+            .filter { !$0.isActive }
+            .map { $0.productInventory.inventory.name }
         let limitingIngredientNames: [String] = limits.compactMap { limit in
             guard limit.units == 0,
                   case let .ingredient(_, name) = limit.type else {
@@ -231,6 +243,12 @@ extension ProductInventoryTests {
 
         #expect(limitingIngredientNames.contains("Beef"))
         #expect(limitingIngredientNames.contains("Spices"))
+        #expect(reportedIngredientNames == activeIngredientNames)
+        #expect(
+            inactiveIngredientNames.allSatisfy {
+                !reportedIngredientNames.contains($0)
+            }
+        )
     }
 }
 
