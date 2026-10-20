@@ -465,13 +465,17 @@ struct FinancialSummaryView: View {
                         }
                     }
                     .chartYAxis {
-                        AxisMarks(values: .automatic(desiredCount: 5)) {
+                        AxisMarks(values: .automatic(desiredCount: 5)) { value in
                             AxisGridLine()
                                 .foregroundStyle(Color.black.opacity(0.14))
                             AxisTick()
                                 .foregroundStyle(Color.black.opacity(0.65))
-                            AxisValueLabel()
-                                .foregroundStyle(.black)
+                            AxisValueLabel {
+                                if let amount = value.as(Double.self) {
+                                    Text(currency(amount))
+                                }
+                            }
+                            .foregroundStyle(.black)
                         }
                     }
                 }
