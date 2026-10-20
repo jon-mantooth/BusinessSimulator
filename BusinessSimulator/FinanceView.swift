@@ -3,9 +3,11 @@ import SwiftUI
 struct FinanceView: View {
     let priceAnalytics: PriceAnalytics
     let salesAnalytics: SalesAnalytics
+    let financialSummary: FinancialSummary
 
     @State private var showingPriceAnalysis = false
     @State private var showingSalesAnalysis = false
+    @State private var showingFinancialSummary = false
 
     private let sourceSize = CGSize(width: 853, height: 1_844)
 
@@ -75,6 +77,25 @@ struct FinanceView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Sales Analysis")
                 .zIndex(1)
+
+                Button {
+                    showingFinancialSummary = true
+                } label: {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.001))
+                        .contentShape(Rectangle())
+                }
+                .frame(
+                    width: renderedSize.width * 0.42,
+                    height: renderedSize.height * 0.09
+                )
+                .position(
+                    x: renderedOrigin.x + renderedSize.width * 0.50,
+                    y: renderedOrigin.y + renderedSize.height * 0.53
+                )
+                .buttonStyle(.plain)
+                .accessibilityLabel("Financial Summary")
+                .zIndex(1)
             }
         }
         .clipped()
@@ -91,6 +112,14 @@ struct FinanceView: View {
                 salesAnalytics: salesAnalytics,
                 onClose: {
                     showingSalesAnalysis = false
+                }
+            )
+        }
+        .fullScreenCover(isPresented: $showingFinancialSummary) {
+            FinancialSummaryView(
+                financialSummary: financialSummary,
+                onClose: {
+                    showingFinancialSummary = false
                 }
             )
         }
