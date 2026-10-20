@@ -264,7 +264,7 @@ struct LocationPriceAnalysisResult: Identifiable {
     var id: LocationID { locationID }
 }
 
-private enum FinanceLocationNames {
+enum FinanceLocationNames {
     static let byID: [LocationID: String] = [
         LocationID(rawValue: "home"): "Neighborhood",
         LocationID(rawValue: "ballpark"): "Ballpark",
