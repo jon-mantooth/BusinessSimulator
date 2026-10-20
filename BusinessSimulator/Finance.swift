@@ -101,6 +101,17 @@ struct FinancialReport {
     let costCategories: [FinancialCostCategory]
     let totalCosts: Double
     let netProfit: Double
+
+    func costs(
+        for category: CostCategory
+    ) -> FinancialCostCategory {
+        costCategories.first { $0.category == category }
+            ?? FinancialCostCategory(
+                category: category,
+                items: [],
+                total: 0
+            )
+    }
 }
 
 /// Derived, in-memory financial reporting data rebuilt from persisted day
