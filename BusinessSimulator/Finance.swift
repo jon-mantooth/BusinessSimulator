@@ -53,8 +53,15 @@ extension CostCategory {
 struct FinancialSummaryRow {
     let day: Int
     let locationID: LocationID
+    let startingBalance: Double
     let revenue: Double
     let costs: [Cost]
+
+    var endingBalance: Double {
+        startingBalance + revenue - costs.reduce(0.0) {
+            $0 + $1.amount
+        }
+    }
 }
 
 /// One itemized cost total within a financial-report category.
@@ -86,6 +93,8 @@ struct FinancialRevenuePoint: Identifiable {
 struct FinancialReport {
     let locationID: LocationID?
     let totalDays: Int
+    let startingBalance: Double?
+    let endingBalance: Double?
     let totalRevenue: Double
     let revenuePerDay: Double
     let revenueByDay: [FinancialRevenuePoint]
@@ -120,6 +129,7 @@ struct FinancialSummary {
             FinancialSummaryRow(
                 day: summary.day,
                 locationID: summary.locationID,
+                startingBalance: summary.startingBalance,
                 revenue: summary.revenue,
                 costs: summary.cashFlowCosts
             )
@@ -174,6 +184,8 @@ struct FinancialSummary {
         return FinancialReport(
             locationID: locationID,
             totalDays: totalDays,
+            startingBalance: filteredRows.first?.startingBalance,
+            endingBalance: filteredRows.last?.endingBalance,
             totalRevenue: totalRevenue,
             revenuePerDay: totalDays == 0
                 ? 0
