@@ -160,7 +160,11 @@ struct LocationSelectionView: View {
                 }
             }
 
-            Text(relocationCost, format: .currency(code: "USD"))
+            Text(
+                relocationCost,
+                format: .currency(code: "USD")
+                    .precision(.fractionLength(2))
+            )
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(navy)
                 .position(

@@ -342,7 +342,10 @@ struct SummaryView: View {
     }
 
     private func currency(_ amount: Double) -> String {
-        amount.formatted(.currency(code: "USD"))
+        amount.formatted(
+            .currency(code: "USD")
+                .precision(.fractionLength(2))
+        )
     }
 
     private func signedCurrency(_ amount: Double) -> String {

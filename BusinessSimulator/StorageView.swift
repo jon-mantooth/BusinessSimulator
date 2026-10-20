@@ -427,7 +427,7 @@ struct StorageView: View {
     private func currency(_ value: Double) -> String {
         value.formatted(
             .currency(code: "USD")
-                .precision(.fractionLength(0))
+                .precision(.fractionLength(2))
         )
     }
 }

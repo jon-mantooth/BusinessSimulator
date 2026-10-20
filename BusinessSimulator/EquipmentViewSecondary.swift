@@ -371,7 +371,7 @@ struct SecondaryEquipmentDetailCard: View {
     private var formattedPrice: String {
         equipment.price.formatted(
             .currency(code: "USD")
-                .precision(.fractionLength(0))
+                .precision(.fractionLength(2))
         )
     }
 
