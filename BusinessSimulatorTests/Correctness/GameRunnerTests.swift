@@ -170,6 +170,39 @@ extension GameRunnerTests {
             }
         )
     }
+
+    @Test
+    func finalizeDayAppendsCompletedSummaryToEveryAnalyticsDataset() throws {
+        let gameState = reportingTestGameState(
+            includesExpiringInventory: true
+        )
+        let runner = GameRunner(gameState: gameState)
+        let summary = runner.simulateDay()
+
+        #expect(gameState.businessAnalytics.priceAnalytics.rows.isEmpty)
+        #expect(gameState.businessAnalytics.salesAnalytics.rows.isEmpty)
+        #expect(gameState.businessAnalytics.financialSummary.rows.isEmpty)
+
+        runner.finalizeDay()
+
+        let priceRow = try #require(
+            gameState.businessAnalytics.priceAnalytics.rows.first
+        )
+        let salesRow = try #require(
+            gameState.businessAnalytics.salesAnalytics.rows.first
+        )
+        let financialRow = try #require(
+            gameState.businessAnalytics.financialSummary.rows.first
+        )
+
+        #expect(priceRow.simulationDay == summary.day)
+        #expect(salesRow.simulationDay == summary.day)
+        #expect(financialRow.day == summary.day)
+        #expect(salesRow.consumedIngredientCost == summary.consumedIngredientCost)
+        #expect(salesRow.expiredIngredientCost == summary.expiredIngredientCost)
+        #expect(salesRow.consumedIngredientCost > 0)
+        #expect(salesRow.expiredIngredientCost > 0)
+    }
 }
 
 private func reportingTestGameState(

@@ -221,7 +221,7 @@ extension ProductInventoryTests {
         )
         productState.applyIngredientUpgrade(upgrade)
         let limits = dimension.calculateSalesLimits()
-        let reportedIngredientNames = limits.compactMap { limit in
+        let reportedIngredientNames: [String] = limits.compactMap { limit in
             guard case let .ingredient(_, name) = limit.type else {
                 return nil
             }
