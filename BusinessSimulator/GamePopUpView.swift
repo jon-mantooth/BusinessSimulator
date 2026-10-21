@@ -12,6 +12,11 @@ enum GamePopupType {
     case upgradeLimitReached
     case relocationUnavailable(message: String)
     case purchaseSaveFailed
+    case summaryNotice(
+        title: String,
+        message: String,
+        isLast: Bool
+    )
 
     var title: String {
         switch self {
@@ -28,6 +33,8 @@ enum GamePopupType {
             return "RELOCATION UNAVAILABLE"
         case .purchaseSaveFailed:
             return "PURCHASE NOT SAVED"
+        case let .summaryNotice(title, _, _):
+            return title.uppercased()
         }
     }
 
@@ -49,6 +56,8 @@ enum GamePopupType {
             return message
         case .purchaseSaveFailed:
             return "Your purchase was not completed because the game could not be saved. Please try again."
+        case let .summaryNotice(_, message, _):
+            return message
         }
     }
 
@@ -70,6 +79,8 @@ enum GamePopupType {
             return .system("map.fill")
         case .purchaseSaveFailed:
             return .system("exclamationmark.triangle.fill")
+        case .summaryNotice:
+            return .system("note.text")
         }
     }
 
@@ -86,6 +97,8 @@ enum GamePopupType {
              .relocationUnavailable,
              .purchaseSaveFailed:
             return "OK"
+        case let .summaryNotice(_, _, isLast):
+            return isLast ? "DONE" : "NEXT"
         }
     }
 
@@ -99,7 +112,8 @@ enum GamePopupType {
              .locationLocked,
              .upgradeLimitReached,
              .relocationUnavailable,
-             .purchaseSaveFailed:
+             .purchaseSaveFailed,
+             .summaryNotice:
             return false
         }
     }

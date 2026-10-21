@@ -38,6 +38,7 @@ struct GameRootView: View {
     @State private var showingSaveError = false
     @State private var selectedArea: GameArea = .gameMode
     @State private var isEditingPrice = false
+    @State private var summaryNoticeIndex: Int?
 
     let productCatalog = ProductCatalog()
     let locationCatalog = LocationCatalog()
@@ -178,8 +179,34 @@ struct GameRootView: View {
     }
     
     private func onNextDay() {
+        summaryNoticeIndex = nil
         dayPlaybackState.reset()
         showNewDayBackground()
+    }
+
+    private func continueFromSummary() {
+        guard let currentSummary,
+              !currentSummary.summaryNotices.isEmpty else {
+            onNextDay()
+            return
+        }
+
+        summaryNoticeIndex = 0
+    }
+
+    private func advanceSummaryNotice() {
+        guard let currentSummary,
+              let summaryNoticeIndex else {
+            onNextDay()
+            return
+        }
+
+        let nextIndex = summaryNoticeIndex + 1
+        if nextIndex < currentSummary.summaryNotices.count {
+            self.summaryNoticeIndex = nextIndex
+        } else {
+            onNextDay()
+        }
     }
 
     private func showNewDayBackground() {
@@ -534,7 +561,7 @@ struct GameRootView: View {
                         case .summary:
                             SummaryView(
                                 summary: currentSummary!,
-                                onNextDay: onNextDay
+                                onContinue: continueFromSummary
                             )
                         }
                     }
@@ -633,6 +660,26 @@ struct GameRootView: View {
                         showingNewJourneyConfirmation = false
                     }
                 )
+            }
+
+            if let summaryNoticeIndex,
+               let currentSummary,
+               currentSummary.summaryNotices.indices.contains(
+                    summaryNoticeIndex
+               ) {
+                let notices = currentSummary.summaryNotices
+                let notice = notices[summaryNoticeIndex]
+
+                GamePopupView(
+                    type: .summaryNotice(
+                        title: notice.title,
+                        message: notice.message,
+                        isLast: summaryNoticeIndex == notices.count - 1
+                    ),
+                    onConfirm: advanceSummaryNotice,
+                    onDismiss: advanceSummaryNotice
+                )
+                .zIndex(12)
             }
         }
         .sheet(isPresented: $showingCalendar) {
