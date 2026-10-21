@@ -148,7 +148,7 @@ extension SummaryTests {
 extension SummaryTests {
 
     @Test
-    func ingredientAnalyticsCauseRetainsExactIngredientNamesInDailyNote() {
+    func ingredientAnalyticsCauseCreatesOneDailyNotePerIngredient() {
         let summary = makeSummary(
             demandedSales: 100,
             sales: 40,
@@ -166,9 +166,9 @@ extension SummaryTests {
         let salesNotes = notes(in: "Sales", from: summary.presentedSections)
 
         #expect(summary.selloutCause == .ingredients)
-        #expect(salesNotes.count == 1)
-        #expect(salesNotes.first?.contains("Apples") == true)
-        #expect(salesNotes.first?.contains("Flour") == true)
+        #expect(salesNotes.count == 2)
+        #expect(salesNotes.contains { $0.contains("Apples") })
+        #expect(salesNotes.contains { $0.contains("Flour") })
     }
 
     @Test
@@ -235,6 +235,35 @@ extension SummaryTests {
         #expect(salesNotes.contains("Sold out at 1:00 PM."))
         #expect(salesNotes.contains("Sales were limited by equipment capacity."))
         #expect(expirationNotes == ["Apples 2 pounds"])
+    }
+
+    @Test
+    func summaryNoticesOrderSelloutThenFactorsThenExpiredIngredients() {
+        let summary = makeSummary(
+            demandedSales: 100,
+            sales: 50,
+            limits: [
+                SalesLimit(type: .equipment, units: 50),
+                SalesLimit(
+                    type: .ingredient(type: .apple, name: "Apples"),
+                    units: 50
+                )
+            ]
+        )
+        summary.addNote(sectionName: "Sales", note: "Sold out at 1:00 PM.")
+        summary.addNote(
+            sectionName: "Expired Inventory",
+            note: "Flour 2 pounds"
+        )
+
+        #expect(
+            summary.summaryNotices.map(\.message) == [
+                "Sold out at 1:00 PM.",
+                "Sales were limited by equipment capacity.",
+                "Sales were limited by a shortage of Apples.",
+                "Flour 2 pounds"
+            ]
+        )
     }
 }
 

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SummaryView: View {
     let summary: DaySummary
-    let onNextDay: () -> Void
+    let onContinue: () -> Void
 
     private let darkBrown = Color(red: 0.23, green: 0.12, blue: 0.06)
     private let gold = Color(red: 0.84, green: 0.57, blue: 0.22)
@@ -21,10 +21,6 @@ struct SummaryView: View {
         summary.cashFlowCosts.reduce(0) { $0 + $1.amount }
     }
 
-    private var noteSections: [SummarySection] {
-        summary.presentedSections
-    }
-
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -33,10 +29,6 @@ struct SummaryView: View {
                 costsSection
                 resultsSection
                 balanceSection
-
-                if !noteSections.isEmpty {
-                    notesSection
-                }
 
                 continueButton
             }
@@ -205,45 +197,10 @@ struct SummaryView: View {
         }
     }
 
-    private var notesSection: some View {
-        summarySection(
-            title: "Notes",
-            systemImage: "note.text",
-            color: blue,
-            contentColor: blue.opacity(0.08)
-        ) {
-            ForEach(
-                Array(noteSections.enumerated()),
-                id: \.offset
-            ) { sectionIndex, noteSection in
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(noteSection.name)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundStyle(darkBrown)
-
-                    ForEach(
-                        Array(noteSection.notes.enumerated()),
-                        id: \.offset
-                    ) { _, note in
-                        Text("•  \(note)")
-                            .font(.subheadline)
-                            .foregroundStyle(darkBrown.opacity(0.8))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if sectionIndex < noteSections.count - 1 {
-                    Divider()
-                }
-            }
-        }
-    }
-
     private var continueButton: some View {
-        Button(action: onNextDay) {
+        Button(action: onContinue) {
             HStack(spacing: 10) {
-                Text("Continue to Day \(summary.day + 1)")
+                Text("Continue")
                 Image(systemName: "chevron.right")
             }
             .font(.title3)

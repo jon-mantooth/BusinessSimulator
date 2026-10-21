@@ -72,6 +72,11 @@ struct SummarySection {
     var notes: [String]
 }
 
+struct SummaryNotice {
+    let title: String
+    let message: String
+}
+
 enum SalesLimitType: Codable {
     case equipment
     case labor
@@ -219,6 +224,16 @@ final class DaySummary {
         return presentedSections
     }
 
+    /// Flattens the displayed summary notes into the order in which they
+    /// should appear after the financial summary is dismissed.
+    var summaryNotices: [SummaryNotice] {
+        presentedSections.flatMap { section in
+            section.notes.map { note in
+                SummaryNotice(title: section.name, message: note)
+            }
+        }
+    }
+
     private var salesLimitSections: [SummarySection] {
         guard didSellOut else { return [] }
 
@@ -257,14 +272,12 @@ final class DaySummary {
             case let .ingredient(_, name):
                 guard !ingredientNames.contains(name) else { continue }
                 ingredientNames.append(name)
-            }
-        }
 
-        if !ingredientNames.isEmpty {
-            addGeneratedNote(
-                sectionName: "Sales",
-                note: "Sales were limited by a shortage of \(ingredientNames.formatted(.list(type: .and)))."
-            )
+                addGeneratedNote(
+                    sectionName: "Sales",
+                    note: "Sales were limited by a shortage of \(name)."
+                )
+            }
         }
 
         return generatedSections
