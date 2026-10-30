@@ -13,7 +13,7 @@ enum CostCategory: String, Codable, CaseIterable {
     case labor
     case advertising
     case storage
-    case transportation
+    case transport
     case relocation
     /// Supports historical saves created before costs stored categories.
     case other
@@ -57,8 +57,8 @@ extension PurchaseCategory {
             return .equipment
         case .labor:
             return .labor
-        case .transportation:
-            return .transportation
+        case .transport:
+            return .transport
         case .storage:
             return .storage
         }

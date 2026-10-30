@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-// TODO: After equipment, labor, storage, transportation, and other purchasable
+// TODO: After equipment, labor, storage, transport, and other purchasable
 // systems are implemented, review their shared models and behavior for possible
 // abstraction. In particular, compare active-item snapshots, owned-item
 // collections, cost aggregation, validation, and rollback behavior. Wait until

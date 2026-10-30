@@ -5,7 +5,7 @@ enum PurchaseCategory: String, Codable {
     case advertisement
     case equipment
     case labor
-    case transportation
+    case transport
     case storage
 }
 

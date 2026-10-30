@@ -246,8 +246,8 @@ extension FinancialSummaryTests {
         ).report(for: nil)
 
         #expect(report.costCategories.map(\.category) == CostCategory.allCases)
-        #expect(report.costs(for: .transportation).items.isEmpty)
-        #expect(report.costs(for: .transportation).total == 0)
+        #expect(report.costs(for: .transport).items.isEmpty)
+        #expect(report.costs(for: .transport).total == 0)
     }
 
     @Test
