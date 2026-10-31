@@ -279,33 +279,45 @@ struct ReputationMarketSizeCase: Sendable {
     let name: String
     let overallReputation: Double
     let expectedEffectScore: Double
+    let locationTier: LocationTierLevel
 }
 
 private let reputationMarketSizeCases = [
     ReputationMarketSizeCase(
         name: "minimum reputation has maximum negative effect",
         overallReputation: 0.0,
-        expectedEffectScore: -1.0
+        expectedEffectScore: -1.0,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "reputation halfway below neutral has half negative effect",
         overallReputation: 37.5,
-        expectedEffectScore: -0.5
+        expectedEffectScore: -0.5,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "neutral reputation does not affect market size",
         overallReputation: 75.0,
-        expectedEffectScore: 0.0
+        expectedEffectScore: 0.0,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "reputation halfway above neutral has half positive effect",
         overallReputation: 87.5,
-        expectedEffectScore: 0.5
+        expectedEffectScore: 0.5,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "maximum reputation has maximum positive effect",
         overallReputation: 100.0,
-        expectedEffectScore: 1.0
+        expectedEffectScore: 1.0,
+        locationTier: .tierOne
+    ),
+    ReputationMarketSizeCase(
+        name: "maximum reputation uses the larger location two target",
+        overallReputation: 100.0,
+        expectedEffectScore: 1.0,
+        locationTier: .tierTwo
     )
 ]
 
@@ -318,10 +330,18 @@ extension MarketSizeTests {
         let reputation = BusinessReputationState(
             overallReputation: testCase.overallReputation
         )
-        let reputationDimension = BusinessReputationDimension(
-            reputation: reputation
+        let locationState = makeReputationLocationState(
+            tier: testCase.locationTier
         )
-        let expectedMarketSize = SimulationBalance.marketSize.multiplier(
+        let reputationDimension = BusinessReputationDimension(
+            reputation: reputation,
+            locationState: locationState
+        )
+        let expectedMarketSize = GrowthBalance(
+            startingMultiplier: 1.0,
+            targetMultiplier:
+                testCase.locationTier.marketSizeTargetMultiplier
+        ).multiplier(
             weight: BusinessReputationDimension.marketSizeWeight,
             effectScore: testCase.expectedEffectScore
         )
@@ -333,6 +353,20 @@ extension MarketSizeTests {
             Comment(rawValue: testCase.name)
         )
     }
+}
+
+private func makeReputationLocationState(
+    tier: LocationTierLevel
+) -> LocationState {
+    let catalog = LocationCatalog()
+    let activeLocationID = tier == .tierOne
+        ? catalog.home.id
+        : catalog.ballpark.id
+
+    return LocationState(
+        tiers: catalog.tiersByProduct[.hotDogs]!,
+        activeLocationID: activeLocationID
+    )
 }
 
 private func makeAdvertisementDimension(

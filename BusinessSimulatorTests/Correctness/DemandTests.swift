@@ -460,8 +460,14 @@ extension DemandTests {
         let reputation = BusinessReputationState(
             overallReputation: testCase.overallReputation
         )
+        let locationCatalog = LocationCatalog()
+        let locationState = LocationState(
+            tiers: locationCatalog.tiersByProduct[.hotDogs]!,
+            activeLocationID: locationCatalog.home.id
+        )
         let reputationDimension = BusinessReputationDimension(
-            reputation: reputation
+            reputation: reputation,
+            locationState: locationState
         )
         let expectedDemand = SimulationBalance.demand.multiplier(
             weight: BusinessReputationDimension.demandWeight,
