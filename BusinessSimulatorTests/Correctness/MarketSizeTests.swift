@@ -145,17 +145,47 @@ private let progressionTestAllocations = [
 
 // MARK: - Total Market Size Allocation
 
-// TODO: Enable once every permanent market size dimension has been implemented.
-// Weather is excluded because its market size effect is transient.
-// @Test
-// func marketSizeDimensionWeightsAddUpToOne() {
-//     let totalMarketSizeWeight =
-//         AdvertisingDimension.marketSizeWeight
-//         + DistributionDimension.marketSizeWeight
-//         + ReputationDimension.marketSizeWeight
-//
-//     #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
-// }
+extension MarketSizeTests {
+
+    @Test
+    func permanentMarketSizeWeightsMatchBalancingContract() {
+        #expect(TransportDimension.marketSizeWeight == 0.45)
+        #expect(AdvertisementDimension.marketSizeWeight == 0.40)
+        #expect(BusinessReputationDimension.marketSizeWeight == 0.15)
+
+        let totalMarketSizeWeight =
+            TransportDimension.marketSizeWeight
+            + AdvertisementDimension.marketSizeWeight
+            + BusinessReputationDimension.marketSizeWeight
+
+        #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
+    }
+
+    @Test
+    func fullyUpgradedLocationTwoMarketSizeMultiplierIsThree() {
+        #expect(SimulationBalance.marketSize.targetMultiplier == 3.0)
+
+        let fullTarget = SimulationBalance.marketSize.targetMultiplier
+        let transportMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: TransportDimension.marketSizeWeight,
+            targetMultiplier: fullTarget
+        )
+        let advertisementMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: AdvertisementDimension.marketSizeWeight,
+            targetMultiplier: fullTarget
+        )
+        let reputationMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: BusinessReputationDimension.marketSizeWeight,
+            targetMultiplier:
+                LocationTierLevel.tierTwo.marketSizeTargetMultiplier
+        )
+        let marketSizeMultiplier = transportMultiplier
+            * advertisementMultiplier
+            * reputationMultiplier
+
+        #expect(abs(marketSizeMultiplier - 3.0) < 0.000_001)
+    }
+}
 
 // MARK: - Advertisements
 
