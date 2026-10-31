@@ -237,6 +237,10 @@ struct BusinessDimensions {
                 StorageDimension(
                     storageState: gameState.storageState!,
                     locationState: gameState.locationState!
+                ),
+                TransportDimension(
+                    transportState: gameState.transportState!,
+                    locationState: gameState.locationState!
                 )
             ],
             marketing: [

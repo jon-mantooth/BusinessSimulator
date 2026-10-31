@@ -65,7 +65,7 @@ struct GameRootView: View {
             destination: location,
             requirements: RelocationRequirements(
                 storageLevel: 1,
-                transportLevel: 0,
+                transportLevel: 1,
                 equipmentLevel: 3,
                 laborLevel: 1,
                 advertisementLevel: 2,
@@ -468,10 +468,12 @@ struct GameRootView: View {
 
             if selectedArea == .distribution,
                 let productID = gameState.productState?.product.id,
-                let storageState = gameState.storageState {
+                let storageState = gameState.storageState,
+                let transportState = gameState.transportState {
                 DistributionView(
                     productID: productID,
                     storageState: storageState,
+                    transportState: transportState,
                     purchaseWorkflow: purchaseWorkflow
                 )
                 .ignoresSafeArea()
