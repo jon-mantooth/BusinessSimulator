@@ -331,7 +331,8 @@ final class BusinessReputationState {
 
 /// Converts the business's current reputation into demand and market-size
 /// multipliers. Reputation is neutral at 75 and reaches its full positive
-/// effect at 100.
+/// effect at 100. Its market-size effect uses the full location-two target so
+/// all permanent market-size weights combine to the intended 3.0 maximum.
 final class BusinessReputationDimension: Dimension {
     static let demandWeight = 0.35
     static let marketSizeWeight = 0.15

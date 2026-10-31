@@ -393,7 +393,7 @@ enum SimulationBalance {
 
     static let marketSize = GrowthBalance(
         startingMultiplier: 1.00,
-        targetMultiplier: 2.00
+        targetMultiplier: 3.00
     )
 
     static let freshness = GrowthBalance(
