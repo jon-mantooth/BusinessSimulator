@@ -261,7 +261,9 @@ struct RelocationWorkflow {
             RelocationRequirementStatus(
                 requirement: .transportLevel,
                 requiredValue: Double(required.transportLevel),
-                currentValue: nil
+                currentValue: gameState.transportState.map {
+                    Double($0.activePrimaryTier?.level ?? 0)
+                }
             ),
             RelocationRequirementStatus(
                 requirement: .equipmentLevel,
