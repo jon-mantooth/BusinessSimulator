@@ -9,7 +9,7 @@ struct LocationTierID: RawRepresentable, Hashable, Codable {
     let rawValue: String
 }
 
-enum LocationTierLevel: Int, Codable, Comparable {
+enum LocationTierLevel: Int, Codable, Comparable, Sendable {
     case tierOne = 1
     case tierTwo = 2
 
@@ -39,6 +39,11 @@ enum LocationTierLevel: Int, Codable, Comparable {
         case .tierTwo:
             return 1.5
         }
+    }
+
+    /// Full permanent market-size target available at this location tier.
+    var marketSizeTargetMultiplier: Double {
+        Double(rawValue + 1)
     }
 }
 

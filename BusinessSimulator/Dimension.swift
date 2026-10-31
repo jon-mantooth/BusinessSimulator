@@ -241,7 +241,8 @@ struct BusinessDimensions {
             ],
             marketing: [
                 BusinessReputationDimension(
-                    reputation: gameState.reputation!
+                    reputation: gameState.reputation!,
+                    locationState: gameState.locationState!
                 ),
                 AdvertisementDimension(
                     advertisementState: gameState.advertisementState!,
@@ -324,9 +325,8 @@ enum MarketSizeProgression {
                 remainingStars,
                 allocation.totalStars
             )
-            let locationTargetMultiplier = Double(
-                allocation.locationTier.rawValue + 1
-            )
+            let locationTargetMultiplier =
+                allocation.locationTier.marketSizeTargetMultiplier
             let growthPerStar = (
                 locationTargetMultiplier - targetMultiplier
             ) / Double(allocation.totalStars)
