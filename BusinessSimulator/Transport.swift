@@ -67,6 +67,17 @@ struct TransportTier: Identifiable, Equatable {
         }
     }
 
+    /// Player-facing market-size rating. Primary Transport establishes the
+    /// total base rating; Secondary Transport contributes additional stars.
+    var marketSizeStars: Double {
+        switch track {
+        case .primary:
+            return 2.5 + Double(level) * 0.5
+        case .secondary:
+            return Double(level) * 0.5
+        }
+    }
+
     init(
         id: TransportTierID,
         track: TransportTrack,
@@ -210,6 +221,11 @@ final class TransportState: PurchasableState {
     var combinedTrackProgress: Double {
         (activePrimaryTier?.trackProgress ?? 0)
             + (activeSecondaryTier?.trackProgress ?? 0)
+    }
+
+    var totalMarketSizeStars: Double {
+        (activePrimaryTier?.marketSizeStars ?? 0)
+            + (activeSecondaryTier?.marketSizeStars ?? 0)
     }
 
     /// The first active primary tier carries the location-two base increase;
