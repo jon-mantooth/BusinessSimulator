@@ -240,6 +240,44 @@ extension FinancialSummaryTests {
     }
 
     @Test
+    func transportCostsAreGroupedByActiveItemName() throws {
+        let summaries = [
+            makeFinancialDaySummary(
+                day: 1,
+                costs: [
+                    Cost(category: .transport, name: "Car", amount: 125),
+                    Cost(
+                        category: .transport,
+                        name: "Vendor Basket and License",
+                        amount: 60
+                    )
+                ]
+            ),
+            makeFinancialDaySummary(
+                day: 2,
+                costs: [
+                    Cost(category: .transport, name: "Car", amount: 125)
+                ]
+            )
+        ]
+        let transport = FinancialSummary(summaries: summaries)
+            .report(for: nil)
+            .costs(for: .transport)
+        let car = try #require(
+            transport.items.first { $0.name == "Car" }
+        )
+        let basket = try #require(
+            transport.items.first {
+                $0.name == "Vendor Basket and License"
+            }
+        )
+
+        #expect(car.total == 250)
+        #expect(basket.total == 60)
+        #expect(transport.total == 310)
+    }
+
+    @Test
     func reportReturnsEveryCostCategoryIncludingZeroCostCategories() {
         let report = FinancialSummary(
             summaries: [makeFinancialDaySummary(day: 1)]

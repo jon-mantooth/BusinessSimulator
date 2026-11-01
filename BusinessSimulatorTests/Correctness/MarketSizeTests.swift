@@ -132,6 +132,148 @@ extension MarketSizeTests {
     }
 }
 
+// MARK: - Transport
+
+@MainActor
+extension MarketSizeTests {
+
+    @Test
+    func transportHasNoMarketSizeEffectAtLocationOne() throws {
+        let context = try makeTransportMarketSizeContext()
+        let firstPrimary = try #require(
+            context.state.nextTiers.first { $0.track == .primary }
+        )
+        context.state.applyUpgrade(firstPrimary.transport)
+
+        #expect(context.dimension.calculateMarketSize() == 1.0)
+    }
+
+    @Test
+    func locationTwoStillRequiresPrimaryTransportForBenefit() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+
+        #expect(context.state.activePrimaryTier == nil)
+        #expect(context.dimension.calculateMarketSize() == 1.0)
+    }
+
+    @Test
+    func locationTwoActivatesOwnedTransportProgress() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        let firstPrimary = try #require(
+            context.state.nextTiers.first { $0.track == .primary }
+        )
+        context.state.applyUpgrade(firstPrimary.transport)
+        let expected = SimulationBalance.marketSize.multiplier(
+            weight: TransportDimension.marketSizeWeight,
+            targetMultiplier: context.state.marketSizeTargetMultiplier
+        )
+
+        #expect(
+            abs(context.dimension.calculateMarketSize() - expected)
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func eachTransportTrackAdvancesMarketSizeExactlyOnce() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        var multipliers: [Double] = []
+
+        for (track, level) in [
+            (TransportTrack.primary, 1),
+            (.primary, 2),
+            (.secondary, 1),
+            (.primary, 3),
+            (.secondary, 2)
+        ] {
+            let tier = try #require(
+                context.state.nextTiers.first {
+                    $0.track == track && $0.level == level
+                }
+            )
+            context.state.applyUpgrade(tier.transport)
+            multipliers.append(context.dimension.calculateMarketSize())
+        }
+
+        for (earlier, later) in zip(multipliers, multipliers.dropFirst()) {
+            #expect(later > earlier)
+        }
+    }
+
+    @Test
+    func fullyUpgradedTransportSuppliesItsCompleteAllocation() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+
+        for (track, level) in [
+            (TransportTrack.primary, 1),
+            (.primary, 2),
+            (.primary, 3),
+            (.secondary, 1),
+            (.secondary, 2)
+        ] {
+            let tier = try #require(
+                context.state.nextTiers.first {
+                    $0.track == track && $0.level == level
+                }
+            )
+            context.state.applyUpgrade(tier.transport)
+        }
+
+        #expect(context.state.marketSizeTargetMultiplier == 3.0)
+        #expect(
+            abs(
+                context.dimension.calculateMarketSize()
+                    - pow(3.0, 0.45)
+            )
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func transportDoesNotAlterDemandOrProductionCapacity() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        let firstPrimary = try #require(context.state.nextPrimaryTier)
+        context.state.applyUpgrade(firstPrimary.transport)
+
+        #expect(context.dimension.calculateDemand() == 1.0)
+        #expect(context.dimension.calculateSalesLimits().isEmpty)
+    }
+}
+
+@MainActor
+private struct TransportMarketSizeContext {
+    let state: TransportState
+    let dimension: TransportDimension
+}
+
+@MainActor
+private func makeTransportMarketSizeContext(
+    locationTwo: Bool = false
+) throws -> TransportMarketSizeContext {
+    let gameState = GameState()
+    gameState.initializeBusiness(
+        product: ProductCatalog().product(for: .pies)
+    )
+    let state = try #require(gameState.transportState)
+    let locationState = try #require(gameState.locationState)
+
+    if locationTwo {
+        let destination = try #require(
+            locationState.tiers.first { $0.level == .tierTwo }?
+                .locations.first
+        )
+        locationState.relocate(to: destination.id)
+    }
+
+    return TransportMarketSizeContext(
+        state: state,
+        dimension: TransportDimension(
+            transportState: state,
+            locationState: locationState
+        )
+    )
+}
+
 private let progressionTestAllocations = [
     MarketSizeLevelAllocation(
         locationTier: .tierOne,

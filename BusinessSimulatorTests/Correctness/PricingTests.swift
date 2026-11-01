@@ -4,6 +4,65 @@ import Testing
 @MainActor
 struct PricingTests {}
 
+// MARK: - Transport Pricing
+
+extension PricingTests {
+
+    @Test(arguments: pricingProductIDs)
+    func transportUsesWeeklyCumulativeTrackPricing(productID: ProductID) {
+        let product = ProductCatalog().product(for: productID)
+        let tiers = TransportCatalog().tiers(for: product)
+
+        for tier in tiers {
+            let targetMultiplier: Double
+            switch tier.track {
+            case .primary:
+                targetMultiplier = 1.0
+                    + TransportState.locationTwoBaseIncrease
+                    + tier.trackProgress
+            case .secondary:
+                targetMultiplier = 1.0 + tier.trackProgress
+            }
+            let dailyBenefit = UpgradePricing.calculateDailyBenefit(
+                tierLevel: tier.level,
+                product: product,
+                locationDemandMultiplier:
+                    LocationTierLevel.tierTwo.demandMultiplier,
+                representativeMarketSizeMultiplier:
+                    LocationTierLevel.tierTwo.pricingMarketSizeMultiplier,
+                marketSizeEndingTargetMultiplier: targetMultiplier,
+                marketSizeWeight: TransportDimension.marketSizeWeight
+            )
+            let expectedPrice = Transport.cleanPrice(
+                UpgradePricing.calculatePrice(
+                    dailyBenefit: dailyBenefit,
+                    paymentSchedule: .weekly,
+                    tierLevel: tier.level
+                )
+            )
+
+            #expect(tier.transport.paymentSchedule == .weekly)
+            #expect(tier.transport.price == expectedPrice)
+        }
+    }
+
+    @Test(arguments: pricingProductIDs)
+    func transportPricesIncreaseWithinEachTrack(productID: ProductID) {
+        let product = ProductCatalog().product(for: productID)
+        let tiers = TransportCatalog().tiers(for: product)
+
+        for track in TransportTrack.allCases {
+            let prices = tiers
+                .filter { $0.track == track }
+                .map { $0.transport.price }
+
+            for (earlier, later) in zip(prices, prices.dropFirst()) {
+                #expect(later > earlier)
+            }
+        }
+    }
+}
+
 // MARK: - Storage Pricing
 
 extension PricingTests {

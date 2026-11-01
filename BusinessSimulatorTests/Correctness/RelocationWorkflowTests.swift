@@ -108,8 +108,13 @@ extension RelocationWorkflowTests {
                     status.requiredValue
                         == Double(request.requirements.transportLevel)
                 )
-                #expect(status.currentValue == nil)
-                #expect(status.isMet)
+                #expect(
+                    status.currentValue
+                        == Double(
+                            gameState.transportState!
+                                .activePrimaryTier?.level ?? 0
+                        )
+                )
             case .equipmentLevel:
                 #expect(
                     status.currentValue
@@ -386,6 +391,50 @@ extension RelocationWorkflowTests {
     }
 
     @Test
+    func relocationSummaryProratesActiveTransportTracks() throws {
+        let gameState = relocationTestGameState()
+        let transportState = try #require(gameState.transportState)
+        let primary = try #require(transportState.nextPrimaryTier)
+        transportState.applyUpgrade(primary.transport)
+        let secondary = try #require(transportState.nextSecondaryTier)
+        transportState.applyUpgrade(secondary.transport)
+        gameState.finance.actualBalance = 100_000
+        gameState.finance.displayedBalance = 100_000
+        let request = try relocationTestRequest(
+            gameState: gameState,
+            requirements: emptyRelocationRequirements,
+            relocationPrice: 12_345
+        )
+        let completedDays = Double(
+            gameState.calendar.currentWeekday.rawValue
+                - GameWeekday.monday.rawValue
+        )
+        let multiplier = completedDays / 5
+
+        let summary = try completedRelocationSummary(
+            workflow: relocationTestWorkflow(gameState: gameState),
+            request: request
+        )
+        let transportCosts = summary.cashFlowCosts.filter {
+            $0.category == .transport
+        }
+
+        #expect(transportCosts.count == 2)
+        #expect(
+            transportCosts.allSatisfy {
+                $0.displaySuffix == "Prorated"
+            }
+        )
+        #expect(
+            abs(
+                transportCosts.reduce(0.0) { $0 + $1.amount }
+                    - (primary.transport.price + secondary.transport.price)
+                        * multiplier
+            ) < 0.000_001
+        )
+    }
+
+    @Test
     func relocationDayDoesNotRecordOperations() throws {
         let gameState = relocationTestGameState()
         gameState.finance.actualBalance = 100_000
@@ -449,6 +498,7 @@ extension RelocationWorkflowTests {
 
 private let implementedRelocationRequirements: [RelocationRequirement] = [
     .storageLevel,
+    .transportLevel,
     .equipmentLevel,
     .laborLevel,
     .advertisementLevel,
@@ -518,7 +568,7 @@ private func relocationTestRequest(
         destination: destination,
         requirements: RelocationRequirements(
             storageLevel: requiredValue(for: .storageLevel, value: 1),
-            transportLevel: 0,
+            transportLevel: requiredValue(for: .transportLevel, value: 1),
             equipmentLevel: requiredValue(
                 for: .equipmentLevel,
                 value: 3
@@ -551,6 +601,13 @@ private func satisfyRelocationRequirements(
         let nextTier = try #require(equipmentState.nextPrimaryTier)
         let equipment = try #require(nextTier.equipment.first)
         equipmentState.applyUpgrade(equipment)
+    }
+
+    let transportState = try #require(gameState.transportState)
+    while (transportState.activePrimaryTier?.level ?? 0)
+        < requirements.transportLevel {
+        let nextTier = try #require(transportState.nextPrimaryTier)
+        transportState.applyUpgrade(nextTier.transport)
     }
 
     let advertisementState = try #require(gameState.advertisementState)

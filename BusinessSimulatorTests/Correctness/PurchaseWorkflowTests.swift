@@ -91,6 +91,131 @@ extension PurchaseWorkflowTests {
     }
 }
 
+// MARK: - Transport Purchase Integration
+
+extension PurchaseWorkflowTests {
+
+    @Test
+    func transportPurchaseUsesSharedWorkflowAndUpdatesOnlyRequestedTrack() throws {
+        let gameState = makeGameState()
+        let repository = TestGameSaveRepository()
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+        let state = try #require(gameState.transportState)
+        let firstPrimary = try #require(state.nextPrimaryTier)
+        let request = PurchaseRequest(
+            state: state,
+            item: firstPrimary.transport,
+            requiredLocationTier: firstPrimary.requiredLocationTier
+        )
+        let startingBalance = gameState.finance.displayedBalance
+
+        let result = workflow.complete(request)
+
+        guard case .completed = result else {
+            Issue.record("Expected Transport purchase to complete.")
+            return
+        }
+        #expect(state.activePrimaryTier?.level == 1)
+        #expect(state.activeSecondaryTier == nil)
+        #expect(gameState.finance.displayedBalance == startingBalance)
+        let event = try #require(gameState.pendingBusinessEvents.last)
+        guard case let .purchase(purchaseEvent) = event.type else {
+            Issue.record("Expected a Transport purchase event.")
+            return
+        }
+        #expect(purchaseEvent.category == .transport)
+        #expect(purchaseEvent.itemID == firstPrimary.transport.purchaseItemID)
+        #expect(
+            repository.savedGame?.transportState.activeTransport.primary?
+                .tierLevel == 1
+        )
+    }
+
+    @Test
+    func failedTransportSaveRestoresBothTracksAndSharedState() throws {
+        let gameState = makeGameState()
+        let state = try #require(gameState.transportState)
+        let firstPrimary = try #require(state.nextPrimaryTier)
+        state.applyUpgrade(firstPrimary.transport)
+        let firstSecondary = try #require(state.nextSecondaryTier)
+        state.applyUpgrade(firstSecondary.transport)
+        let startingTransport = state.activeTransport
+        let startingBalance = gameState.finance.displayedBalance
+        let repository = TestGameSaveRepository(shouldFailSave: true)
+        let workflow = PurchaseWorkflow(
+            gameState: gameState,
+            saveRepository: repository
+        )
+        let secondPrimary = try #require(state.nextPrimaryTier)
+
+        let result = workflow.complete(
+            PurchaseRequest(
+                state: state,
+                item: secondPrimary.transport,
+                requiredLocationTier: secondPrimary.requiredLocationTier
+            )
+        )
+
+        guard case .unavailable(.locationLocked(requiredTier: .tierTwo)) = result
+        else {
+            Issue.record("Expected location to block the later Transport tier.")
+            return
+        }
+
+        let destination = try #require(
+            gameState.locationState?.tiers.first { $0.level == .tierTwo }?
+                .locations.first
+        )
+        gameState.locationState?.relocate(to: destination.id)
+        let saveResult = workflow.complete(
+            PurchaseRequest(
+                state: state,
+                item: secondPrimary.transport,
+                requiredLocationTier: secondPrimary.requiredLocationTier
+            )
+        )
+
+        guard case .saveFailed = saveResult else {
+            Issue.record("Expected Transport save to fail.")
+            return
+        }
+        #expect(state.activeTransport == startingTransport)
+        #expect(gameState.finance.displayedBalance == startingBalance)
+        #expect(gameState.pendingBusinessEvents.isEmpty)
+    }
+
+    @Test
+    func laterTransportTierIsLockedUntilLocationTwo() throws {
+        let gameState = makeGameState()
+        let workflow = makeWorkflow(gameState: gameState)
+        let state = try #require(gameState.transportState)
+        let firstPrimary = try #require(state.nextPrimaryTier)
+        state.applyUpgrade(firstPrimary.transport)
+        let secondPrimary = try #require(state.nextPrimaryTier)
+        let request = PurchaseRequest(
+            state: state,
+            item: secondPrimary.transport,
+            requiredLocationTier: secondPrimary.requiredLocationTier
+        )
+
+        #expect(
+            workflow.itemAvailability(for: request)
+                == .locationLocked(requiredTier: .tierTwo)
+        )
+
+        let destination = try #require(
+            gameState.locationState?.tiers.first { $0.level == .tierTwo }?
+                .locations.first
+        )
+        gameState.locationState?.relocate(to: destination.id)
+
+        #expect(workflow.itemAvailability(for: request) == .available)
+    }
+}
+
 // MARK: - Storage Purchase Integration
 
 extension PurchaseWorkflowTests {
