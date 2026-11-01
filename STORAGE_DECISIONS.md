@@ -118,7 +118,7 @@ Capacity pricing distinguishes between replacement and additive upgrades.
 - Storage activates that existing channel through a `Distribution`
   department rather than being placed artificially in production.
 - The distribution department delegates all dimension behavior consistently
-  with the other departments, allowing transportation to join the same
+  with the other departments, allowing transport to join the same
   channel later without restructuring the simulation pipeline.
 
 ## UI
