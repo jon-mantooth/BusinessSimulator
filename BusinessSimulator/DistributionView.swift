@@ -33,7 +33,9 @@ struct DistributionView: View {
         _displayedSceneLayers = State(
             initialValue: Self.resolveSceneLayers(
                 productID: productID,
-                storageLevel: storageState.activeStorage.tierLevel
+                storageLevel: storageState.activeStorage.tierLevel,
+                primaryTransportLevel: transportState.activePrimaryTier?.level,
+                secondaryTransportLevel: transportState.activeSecondaryTier?.level
             )
         )
     }
@@ -104,7 +106,7 @@ struct DistributionView: View {
         .clipped()
         .sheet(
             isPresented: $showingStorage,
-            onDismiss: scheduleStorageSceneUpdate
+            onDismiss: scheduleDistributionSceneUpdate
         ) {
             StorageView(
                 storageState: storageState,
@@ -117,7 +119,10 @@ struct DistributionView: View {
             .presentationCornerRadius(28)
             .presentationBackground(.clear)
         }
-        .sheet(isPresented: $showingTransport) {
+        .sheet(
+            isPresented: $showingTransport,
+            onDismiss: scheduleDistributionSceneUpdate
+        ) {
             TransportView(
                 transportState: transportState,
                 purchaseWorkflow: purchaseWorkflow
@@ -155,10 +160,12 @@ struct DistributionView: View {
         }
     }
 
-    private func scheduleStorageSceneUpdate() {
+    private func scheduleDistributionSceneUpdate() {
         let updatedSceneLayers = Self.resolveSceneLayers(
             productID: productID,
-            storageLevel: storageState.activeStorage.tierLevel
+            storageLevel: storageState.activeStorage.tierLevel,
+            primaryTransportLevel: transportState.activePrimaryTier?.level,
+            secondaryTransportLevel: transportState.activeSecondaryTier?.level
         )
         guard sceneAssetIDs(in: updatedSceneLayers)
                 != sceneAssetIDs(in: displayedSceneLayers) else {
@@ -242,17 +249,39 @@ struct DistributionView: View {
 
     private static func resolveSceneLayers(
         productID: ProductID,
-        storageLevel: Int
+        storageLevel: Int,
+        primaryTransportLevel: Int?,
+        secondaryTransportLevel: Int?
     ) -> [DepartmentSceneLayer] {
-        DepartmentSceneResolver.assets(
+        var replacementAssetLevels = [
+            ReplacementSceneAssetLevel(
+                dimension: .storage,
+                level: storageLevel
+            )
+        ]
+
+        if let primaryTransportLevel {
+            replacementAssetLevels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: primaryTransportLevel
+                )
+            )
+        }
+
+        if let secondaryTransportLevel {
+            replacementAssetLevels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .secondaryTransport,
+                    level: secondaryTransportLevel
+                )
+            )
+        }
+
+        return DepartmentSceneResolver.assets(
             for: productID,
             department: .distribution,
-            replacementAssetLevels: [
-                ReplacementSceneAssetLevel(
-                    dimension: .storage,
-                    level: storageLevel
-                )
-            ],
+            replacementAssetLevels: replacementAssetLevels,
             cumulativeAssetItems: []
         )
     }

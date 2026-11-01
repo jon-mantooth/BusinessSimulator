@@ -8,7 +8,7 @@ struct TransportView: View {
     @State private var pendingConfirmation: Transport?
     @State private var purchaseWarning: GamePopupType?
 
-    private let sourceSize = CGSize(width: 887, height: 1_774)
+    private let sourceSize = CGSize(width: 918, height: 1_713)
     private let ink = Color(red: 0.14, green: 0.19, blue: 0.22)
     private let navy = Color(red: 0.05, green: 0.22, blue: 0.34)
     private let green = Color(red: 0.05, green: 0.47, blue: 0.13)
@@ -99,6 +99,7 @@ struct TransportView: View {
                 )
             }
         }
+        .ignoresSafeArea()
     }
 
     @ViewBuilder
@@ -109,7 +110,7 @@ struct TransportView: View {
         if let primary = transportState.activePrimaryTier {
             GameIconView(
                 icon: primary.transport.smallIcon,
-                size: 380 * scale
+                size: 502 * scale
             )
             .transportPlace(
                 in: TransportLayout.primaryArtwork,
@@ -121,7 +122,7 @@ struct TransportView: View {
         if let secondary = transportState.activeSecondaryTier {
             GameIconView(
                 icon: secondary.transport.smallIcon,
-                size: 270 * scale
+                size: 202.5 * scale
             )
             .transportPlace(
                 in: TransportLayout.secondaryArtwork,
@@ -168,6 +169,22 @@ struct TransportView: View {
                 canvasSize: renderedSize,
                 showsGuide: showsLayoutGuides
             )
+
+            HStack(spacing: 12 * scale) {
+                Text("TOTAL MARKET SIZE")
+                    .font(.system(size: 22 * scale, weight: .black))
+                    .foregroundStyle(navy)
+
+                TransportStarRating(
+                    value: transportState.totalMarketSizeStars,
+                    starSize: 26 * scale
+                )
+            }
+            .transportPlace(
+                in: TransportLayout.currentTotalStars,
+                canvasSize: renderedSize,
+                showsGuide: showsLayoutGuides
+            )
         }
     }
 
@@ -198,13 +215,20 @@ struct TransportView: View {
                     .font(.system(size: 25 * scale, weight: .bold))
                     .foregroundStyle(ink)
 
-                Text(
-                    "Market-size contribution: \(marketSizePercent(for: tier))%"
-                )
-                .font(.system(size: 22 * scale, weight: .semibold))
-                .foregroundStyle(ink.opacity(0.82))
-                .lineLimit(2)
-                .minimumScaleFactor(0.75)
+                HStack(spacing: 8 * scale) {
+                    Text(
+                        tier.track == .primary
+                            ? "MARKET SIZE"
+                            : "ADDITIONAL MARKET SIZE"
+                    )
+                        .font(.system(size: 19 * scale, weight: .black))
+                        .foregroundStyle(ink.opacity(0.82))
+
+                    TransportStarRating(
+                        value: tier.marketSizeStars,
+                        starSize: 22 * scale
+                    )
+                }
             } else {
                 Text("No \(track.displayName) Transport")
                     .font(
@@ -306,11 +330,23 @@ struct TransportView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 5 * scale))
                     }
 
-                    Text("Level \(tier.level) · +\(marketSizePercent(for: tier))% market-size progress")
-                        .font(.system(size: 20 * scale, weight: .black))
+                    HStack(spacing: 7 * scale) {
+                        Text(
+                            "Level \(tier.level) · "
+                                + (tier.track == .primary
+                                    ? "MARKET SIZE"
+                                    : "ADDITIONAL MARKET SIZE")
+                        )
+                        .font(.system(size: 18 * scale, weight: .black))
                         .foregroundStyle(ink)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.72)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.70)
+
+                        TransportStarRating(
+                            value: tier.marketSizeStars,
+                            starSize: 18 * scale
+                        )
+                    }
 
                     Text(tier.transport.description)
                         .font(.system(size: 18 * scale, weight: .semibold))
@@ -364,10 +400,6 @@ struct TransportView: View {
                 .position(x: size.width * 0.86, y: size.height * 0.52)
             }
         }
-    }
-
-    private func marketSizePercent(for tier: TransportTier) -> Int {
-        Int((tier.trackProgress * 100).rounded())
     }
 
     private func priceLabel(for transport: Transport) -> String {
@@ -466,12 +498,13 @@ private extension TransportTrack {
 private enum TransportLayout {
     static let closeButton = region(0.86, 0.012, 0.105, 0.060)
 
-    static let primaryArtwork = region(0.10, 0.105, 0.52, 0.215)
-    static let secondaryArtwork = region(0.59, 0.145, 0.32, 0.165)
+    static let primaryArtwork = region(0.10, 0.116, 0.52, 0.215)
+    static let secondaryArtwork = region(0.59, 0.162, 0.32, 0.165)
     static let emptyArtwork = region(0.22, 0.19, 0.56, 0.07)
 
-    static let currentPrimary = region(0.055, 0.365, 0.43, 0.142)
-    static let currentSecondary = region(0.515, 0.365, 0.43, 0.142)
+    static let currentPrimary = region(0.055, 0.365, 0.43, 0.110)
+    static let currentSecondary = region(0.515, 0.365, 0.43, 0.110)
+    static let currentTotalStars = region(0.20, 0.477, 0.60, 0.028)
 
     static let maximumTransport = region(0.13, 0.64, 0.74, 0.10)
 
@@ -488,6 +521,39 @@ private enum TransportLayout {
         _ height: CGFloat
     ) -> CGRect {
         CGRect(x: x, y: y, width: width, height: height)
+    }
+}
+
+private struct TransportStarRating: View {
+    let value: Double
+    let starSize: CGFloat
+
+    var body: some View {
+        HStack(spacing: starSize * 0.12) {
+            ForEach(0..<5, id: \.self) { index in
+                Image(systemName: symbol(for: index))
+                    .font(.system(size: starSize, weight: .black))
+                    .foregroundStyle(
+                        symbol(for: index) == "star"
+                            ? Color(red: 0.42, green: 0.43, blue: 0.43)
+                            : Color(red: 0.95, green: 0.62, blue: 0.06)
+                    )
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Market size rating")
+        .accessibilityValue("\(value.formatted()) out of 5 stars")
+    }
+
+    private func symbol(for index: Int) -> String {
+        let remainingValue = value - Double(index)
+        if remainingValue >= 1 {
+            return "star.fill"
+        }
+        if remainingValue >= 0.5 {
+            return "star.leadinghalf.filled"
+        }
+        return "star"
     }
 }
 

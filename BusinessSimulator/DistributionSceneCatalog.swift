@@ -196,6 +196,156 @@ struct DistributionSceneCatalog: SceneCatalog {
         layerOrder: 100
     )
 
+    private let pieCar = DepartmentSceneAsset(
+        id: "pie-primary-transport-1",
+        imageName: "pie_car",
+        type: .element(
+            sourceWidth: 455,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieVan = DepartmentSceneAsset(
+        id: "pie-primary-transport-2",
+        imageName: "pie_van",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieTruck = DepartmentSceneAsset(
+        id: "pie-primary-transport-3",
+        imageName: "pie_truck",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let pieSecondaryTransport1 = DepartmentSceneAsset(
+        id: "pie-secondary-transport-1",
+        imageName: "pie_secondary_transport_1",
+        type: .element(
+            sourceWidth: 312,
+            position: CGPoint(x: 532, y: 895)
+        ),
+        layerOrder: 200
+    )
+
+    private let pieSecondaryTransport2 = DepartmentSceneAsset(
+        id: "pie-secondary-transport-2",
+        imageName: "pie_secondary_transport_2",
+        type: .element(
+            sourceWidth: 312,
+            position: CGPoint(x: 532, y: 895)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogCar = DepartmentSceneAsset(
+        id: "hotdog-primary-transport-1",
+        imageName: "hotdog_car",
+        type: .element(
+            sourceWidth: 455,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let hotDogVan = DepartmentSceneAsset(
+        id: "hotdog-primary-transport-2",
+        imageName: "hotdog_van",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let hotDogTruck = DepartmentSceneAsset(
+        id: "hotdog-primary-transport-3",
+        imageName: "hotdog_truck",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let hotDogSecondaryTransport1 = DepartmentSceneAsset(
+        id: "hotdog-secondary-transport-1",
+        imageName: "vendor_tray_1",
+        type: .element(
+            sourceWidth: 130,
+            position: CGPoint(x: 532, y: 955)
+        ),
+        layerOrder: 200
+    )
+
+    private let hotDogSecondaryTransport2 = DepartmentSceneAsset(
+        id: "hotdog-secondary-transport-2",
+        imageName: "vendor_tray_2",
+        type: .element(
+            sourceWidth: 130,
+            position: CGPoint(x: 532, y: 955)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieCar = DepartmentSceneAsset(
+        id: "smoothie-primary-transport-1",
+        imageName: "smoothie_car",
+        type: .element(
+            sourceWidth: 455,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let smoothieVan = DepartmentSceneAsset(
+        id: "smoothie-primary-transport-2",
+        imageName: "smoothie_van",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let smoothieTruck = DepartmentSceneAsset(
+        id: "smoothie-primary-transport-3",
+        imageName: "smoothie_truck",
+        type: .element(
+            sourceWidth: 546,
+            position: CGPoint(x: 205, y: 955)
+        ),
+        layerOrder: 300
+    )
+
+    private let smoothieSecondaryTransport1 = DepartmentSceneAsset(
+        id: "smoothie-secondary-transport-1",
+        imageName: "smoothie_secondary_transport_1",
+        type: .element(
+            sourceWidth: 156,
+            position: CGPoint(x: 532, y: 935)
+        ),
+        layerOrder: 200
+    )
+
+    private let smoothieSecondaryTransport2 = DepartmentSceneAsset(
+        id: "smoothie-secondary-transport-2",
+        imageName: "smoothie_secondary_transport_2",
+        type: .element(
+            sourceWidth: 156,
+            position: CGPoint(x: 532, y: 935)
+        ),
+        layerOrder: 200
+    )
+
     var replacementAssets: ReplacementSceneAssets { [
         .pies: [
             .storage: [
@@ -205,6 +355,15 @@ struct DistributionSceneCatalog: SceneCatalog {
                 3: pieStorage3,
                 4: pieStorage4,
                 5: pieStorage5
+            ],
+            .primaryTransport: [
+                1: pieCar,
+                2: pieVan,
+                3: pieTruck
+            ],
+            .secondaryTransport: [
+                1: pieSecondaryTransport1,
+                2: pieSecondaryTransport2
             ]
         ],
         .hotDogs: [
@@ -215,6 +374,15 @@ struct DistributionSceneCatalog: SceneCatalog {
                 3: hotDogStorage3,
                 4: hotDogStorage4,
                 5: hotDogStorage5
+            ],
+            .primaryTransport: [
+                1: hotDogCar,
+                2: hotDogVan,
+                3: hotDogTruck
+            ],
+            .secondaryTransport: [
+                1: hotDogSecondaryTransport1,
+                2: hotDogSecondaryTransport2
             ]
         ],
         .smoothies: [
@@ -225,6 +393,15 @@ struct DistributionSceneCatalog: SceneCatalog {
                 3: smoothieStorage3,
                 4: smoothieStorage4,
                 5: smoothieStorage5
+            ],
+            .primaryTransport: [
+                1: smoothieCar,
+                2: smoothieVan,
+                3: smoothieTruck
+            ],
+            .secondaryTransport: [
+                1: smoothieSecondaryTransport1,
+                2: smoothieSecondaryTransport2
             ]
         ]
     ] }

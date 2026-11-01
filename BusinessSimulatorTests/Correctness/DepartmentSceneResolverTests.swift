@@ -239,6 +239,139 @@ struct DepartmentSceneResolverTests {
         }
     }
 
+    // MARK: - Distribution Transport Scene
+
+    @Test
+    func distributionResolvesBothTransportTracksWithExistingScene() {
+        let layers = DepartmentSceneResolver.assets(
+            for: .pies,
+            department: .distribution,
+            replacementAssetLevels: [
+                ReplacementSceneAssetLevel(dimension: .storage, level: 0),
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: 1
+                ),
+                ReplacementSceneAssetLevel(
+                    dimension: .secondaryTransport,
+                    level: 1
+                )
+            ],
+            cumulativeAssetItems: []
+        )
+
+        #expect(layers.map(\.layerOrder) == [0, 100, 200, 300])
+        #expect(
+            Set(assetIDs(in: layers)) == [
+                "distribution-background",
+                "pie_storage_0",
+                "pie-secondary-transport-1",
+                "pie-primary-transport-1"
+            ]
+        )
+    }
+
+    @Test
+    func distributionTransportTracksResolveIndependently() {
+        let primaryOnly = DepartmentSceneResolver.assets(
+            for: .smoothies,
+            department: .distribution,
+            replacementAssetLevels: [
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: 2
+                )
+            ],
+            cumulativeAssetItems: []
+        )
+        let secondaryOnly = DepartmentSceneResolver.assets(
+            for: .smoothies,
+            department: .distribution,
+            replacementAssetLevels: [
+                ReplacementSceneAssetLevel(
+                    dimension: .secondaryTransport,
+                    level: 2
+                )
+            ],
+            cumulativeAssetItems: []
+        )
+
+        #expect(assetIDs(in: primaryOnly).contains("smoothie-primary-transport-2"))
+        #expect(
+            !assetIDs(in: primaryOnly).contains {
+                $0.contains("secondary-transport")
+            }
+        )
+        #expect(
+            assetIDs(in: secondaryOnly).contains(
+                "smoothie-secondary-transport-2"
+            )
+        )
+        #expect(
+            !assetIDs(in: secondaryOnly).contains {
+                $0.contains("primary-transport")
+            }
+        )
+    }
+
+    @Test
+    func replacingOneTransportTrackPreservesOtherResolvedTrack() {
+        let levelOne = distributionTransportAssetIDs(
+            productID: .pies,
+            primaryLevel: 1,
+            secondaryLevel: 1
+        )
+        let upgradedPrimary = distributionTransportAssetIDs(
+            productID: .pies,
+            primaryLevel: 2,
+            secondaryLevel: 1
+        )
+
+        #expect(levelOne.contains("pie-secondary-transport-1"))
+        #expect(upgradedPrimary.contains("pie-secondary-transport-1"))
+        #expect(levelOne.contains("pie-primary-transport-1"))
+        #expect(!upgradedPrimary.contains("pie-primary-transport-1"))
+        #expect(upgradedPrimary.contains("pie-primary-transport-2"))
+    }
+
+    @Test
+    func missingTransportAssetDoesNotRemoveOtherSceneLayers() {
+        let layers = DepartmentSceneResolver.assets(
+            for: .pies,
+            department: .distribution,
+            replacementAssetLevels: [
+                ReplacementSceneAssetLevel(dimension: .storage, level: 0),
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: 99
+                )
+            ],
+            cumulativeAssetItems: []
+        )
+        let ids = assetIDs(in: layers)
+
+        #expect(ids.contains("distribution-background"))
+        #expect(ids.contains("pie_storage_0"))
+        #expect(!ids.contains { $0.contains("primary-transport") })
+    }
+
+    @Test
+    func hotDogSecondaryTransportUsesVendorTraySceneAssets() {
+        let levelOne = distributionTransportAssetIDs(
+            productID: .hotDogs,
+            primaryLevel: nil,
+            secondaryLevel: 1
+        )
+        let levelTwo = distributionTransportAssetIDs(
+            productID: .hotDogs,
+            primaryLevel: nil,
+            secondaryLevel: 2
+        )
+
+        #expect(levelOne.contains("hotdog-secondary-transport-1"))
+        #expect(levelTwo.contains("hotdog-secondary-transport-2"))
+    }
+
     // MARK: - Marketing Scene
 
     @Test
@@ -385,5 +518,38 @@ struct DepartmentSceneResolverTests {
         in layers: [DepartmentSceneLayer]
     ) -> [String] {
         layers.flatMap(\.assets).map(\.id)
+    }
+
+    private func distributionTransportAssetIDs(
+        productID: ProductID,
+        primaryLevel: Int?,
+        secondaryLevel: Int?
+    ) -> [String] {
+        var levels: [ReplacementSceneAssetLevel] = []
+        if let primaryLevel {
+            levels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: primaryLevel
+                )
+            )
+        }
+        if let secondaryLevel {
+            levels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .secondaryTransport,
+                    level: secondaryLevel
+                )
+            )
+        }
+
+        return assetIDs(
+            in: DepartmentSceneResolver.assets(
+                for: productID,
+                department: .distribution,
+                replacementAssetLevels: levels,
+                cumulativeAssetItems: []
+            )
+        )
     }
 }
