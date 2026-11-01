@@ -237,11 +237,16 @@ struct BusinessDimensions {
                 StorageDimension(
                     storageState: gameState.storageState!,
                     locationState: gameState.locationState!
+                ),
+                TransportDimension(
+                    transportState: gameState.transportState!,
+                    locationState: gameState.locationState!
                 )
             ],
             marketing: [
                 BusinessReputationDimension(
-                    reputation: gameState.reputation!
+                    reputation: gameState.reputation!,
+                    locationState: gameState.locationState!
                 ),
                 AdvertisementDimension(
                     advertisementState: gameState.advertisementState!,
@@ -324,9 +329,8 @@ enum MarketSizeProgression {
                 remainingStars,
                 allocation.totalStars
             )
-            let locationTargetMultiplier = Double(
-                allocation.locationTier.rawValue + 1
-            )
+            let locationTargetMultiplier =
+                allocation.locationTier.marketSizeTargetMultiplier
             let growthPerStar = (
                 locationTargetMultiplier - targetMultiplier
             ) / Double(allocation.totalStars)
@@ -393,7 +397,7 @@ enum SimulationBalance {
 
     static let marketSize = GrowthBalance(
         startingMultiplier: 1.00,
-        targetMultiplier: 2.00
+        targetMultiplier: 3.00
     )
 
     static let freshness = GrowthBalance(

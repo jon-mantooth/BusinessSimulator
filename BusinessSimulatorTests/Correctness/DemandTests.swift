@@ -10,7 +10,14 @@ struct DemandTests {}
 extension DemandTests {
 
     @Test
-    func demandDimensionWeightsAddUpToOne() {
+    func demandDimensionWeightsMatchBalancingContract() {
+        #expect(AdvertisementDimension.demandWeight == 0.10)
+        #expect(EquipmentDimension.primaryDemandWeight == 0.10)
+        #expect(EquipmentDimension.secondaryDemandWeight == 0.15)
+        #expect(LaborDimension.demandWeight == 0.18)
+        #expect(BusinessReputationDimension.demandWeight == 0.35)
+        #expect(WeatherDimension.demandWeight == 0.12)
+
         let totalDemandWeight =
             WeatherDimension.demandWeight
             + EquipmentDimension.primaryDemandWeight
@@ -20,6 +27,27 @@ extension DemandTests {
             + BusinessReputationDimension.demandWeight
 
         #expect(abs(totalDemandWeight - 1.0) < 0.000_001)
+    }
+
+    @Test
+    func fullyUpgradedLocationTwoDemandMultiplierIsTwoPointFourThreeSevenFive() {
+        let fullEffectMultipliers = [
+            AdvertisementDimension.demandWeight,
+            EquipmentDimension.primaryDemandWeight,
+            EquipmentDimension.secondaryDemandWeight,
+            LaborDimension.demandWeight,
+            BusinessReputationDimension.demandWeight,
+            WeatherDimension.demandWeight
+        ].map {
+            SimulationBalance.demand.multiplier(
+                weight: $0,
+                effectScore: 1.0
+            )
+        }
+        let demandMultiplier = fullEffectMultipliers.reduce(1.0, *)
+            * LocationTierLevel.tierTwo.demandMultiplier
+
+        #expect(abs(demandMultiplier - 2.4375) < 0.000_001)
     }
 }
 
@@ -460,8 +488,14 @@ extension DemandTests {
         let reputation = BusinessReputationState(
             overallReputation: testCase.overallReputation
         )
+        let locationCatalog = LocationCatalog()
+        let locationState = LocationState(
+            tiers: locationCatalog.tiersByProduct[.hotDogs]!,
+            activeLocationID: locationCatalog.home.id
+        )
         let reputationDimension = BusinessReputationDimension(
-            reputation: reputation
+            reputation: reputation,
+            locationState: locationState
         )
         let expectedDemand = SimulationBalance.demand.multiplier(
             weight: BusinessReputationDimension.demandWeight,

@@ -196,7 +196,7 @@ struct LocationSelectionView: View {
             text = String(format: "%.1f / %.1f", currentValue, status.requiredValue)
         case .advertisementLevel:
             text = "Level \(Int(currentValue)) / \(Int(status.requiredValue))"
-        case .equipmentLevel, .storageLevel, .transportationLevel:
+        case .equipmentLevel, .storageLevel, .transportLevel:
             text = "Level \(Int(currentValue)) / \(Int(status.requiredValue))"
         case .laborLevel:
             text = "\(Int(currentValue)) / \(Int(status.requiredValue))"
@@ -217,7 +217,7 @@ struct LocationSelectionView: View {
             .equipmentLevel,
             .laborLevel,
             .storageLevel,
-            .transportationLevel
+            .transportLevel
         ]
 
         return displayOrder.compactMap { requirement in

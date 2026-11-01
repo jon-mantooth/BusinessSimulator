@@ -6,8 +6,8 @@ enum DepartmentSceneDimension: Hashable {
     case secondaryEquipment
     case labor
     case storage
-    case primaryTransportation
-    case secondaryTransportation
+    case primaryTransport
+    case secondaryTransport
 }
 
 enum DepartmentSceneAssetType {

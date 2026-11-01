@@ -331,17 +331,21 @@ final class BusinessReputationState {
 
 /// Converts the business's current reputation into demand and market-size
 /// multipliers. Reputation is neutral at 75 and reaches its full positive
-/// effect at 100.
+/// effect at 100. Reputation uses the active location tier's market-size
+/// target, making the same reputation more influential after relocation.
 final class BusinessReputationDimension: Dimension {
     static let demandWeight = 0.35
     static let marketSizeWeight = 0.15
 
     private let reputation: BusinessReputationState
+    private let locationState: LocationState
 
     init(
-        reputation: BusinessReputationState
+        reputation: BusinessReputationState,
+        locationState: LocationState
     ) {
         self.reputation = reputation
+        self.locationState = locationState
     }
 
     func calculateDemand() -> Double {
@@ -352,7 +356,11 @@ final class BusinessReputationDimension: Dimension {
     }
 
     func calculateMarketSize() -> Double {
-        SimulationBalance.marketSize.multiplier(
+        GrowthBalance(
+            startingMultiplier: 1.0,
+            targetMultiplier:
+                locationState.activeTier.level.marketSizeTargetMultiplier
+        ).multiplier(
             weight: Self.marketSizeWeight,
             effectScore: reputationEffectScore
         )

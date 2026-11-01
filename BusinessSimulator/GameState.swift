@@ -16,6 +16,7 @@ enum GameStateRestoreError: Error {
     case invalidEquipmentData
     case invalidLaborData
     case invalidStorageData
+    case invalidTransportData
 }
 
 @Observable
@@ -34,6 +35,7 @@ final class GameState {
     var equipmentState: EquipmentState?
     var laborState: LaborState?
     var storageState: StorageState?
+    var transportState: TransportState?
     var businessHours: BusinessHours?
     var production: Production?
     var distribution: Distribution?
@@ -173,6 +175,10 @@ final class GameState {
         let storageCatalog = StorageCatalog()
         self.storageState = StorageState(
             tiers: storageCatalog.tiers(for: product)
+        )
+
+        self.transportState = TransportState(
+            tiers: TransportCatalog().tiers(for: product)
         )
         
         let dimensions = BusinessDimensions.create(
@@ -433,6 +439,32 @@ final class GameState {
         storageState = StorageState(
             tiers: storageTiers,
             activeStorage: savedActiveStorage
+        )
+
+        let transportTiers = TransportCatalog().tiers(for: product)
+        let savedActiveTransport = gameSave.transportState.activeTransport
+        let savedTransportItems = [
+            (savedActiveTransport.primary, TransportTrack.primary),
+            (savedActiveTransport.secondary, TransportTrack.secondary)
+        ]
+
+        guard savedTransportItems.allSatisfy({ entry in
+            let (savedItem, track) = entry
+            guard let savedItem else { return true }
+            return transportTiers.contains {
+                $0.track == track
+                    && $0.level == savedItem.tierLevel
+                    && $0.transport.id == savedItem.id
+            }
+        }),
+        savedActiveTransport.secondary == nil
+            || savedActiveTransport.primary != nil else {
+            throw GameStateRestoreError.invalidTransportData
+        }
+
+        transportState = TransportState(
+            tiers: transportTiers,
+            activeTransport: savedActiveTransport
         )
 
         pendingBusinessEvents = gameSave.pendingBusinessEvents

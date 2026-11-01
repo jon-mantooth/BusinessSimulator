@@ -3,7 +3,7 @@
 ## Purpose
 
 Department views should visually reflect the business the player has built. As
-the player purchases equipment, labor, advertising, storage, and transportation,
+the player purchases equipment, labor, advertising, storage, and transport,
 the corresponding scene should gain or replace visual elements.
 
 The first implementation was built for Distribution and assumed a simple,
@@ -15,7 +15,7 @@ and Marketing exposed several cases that do not fit that assumption.
 ### Independent dimension state
 
 A department can contain several dimensions at different levels. Distribution,
-for example, may have storage at one level and transportation at another. A
+for example, may have storage at one level and transport at another. A
 single department level cannot describe the complete scene.
 
 ### Replacement and additive upgrades
@@ -24,7 +24,7 @@ Some upgrades replace a previous asset:
 
 - Primary equipment
 - Storage
-- Primary transportation
+- Primary transport
 
 For these dimensions, only the asset for the active level should normally be
 shown.
@@ -33,7 +33,7 @@ Other upgrades accumulate:
 
 - Secondary equipment
 - Labor
-- Secondary transportation
+- Secondary transport
 
 For these dimensions, every owned item with a configured scene asset should be
 shown.
@@ -107,10 +107,10 @@ Examples:
 | --- | --- | --- |
 | Primary equipment | Replacement | Active level |
 | Storage | Replacement | Active level |
-| Primary transportation | Replacement | Active level |
+| Primary transport | Replacement | Active level |
 | Secondary equipment | Additive | Owned item IDs |
 | Labor | Additive | Owned item IDs |
-| Secondary transportation | Additive | Owned item IDs |
+| Secondary transport | Additive | Owned item IDs |
 | Advertisement | Replacement | Purchased item IDs |
 
 ### Catalogs and normalized scene input

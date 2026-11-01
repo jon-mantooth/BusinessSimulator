@@ -38,7 +38,7 @@ struct FinancialSummaryView: View {
             FinancialExpenseRow(category: .labor, yRatio: 0.402),
             FinancialExpenseRow(category: .advertising, yRatio: 0.434),
             FinancialExpenseRow(category: .storage, yRatio: 0.466),
-            FinancialExpenseRow(category: .transportation, yRatio: 0.499),
+            FinancialExpenseRow(category: .transport, yRatio: 0.499),
             FinancialExpenseRow(category: .relocation, yRatio: 0.532)
         ]
     }
@@ -650,7 +650,7 @@ private extension CostCategory {
             return "Advertising"
         case .storage:
             return "Storage"
-        case .transportation:
+        case .transport:
             return "Transport"
         case .relocation:
             return "Locations"

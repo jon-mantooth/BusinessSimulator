@@ -161,7 +161,7 @@ private extension CostCategory {
             return "Advertising Costs"
         case .storage:
             return "Storage Costs"
-        case .transportation:
+        case .transport:
             return "Transport Costs"
         case .relocation:
             return "Relocation Costs"

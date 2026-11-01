@@ -6,7 +6,7 @@
 //
 
 /// Runs dimensions associated with moving and holding products after
-/// production. Transportation can join this department without changing the
+/// production. Transport can join this department without changing the
 /// simulation pipeline when that dimension is implemented.
 final class Distribution: Department {
     private let dimensions: [any Dimension]

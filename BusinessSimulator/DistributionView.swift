@@ -3,10 +3,13 @@ import SwiftUI
 struct DistributionView: View {
     let productID: ProductID
     let storageState: StorageState
+    let transportState: TransportState
     let purchaseWorkflow: PurchaseWorkflow
 
     @State private var showingStorage = false
+    @State private var showingTransport = false
     @State private var showingStorageUpgradeLimit = false
+    @State private var showingTransportUpgradeLimit = false
     @State private var displayedSceneLayers: [DepartmentSceneLayer]
     @State private var incomingSceneLayers: [DepartmentSceneLayer]?
     @State private var incomingSceneOpacity = 0.0
@@ -20,15 +23,19 @@ struct DistributionView: View {
     init(
         productID: ProductID,
         storageState: StorageState,
+        transportState: TransportState,
         purchaseWorkflow: PurchaseWorkflow
     ) {
         self.productID = productID
         self.storageState = storageState
+        self.transportState = transportState
         self.purchaseWorkflow = purchaseWorkflow
         _displayedSceneLayers = State(
             initialValue: Self.resolveSceneLayers(
                 productID: productID,
-                storageLevel: storageState.activeStorage.tierLevel
+                storageLevel: storageState.activeStorage.tierLevel,
+                primaryTransportLevel: transportState.activePrimaryTier?.level,
+                secondaryTransportLevel: transportState.activeSecondaryTier?.level
             )
         )
     }
@@ -78,9 +85,16 @@ struct DistributionView: View {
                 distributionButton(
                     title: "Transport",
                     systemImage: "truck.box.fill",
-                    scale: scale,
-                    action: {}
-                )
+                    scale: scale
+                ) {
+                    if purchaseWorkflow.dimensionAvailability(
+                        for: PurchaseDimensionAvailabilityRequest()
+                    ) == .available {
+                        showingTransport = true
+                    } else {
+                        showingTransportUpgradeLimit = true
+                    }
+                }
                 .position(x: 245 * scale, y: 1_145 * scale)
             }
             .frame(width: renderedSize.width, height: renderedSize.height)
@@ -92,13 +106,28 @@ struct DistributionView: View {
         .clipped()
         .sheet(
             isPresented: $showingStorage,
-            onDismiss: scheduleStorageSceneUpdate
+            onDismiss: scheduleDistributionSceneUpdate
         ) {
             StorageView(
                 storageState: storageState,
                 purchaseWorkflow: purchaseWorkflow
             ) {
                 showingStorage = false
+            }
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(28)
+            .presentationBackground(.clear)
+        }
+        .sheet(
+            isPresented: $showingTransport,
+            onDismiss: scheduleDistributionSceneUpdate
+        ) {
+            TransportView(
+                transportState: transportState,
+                purchaseWorkflow: purchaseWorkflow
+            ) {
+                showingTransport = false
             }
             .presentationDetents([.fraction(0.9)])
             .presentationDragIndicator(.hidden)
@@ -115,16 +144,28 @@ struct DistributionView: View {
                     }
                 )
             }
+
+            if showingTransportUpgradeLimit {
+                GamePopupView(
+                    type: .upgradeLimitReached,
+                    onConfirm: {},
+                    onDismiss: {
+                        showingTransportUpgradeLimit = false
+                    }
+                )
+            }
         }
         .onDisappear {
             sceneTransitionTask?.cancel()
         }
     }
 
-    private func scheduleStorageSceneUpdate() {
+    private func scheduleDistributionSceneUpdate() {
         let updatedSceneLayers = Self.resolveSceneLayers(
             productID: productID,
-            storageLevel: storageState.activeStorage.tierLevel
+            storageLevel: storageState.activeStorage.tierLevel,
+            primaryTransportLevel: transportState.activePrimaryTier?.level,
+            secondaryTransportLevel: transportState.activeSecondaryTier?.level
         )
         guard sceneAssetIDs(in: updatedSceneLayers)
                 != sceneAssetIDs(in: displayedSceneLayers) else {
@@ -208,17 +249,39 @@ struct DistributionView: View {
 
     private static func resolveSceneLayers(
         productID: ProductID,
-        storageLevel: Int
+        storageLevel: Int,
+        primaryTransportLevel: Int?,
+        secondaryTransportLevel: Int?
     ) -> [DepartmentSceneLayer] {
-        DepartmentSceneResolver.assets(
+        var replacementAssetLevels = [
+            ReplacementSceneAssetLevel(
+                dimension: .storage,
+                level: storageLevel
+            )
+        ]
+
+        if let primaryTransportLevel {
+            replacementAssetLevels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .primaryTransport,
+                    level: primaryTransportLevel
+                )
+            )
+        }
+
+        if let secondaryTransportLevel {
+            replacementAssetLevels.append(
+                ReplacementSceneAssetLevel(
+                    dimension: .secondaryTransport,
+                    level: secondaryTransportLevel
+                )
+            )
+        }
+
+        return DepartmentSceneResolver.assets(
             for: productID,
             department: .distribution,
-            replacementAssetLevels: [
-                ReplacementSceneAssetLevel(
-                    dimension: .storage,
-                    level: storageLevel
-                )
-            ],
+            replacementAssetLevels: replacementAssetLevels,
             cumulativeAssetItems: []
         )
     }

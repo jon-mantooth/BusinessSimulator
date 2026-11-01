@@ -132,6 +132,148 @@ extension MarketSizeTests {
     }
 }
 
+// MARK: - Transport
+
+@MainActor
+extension MarketSizeTests {
+
+    @Test
+    func transportHasNoMarketSizeEffectAtLocationOne() throws {
+        let context = try makeTransportMarketSizeContext()
+        let firstPrimary = try #require(
+            context.state.nextTiers.first { $0.track == .primary }
+        )
+        context.state.applyUpgrade(firstPrimary.transport)
+
+        #expect(context.dimension.calculateMarketSize() == 1.0)
+    }
+
+    @Test
+    func locationTwoStillRequiresPrimaryTransportForBenefit() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+
+        #expect(context.state.activePrimaryTier == nil)
+        #expect(context.dimension.calculateMarketSize() == 1.0)
+    }
+
+    @Test
+    func locationTwoActivatesOwnedTransportProgress() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        let firstPrimary = try #require(
+            context.state.nextTiers.first { $0.track == .primary }
+        )
+        context.state.applyUpgrade(firstPrimary.transport)
+        let expected = SimulationBalance.marketSize.multiplier(
+            weight: TransportDimension.marketSizeWeight,
+            targetMultiplier: context.state.marketSizeTargetMultiplier
+        )
+
+        #expect(
+            abs(context.dimension.calculateMarketSize() - expected)
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func eachTransportTrackAdvancesMarketSizeExactlyOnce() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        var multipliers: [Double] = []
+
+        for (track, level) in [
+            (TransportTrack.primary, 1),
+            (.primary, 2),
+            (.secondary, 1),
+            (.primary, 3),
+            (.secondary, 2)
+        ] {
+            let tier = try #require(
+                context.state.nextTiers.first {
+                    $0.track == track && $0.level == level
+                }
+            )
+            context.state.applyUpgrade(tier.transport)
+            multipliers.append(context.dimension.calculateMarketSize())
+        }
+
+        for (earlier, later) in zip(multipliers, multipliers.dropFirst()) {
+            #expect(later > earlier)
+        }
+    }
+
+    @Test
+    func fullyUpgradedTransportSuppliesItsCompleteAllocation() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+
+        for (track, level) in [
+            (TransportTrack.primary, 1),
+            (.primary, 2),
+            (.primary, 3),
+            (.secondary, 1),
+            (.secondary, 2)
+        ] {
+            let tier = try #require(
+                context.state.nextTiers.first {
+                    $0.track == track && $0.level == level
+                }
+            )
+            context.state.applyUpgrade(tier.transport)
+        }
+
+        #expect(context.state.marketSizeTargetMultiplier == 3.0)
+        #expect(
+            abs(
+                context.dimension.calculateMarketSize()
+                    - pow(3.0, 0.45)
+            )
+                < 0.000_001
+        )
+    }
+
+    @Test
+    func transportDoesNotAlterDemandOrProductionCapacity() throws {
+        let context = try makeTransportMarketSizeContext(locationTwo: true)
+        let firstPrimary = try #require(context.state.nextPrimaryTier)
+        context.state.applyUpgrade(firstPrimary.transport)
+
+        #expect(context.dimension.calculateDemand() == 1.0)
+        #expect(context.dimension.calculateSalesLimits().isEmpty)
+    }
+}
+
+@MainActor
+private struct TransportMarketSizeContext {
+    let state: TransportState
+    let dimension: TransportDimension
+}
+
+@MainActor
+private func makeTransportMarketSizeContext(
+    locationTwo: Bool = false
+) throws -> TransportMarketSizeContext {
+    let gameState = GameState()
+    gameState.initializeBusiness(
+        product: ProductCatalog().product(for: .pies)
+    )
+    let state = try #require(gameState.transportState)
+    let locationState = try #require(gameState.locationState)
+
+    if locationTwo {
+        let destination = try #require(
+            locationState.tiers.first { $0.level == .tierTwo }?
+                .locations.first
+        )
+        locationState.relocate(to: destination.id)
+    }
+
+    return TransportMarketSizeContext(
+        state: state,
+        dimension: TransportDimension(
+            transportState: state,
+            locationState: locationState
+        )
+    )
+}
+
 private let progressionTestAllocations = [
     MarketSizeLevelAllocation(
         locationTier: .tierOne,
@@ -145,17 +287,47 @@ private let progressionTestAllocations = [
 
 // MARK: - Total Market Size Allocation
 
-// TODO: Enable once every permanent market size dimension has been implemented.
-// Weather is excluded because its market size effect is transient.
-// @Test
-// func marketSizeDimensionWeightsAddUpToOne() {
-//     let totalMarketSizeWeight =
-//         AdvertisingDimension.marketSizeWeight
-//         + DistributionDimension.marketSizeWeight
-//         + ReputationDimension.marketSizeWeight
-//
-//     #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
-// }
+extension MarketSizeTests {
+
+    @Test
+    func permanentMarketSizeWeightsMatchBalancingContract() {
+        #expect(TransportDimension.marketSizeWeight == 0.45)
+        #expect(AdvertisementDimension.marketSizeWeight == 0.40)
+        #expect(BusinessReputationDimension.marketSizeWeight == 0.15)
+
+        let totalMarketSizeWeight =
+            TransportDimension.marketSizeWeight
+            + AdvertisementDimension.marketSizeWeight
+            + BusinessReputationDimension.marketSizeWeight
+
+        #expect(abs(totalMarketSizeWeight - 1.0) < 0.000_001)
+    }
+
+    @Test
+    func fullyUpgradedLocationTwoMarketSizeMultiplierIsThree() {
+        #expect(SimulationBalance.marketSize.targetMultiplier == 3.0)
+
+        let fullTarget = SimulationBalance.marketSize.targetMultiplier
+        let transportMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: TransportDimension.marketSizeWeight,
+            targetMultiplier: fullTarget
+        )
+        let advertisementMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: AdvertisementDimension.marketSizeWeight,
+            targetMultiplier: fullTarget
+        )
+        let reputationMultiplier = SimulationBalance.marketSize.multiplier(
+            weight: BusinessReputationDimension.marketSizeWeight,
+            targetMultiplier:
+                LocationTierLevel.tierTwo.marketSizeTargetMultiplier
+        )
+        let marketSizeMultiplier = transportMultiplier
+            * advertisementMultiplier
+            * reputationMultiplier
+
+        #expect(abs(marketSizeMultiplier - 3.0) < 0.000_001)
+    }
+}
 
 // MARK: - Advertisements
 
@@ -279,33 +451,45 @@ struct ReputationMarketSizeCase: Sendable {
     let name: String
     let overallReputation: Double
     let expectedEffectScore: Double
+    let locationTier: LocationTierLevel
 }
 
 private let reputationMarketSizeCases = [
     ReputationMarketSizeCase(
         name: "minimum reputation has maximum negative effect",
         overallReputation: 0.0,
-        expectedEffectScore: -1.0
+        expectedEffectScore: -1.0,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "reputation halfway below neutral has half negative effect",
         overallReputation: 37.5,
-        expectedEffectScore: -0.5
+        expectedEffectScore: -0.5,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "neutral reputation does not affect market size",
         overallReputation: 75.0,
-        expectedEffectScore: 0.0
+        expectedEffectScore: 0.0,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "reputation halfway above neutral has half positive effect",
         overallReputation: 87.5,
-        expectedEffectScore: 0.5
+        expectedEffectScore: 0.5,
+        locationTier: .tierOne
     ),
     ReputationMarketSizeCase(
         name: "maximum reputation has maximum positive effect",
         overallReputation: 100.0,
-        expectedEffectScore: 1.0
+        expectedEffectScore: 1.0,
+        locationTier: .tierOne
+    ),
+    ReputationMarketSizeCase(
+        name: "maximum reputation uses the larger location two target",
+        overallReputation: 100.0,
+        expectedEffectScore: 1.0,
+        locationTier: .tierTwo
     )
 ]
 
@@ -318,10 +502,18 @@ extension MarketSizeTests {
         let reputation = BusinessReputationState(
             overallReputation: testCase.overallReputation
         )
-        let reputationDimension = BusinessReputationDimension(
-            reputation: reputation
+        let locationState = makeReputationLocationState(
+            tier: testCase.locationTier
         )
-        let expectedMarketSize = SimulationBalance.marketSize.multiplier(
+        let reputationDimension = BusinessReputationDimension(
+            reputation: reputation,
+            locationState: locationState
+        )
+        let expectedMarketSize = GrowthBalance(
+            startingMultiplier: 1.0,
+            targetMultiplier:
+                testCase.locationTier.marketSizeTargetMultiplier
+        ).multiplier(
             weight: BusinessReputationDimension.marketSizeWeight,
             effectScore: testCase.expectedEffectScore
         )
@@ -333,6 +525,20 @@ extension MarketSizeTests {
             Comment(rawValue: testCase.name)
         )
     }
+}
+
+private func makeReputationLocationState(
+    tier: LocationTierLevel
+) -> LocationState {
+    let catalog = LocationCatalog()
+    let activeLocationID = tier == .tierOne
+        ? catalog.home.id
+        : catalog.ballpark.id
+
+    return LocationState(
+        tiers: catalog.tiersByProduct[.hotDogs]!,
+        activeLocationID: activeLocationID
+    )
 }
 
 private func makeAdvertisementDimension(

@@ -123,6 +123,93 @@ extension CostsTests {
     }
 }
 
+// MARK: - Transport
+
+extension CostsTests {
+
+    @MainActor
+    @Test
+    func activeTransportTracksCreateNamedWeeklyCosts() throws {
+        let context = try makeTransportDimensionForCosts(
+            primaryLevel: 1,
+            secondaryLevel: 1
+        )
+        let summary = DaySummary(day: 5, startingBalance: 10_000)
+        let activeItems = context.state.activeTransport.items
+        let expectedCost = activeItems.reduce(0.0) {
+            $0 + $1.transport.price
+        }
+
+        let cost = context.dimension.calculateWeeklyCosts(summary: summary)
+
+        #expect(cost == expectedCost)
+        #expect(summary.cashFlowCosts.count == 2)
+        #expect(
+            Set(summary.cashFlowCosts.map(\.name))
+                == Set(activeItems.map { $0.transport.name })
+        )
+        #expect(
+            summary.cashFlowCosts.allSatisfy {
+                $0.category == .transport && $0.displaySuffix == nil
+            }
+        )
+    }
+
+    @MainActor
+    @Test
+    func replacingTrackChargesOnlyItsActiveTransport() throws {
+        let context = try makeTransportDimensionForCosts(primaryLevel: 2)
+        let summary = DaySummary(day: 5, startingBalance: 10_000)
+        let activePrimary = try #require(
+            context.state.activeTransport.primary?.transport
+        )
+
+        let cost = context.dimension.calculateWeeklyCosts(summary: summary)
+
+        #expect(cost == activePrimary.price)
+        #expect(summary.cashFlowCosts.map(\.name) == [activePrimary.name])
+    }
+
+    @MainActor
+    @Test
+    func proratedTransportCostsApplyMultiplierAndSuffix() throws {
+        let context = try makeTransportDimensionForCosts(
+            primaryLevel: 1,
+            secondaryLevel: 1
+        )
+        let summary = DaySummary(day: 3, startingBalance: 10_000)
+        let multiplier = 0.4
+        let fullWeeklyCost = context.state.activeTransport.items.reduce(0.0) {
+            $0 + $1.transport.price
+        }
+
+        let cost = context.dimension.calculateWeeklyCosts(
+            summary: summary,
+            multiplier: multiplier
+        )
+
+        #expect(abs(cost - fullWeeklyCost * multiplier) < 0.000_001)
+        #expect(
+            summary.cashFlowCosts.allSatisfy {
+                $0.category == .transport
+                    && $0.displaySuffix == "Prorated"
+            }
+        )
+    }
+
+    @MainActor
+    @Test
+    func noActiveTransportCreatesNoScheduledCost() throws {
+        let context = try makeTransportDimensionForCosts()
+        let summary = DaySummary(day: 5, startingBalance: 10_000)
+
+        let cost = context.dimension.calculateWeeklyCosts(summary: summary)
+
+        #expect(cost == 0)
+        #expect(summary.cashFlowCosts.isEmpty)
+    }
+}
+
 // MARK: - Labor
 
 extension CostsTests {
@@ -245,6 +332,53 @@ private func makeAdvertisementDimensionForCosts(
 private struct LaborCostContext {
     let state: LaborState
     let dimension: LaborDimension
+}
+
+private struct TransportCostContext {
+    let state: TransportState
+    let dimension: TransportDimension
+}
+
+@MainActor
+private func makeTransportDimensionForCosts(
+    primaryLevel: Int = 0,
+    secondaryLevel: Int = 0
+) throws -> TransportCostContext {
+    let gameState = GameState()
+    gameState.initializeBusiness(
+        product: ProductCatalog().product(for: .pies)
+    )
+    let state = try #require(gameState.transportState)
+    let locationState = try #require(gameState.locationState)
+
+    if primaryLevel > 0 {
+        for level in 1...primaryLevel {
+            let tier = try #require(
+                state.nextTiers.first {
+                    $0.track == .primary && $0.level == level
+                }
+            )
+            state.applyUpgrade(tier.transport)
+        }
+    }
+    if secondaryLevel > 0 {
+        for level in 1...secondaryLevel {
+            let tier = try #require(
+                state.nextTiers.first {
+                    $0.track == .secondary && $0.level == level
+                }
+            )
+            state.applyUpgrade(tier.transport)
+        }
+    }
+
+    return TransportCostContext(
+        state: state,
+        dimension: TransportDimension(
+            transportState: state,
+            locationState: locationState
+        )
+    )
 }
 
 @MainActor

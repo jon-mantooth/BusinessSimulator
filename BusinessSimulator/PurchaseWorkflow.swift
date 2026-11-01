@@ -95,7 +95,7 @@ struct PurchaseRequest {
 }
 
 /// Coordinates the shared purchase process used by advertisements,
-/// equipment, labor, transportation, and storage.
+/// equipment, labor, transport, and storage.
 struct PurchaseWorkflow: Workflow {
     typealias DimensionAvailabilityRequest =
         PurchaseDimensionAvailabilityRequest

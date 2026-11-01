@@ -134,7 +134,7 @@ calculated accurately.
 When multiple constraints bind at the same unit count, the daily summary shows
 every binding constraint. Sales Analytics assigns the day to one cause using
 the easiest-to-remedy priority: ingredients, labor, equipment, then storage.
-Transportation affects market size rather than capacity and is not a sellout
+Transport affects market size rather than capacity and is not a sellout
 cause.
 
 Ingredient waste is calculated as:

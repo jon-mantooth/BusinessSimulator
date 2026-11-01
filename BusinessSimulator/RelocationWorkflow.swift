@@ -16,7 +16,7 @@ enum RelocationWorkflowResult {
 
 enum RelocationRequirement: CaseIterable, Equatable {
     case storageLevel
-    case transportationLevel
+    case transportLevel
     case equipmentLevel
     case laborLevel
     case advertisementLevel
@@ -26,7 +26,7 @@ enum RelocationRequirement: CaseIterable, Equatable {
 /// The minimum business progress required to relocate to a destination.
 struct RelocationRequirements: Equatable {
     let storageLevel: Int
-    let transportationLevel: Int
+    let transportLevel: Int
     let equipmentLevel: Int
     let laborLevel: Int
     let advertisementLevel: Int
@@ -259,9 +259,11 @@ struct RelocationWorkflow {
                 }
             ),
             RelocationRequirementStatus(
-                requirement: .transportationLevel,
-                requiredValue: Double(required.transportationLevel),
-                currentValue: nil
+                requirement: .transportLevel,
+                requiredValue: Double(required.transportLevel),
+                currentValue: gameState.transportState.map {
+                    Double($0.activePrimaryTier?.level ?? 0)
+                }
             ),
             RelocationRequirementStatus(
                 requirement: .equipmentLevel,
