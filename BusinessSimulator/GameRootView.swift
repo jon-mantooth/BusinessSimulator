@@ -38,6 +38,7 @@ struct GameRootView: View {
     @State private var showingLoadError = false
     @State private var showingSaveError = false
     @State private var selectedArea: GameArea = .gameMode
+    @State private var playedDepartmentSounds: Set<GameArea> = []
     @State private var isEditingPrice = false
     @State private var summaryNoticeIndex: Int?
 
@@ -212,6 +213,7 @@ struct GameRootView: View {
     }
 
     private func showNewDayBackground() {
+        playedDepartmentSounds.removeAll()
         gameState.beginOperatingPeriodIfNeeded()
         selectedArea = .gameMode
         currentScreen = .neighborhood
@@ -243,6 +245,44 @@ struct GameRootView: View {
             }
         case .production, .distribution, .marketing, .finance:
             selectedArea = area
+            playDepartmentSoundIfNeeded(for: area)
+        }
+    }
+
+    private func playDepartmentSoundIfNeeded(for area: GameArea) {
+        guard let sound = departmentSound(for: area),
+              playedDepartmentSounds.insert(area).inserted else {
+            return
+        }
+
+        soundPlayer.play(sound)
+    }
+
+    private func departmentSound(for area: GameArea) -> GameSound? {
+        switch area {
+        case .distribution:
+            return .distribution
+
+        case .finance:
+            return .finance
+
+        case .marketing:
+            return .marketing
+
+        case .production:
+            guard let productID = gameState.productState?.product.id else {
+                return nil
+            }
+
+            switch productID {
+            case .hotDogs, .pies:
+                return .productionCooking
+            case .smoothies:
+                return .productionBlender
+            }
+
+        case .gameMode:
+            return nil
         }
     }
 

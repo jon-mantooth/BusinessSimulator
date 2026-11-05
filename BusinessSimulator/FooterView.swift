@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum GameArea {
+enum GameArea: Hashable {
     case gameMode
     case production
     case distribution
