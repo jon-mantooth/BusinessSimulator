@@ -5,6 +5,7 @@ struct ProductionView: View {
     let equipmentState: EquipmentState
     let laborState: LaborState
     let purchaseWorkflow: PurchaseWorkflow
+    let soundPlayer: SoundPlayer
 
     @State private var showingEquipment = false
     @State private var showingLabor = false
@@ -28,12 +29,14 @@ struct ProductionView: View {
         product: Product,
         equipmentState: EquipmentState,
         laborState: LaborState,
-        purchaseWorkflow: PurchaseWorkflow
+        purchaseWorkflow: PurchaseWorkflow,
+        soundPlayer: SoundPlayer
     ) {
         self.product = product
         self.equipmentState = equipmentState
         self.laborState = laborState
         self.purchaseWorkflow = purchaseWorkflow
+        self.soundPlayer = soundPlayer
         _displayedSceneLayers = State(
             initialValue: Self.resolveSceneLayers(
                 productID: product.id,
@@ -227,6 +230,7 @@ struct ProductionView: View {
         productionSceneTransitionTask = Task {
             incomingSceneLayers = updatedSceneLayers
             incomingProductionSceneOpacity = 0
+            soundPlayer.play(.upgradeWhoosh)
 
             withAnimation(.easeInOut(duration: 0.45)) {
                 incomingProductionSceneOpacity = 1

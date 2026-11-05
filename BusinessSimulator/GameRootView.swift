@@ -24,6 +24,7 @@ struct GameRootView: View {
     @State private var gameState = GameState()
     @State private var dayPlaybackState = DayPlaybackState()
     @State private var dayTransitionState = DayTransitionState()
+    @State private var soundPlayer: SoundPlayer
     @State private var currentSummary: DaySummary?
     @State private var stateBeforeSimulatedDay: GameSave?
     @State private var previewedProduct: Product?
@@ -146,6 +147,7 @@ struct GameRootView: View {
         saveRepository: any GameSaveRepository
     ) {
         self.saveRepository = saveRepository
+        _soundPlayer = State(initialValue: SoundPlayer())
     }
     
     private func onBeginJourney(){
@@ -447,7 +449,8 @@ struct GameRootView: View {
                     product: product,
                     equipmentState: equipmentState,
                     laborState: laborState,
-                    purchaseWorkflow: purchaseWorkflow
+                    purchaseWorkflow: purchaseWorkflow,
+                    soundPlayer: soundPlayer
                 )
                     .ignoresSafeArea()
             }
@@ -461,7 +464,8 @@ struct GameRootView: View {
                     reputation: reputation,
                     advertisementState: advertisementState,
                     purchaseWorkflow: purchaseWorkflow,
-                    simulationDay: gameState.calendar.simulationDay
+                    simulationDay: gameState.calendar.simulationDay,
+                    soundPlayer: soundPlayer
                 )
                 .ignoresSafeArea()
             }
@@ -474,7 +478,8 @@ struct GameRootView: View {
                     productID: productID,
                     storageState: storageState,
                     transportState: transportState,
-                    purchaseWorkflow: purchaseWorkflow
+                    purchaseWorkflow: purchaseWorkflow,
+                    soundPlayer: soundPlayer
                 )
                 .ignoresSafeArea()
             }
