@@ -345,6 +345,7 @@ struct GameRootView: View {
             reduceMotion: reduceMotion,
             onPlaybackReady: {
                 guard currentScreen == .playback else { return }
+                startSimulationAmbience()
                 dayPlaybackState.start()
             }
         )
@@ -352,7 +353,28 @@ struct GameRootView: View {
 
     private func completeDayPlayback() {
         guard currentScreen == .playback else { return }
+        stopSimulationAmbience()
         transitionFromPlaybackToSummary()
+    }
+
+    private func startSimulationAmbience() {
+        let activeLocationID = gameState.locationState?.activeLocationID
+
+        if activeLocationID == locationCatalog.home.id {
+            soundPlayer.playLooping(.neighborhoodAmbient)
+        } else if activeLocationID == locationCatalog.ballpark.id {
+            soundPlayer.playLooping(.ballparkAmbient)
+        }
+
+        if currentWeatherCondition == .rain {
+            soundPlayer.playLooping(.rainAmbient)
+        }
+    }
+
+    private func stopSimulationAmbience() {
+        soundPlayer.stop(.ballparkAmbient)
+        soundPlayer.stop(.neighborhoodAmbient)
+        soundPlayer.stop(.rainAmbient)
     }
     
     private var gameBackground: some View {

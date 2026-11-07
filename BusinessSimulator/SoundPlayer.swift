@@ -1,16 +1,20 @@
 import AVFoundation
 
 enum GameSound: Hashable {
+    case ballparkAmbient
     case distribution
     case finance
     case marketing
     case neighborhoodAmbient
+    case rainAmbient
     case productionBlender
     case productionCooking
     case upgradeWhoosh
 
     fileprivate var resourceName: String {
         switch self {
+        case .ballparkAmbient:
+            "ballpark_ambient"
         case .distribution:
             "distribution_sound"
         case .finance:
@@ -19,6 +23,8 @@ enum GameSound: Hashable {
             "marketing_sound"
         case .neighborhoodAmbient:
             "neighborhood_ambient"
+        case .rainAmbient:
+            "rain_ambient"
         case .productionBlender:
             "production_blender"
         case .productionCooking:
