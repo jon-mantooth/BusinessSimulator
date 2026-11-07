@@ -24,6 +24,8 @@ struct GameRootView: View {
     @State private var gameState = GameState()
     @State private var dayPlaybackState = DayPlaybackState()
     @State private var dayTransitionState = DayTransitionState()
+    @State private var soundPlayer: SoundPlayer
+    @State private var simulationAudioController: SimulationAudioController
     @State private var currentSummary: DaySummary?
     @State private var stateBeforeSimulatedDay: GameSave?
     @State private var previewedProduct: Product?
@@ -37,12 +39,14 @@ struct GameRootView: View {
     @State private var showingLoadError = false
     @State private var showingSaveError = false
     @State private var selectedArea: GameArea = .gameMode
+    @State private var playedDepartmentSounds: Set<GameArea> = []
     @State private var isEditingPrice = false
     @State private var summaryNoticeIndex: Int?
 
     let productCatalog = ProductCatalog()
     let locationCatalog = LocationCatalog()
     let locationSceneResolver = LocationSceneResolver()
+    let simulationAudioResolver = SimulationAudioResolver()
 
     private var purchaseWorkflow: PurchaseWorkflow {
         PurchaseWorkflow(
@@ -120,6 +124,7 @@ struct GameRootView: View {
 
         switch relocationWorkflow.complete(request) {
         case .completed(let summary):
+            soundPlayer.play(.relocation)
             currentSummary = summary
             selectedMapLocation = nil
             showingLocationMap = false
@@ -146,6 +151,13 @@ struct GameRootView: View {
         saveRepository: any GameSaveRepository
     ) {
         self.saveRepository = saveRepository
+        let soundPlayer = SoundPlayer()
+        _soundPlayer = State(initialValue: soundPlayer)
+        _simulationAudioController = State(
+            initialValue: SimulationAudioController(
+                soundPlayer: soundPlayer
+            )
+        )
     }
     
     private func onBeginJourney(){
@@ -210,6 +222,7 @@ struct GameRootView: View {
     }
 
     private func showNewDayBackground() {
+        playedDepartmentSounds.removeAll()
         gameState.beginOperatingPeriodIfNeeded()
         selectedArea = .gameMode
         currentScreen = .neighborhood
@@ -241,6 +254,44 @@ struct GameRootView: View {
             }
         case .production, .distribution, .marketing, .finance:
             selectedArea = area
+            playDepartmentSoundIfNeeded(for: area)
+        }
+    }
+
+    private func playDepartmentSoundIfNeeded(for area: GameArea) {
+        guard let sound = departmentSound(for: area),
+              playedDepartmentSounds.insert(area).inserted else {
+            return
+        }
+
+        soundPlayer.play(sound)
+    }
+
+    private func departmentSound(for area: GameArea) -> GameSound? {
+        switch area {
+        case .distribution:
+            return .distribution
+
+        case .finance:
+            return .finance
+
+        case .marketing:
+            return .marketing
+
+        case .production:
+            guard let productID = gameState.productState?.product.id else {
+                return nil
+            }
+
+            switch productID {
+            case .hotDogs, .pies:
+                return .productionCooking
+            case .smoothies:
+                return .productionBlender
+            }
+
+        case .gameMode:
+            return nil
         }
     }
 
@@ -303,6 +354,7 @@ struct GameRootView: View {
             reduceMotion: reduceMotion,
             onPlaybackReady: {
                 guard currentScreen == .playback else { return }
+                startSimulationAudio()
                 dayPlaybackState.start()
             }
         )
@@ -310,7 +362,29 @@ struct GameRootView: View {
 
     private func completeDayPlayback() {
         guard currentScreen == .playback else { return }
+        simulationAudioController.stop()
         transitionFromPlaybackToSummary()
+    }
+
+    private func startSimulationAudio() {
+        guard let locationID = gameState.locationState?.activeLocationID,
+              let productID = gameState.productState?.product.id,
+              let seasonOfYear = gameState.calendar?.seasonOfYear else {
+            return
+        }
+
+        let context = SimulationAudioContext(
+            locationID: locationID,
+            productID: productID,
+            weatherCondition: currentWeatherCondition,
+            seasonOfYear: seasonOfYear
+        )
+        let plan = simulationAudioResolver.resolve(context)
+
+        simulationAudioController.start(
+            plan: plan,
+            duration: dayPlaybackState.duration
+        )
     }
     
     private var gameBackground: some View {
@@ -447,7 +521,8 @@ struct GameRootView: View {
                     product: product,
                     equipmentState: equipmentState,
                     laborState: laborState,
-                    purchaseWorkflow: purchaseWorkflow
+                    purchaseWorkflow: purchaseWorkflow,
+                    soundPlayer: soundPlayer
                 )
                     .ignoresSafeArea()
             }
@@ -461,7 +536,8 @@ struct GameRootView: View {
                     reputation: reputation,
                     advertisementState: advertisementState,
                     purchaseWorkflow: purchaseWorkflow,
-                    simulationDay: gameState.calendar.simulationDay
+                    simulationDay: gameState.calendar.simulationDay,
+                    soundPlayer: soundPlayer
                 )
                 .ignoresSafeArea()
             }
@@ -474,7 +550,8 @@ struct GameRootView: View {
                     productID: productID,
                     storageState: storageState,
                     transportState: transportState,
-                    purchaseWorkflow: purchaseWorkflow
+                    purchaseWorkflow: purchaseWorkflow,
+                    soundPlayer: soundPlayer
                 )
                 .ignoresSafeArea()
             }

@@ -5,6 +5,7 @@ struct DistributionView: View {
     let storageState: StorageState
     let transportState: TransportState
     let purchaseWorkflow: PurchaseWorkflow
+    let soundPlayer: SoundPlayer
 
     @State private var showingStorage = false
     @State private var showingTransport = false
@@ -24,12 +25,14 @@ struct DistributionView: View {
         productID: ProductID,
         storageState: StorageState,
         transportState: TransportState,
-        purchaseWorkflow: PurchaseWorkflow
+        purchaseWorkflow: PurchaseWorkflow,
+        soundPlayer: SoundPlayer
     ) {
         self.productID = productID
         self.storageState = storageState
         self.transportState = transportState
         self.purchaseWorkflow = purchaseWorkflow
+        self.soundPlayer = soundPlayer
         _displayedSceneLayers = State(
             initialValue: Self.resolveSceneLayers(
                 productID: productID,
@@ -176,6 +179,7 @@ struct DistributionView: View {
         sceneTransitionTask = Task {
             incomingSceneLayers = updatedSceneLayers
             incomingSceneOpacity = 0
+            soundPlayer.play(.upgradeWhoosh)
 
             withAnimation(.easeInOut(duration: 0.45)) {
                 incomingSceneOpacity = 1

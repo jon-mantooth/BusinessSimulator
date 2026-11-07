@@ -6,6 +6,7 @@ struct MarketingView: View {
     let advertisementState: AdvertisementState
     let purchaseWorkflow: PurchaseWorkflow
     let simulationDay: Int
+    let soundPlayer: SoundPlayer
 
     @State private var showingBusinessReputation = false
     @State private var showingAdvertisement = false
@@ -22,13 +23,15 @@ struct MarketingView: View {
         reputation: BusinessReputationState,
         advertisementState: AdvertisementState,
         purchaseWorkflow: PurchaseWorkflow,
-        simulationDay: Int
+        simulationDay: Int,
+        soundPlayer: SoundPlayer
     ) {
         self.product = product
         self.reputation = reputation
         self.advertisementState = advertisementState
         self.purchaseWorkflow = purchaseWorkflow
         self.simulationDay = simulationDay
+        self.soundPlayer = soundPlayer
         _displayedSceneLayers = State(
             initialValue: Self.resolveSceneLayers(
                 productID: product.id,
@@ -214,6 +217,7 @@ struct MarketingView: View {
         marketingSceneTransitionTask = Task {
             incomingSceneLayers = updatedSceneLayers
             incomingMarketingSceneOpacity = 0
+            soundPlayer.play(.upgradeWhoosh)
 
             withAnimation(.easeInOut(duration: 0.45)) {
                 incomingMarketingSceneOpacity = 1
