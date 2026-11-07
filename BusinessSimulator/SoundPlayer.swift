@@ -2,25 +2,33 @@ import AVFoundation
 
 enum GameSound: Hashable {
     case ballparkAmbient
+    case baseballHit
     case distribution
     case finance
     case marketing
+    case marketBellChime
     case neighborhoodAmbient
     case rainAmbient
     case productionBlender
     case productionCooking
+    case relocation
     case upgradeWhoosh
+    case waveCrash
 
     fileprivate var resourceName: String {
         switch self {
         case .ballparkAmbient:
             "ballpark_ambient"
+        case .baseballHit:
+            "ballpark_hit"
         case .distribution:
             "distribution_sound"
         case .finance:
             "finance_sound"
         case .marketing:
             "marketing_sound"
+        case .marketBellChime:
+            "bell_chime"
         case .neighborhoodAmbient:
             "neighborhood_ambient"
         case .rainAmbient:
@@ -29,13 +37,33 @@ enum GameSound: Hashable {
             "production_blender"
         case .productionCooking:
             "production_cooking"
+        case .relocation:
+            "relocation"
         case .upgradeWhoosh:
             "upgrade_whoosh"
+        case .waveCrash:
+            "wave_crash"
         }
     }
 
     fileprivate var fileExtension: String {
-        "wav"
+        switch self {
+        case .relocation:
+            return "mp3"
+        default:
+            return "wav"
+        }
+    }
+
+    fileprivate var volume: Float {
+        switch self {
+        case .rainAmbient:
+            return 0.25
+        case .waveCrash:
+            return 0.5
+        default:
+            return 1.0
+        }
     }
 }
 
@@ -90,6 +118,7 @@ final class SoundPlayer {
 
         do {
             let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = sound.volume
             player.prepareToPlay()
             players[sound] = player
             return player
