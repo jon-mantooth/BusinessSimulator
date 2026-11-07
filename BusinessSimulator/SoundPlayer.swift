@@ -1,5 +1,12 @@
 import AVFoundation
 
+@MainActor
+protocol SoundPlaying: AnyObject {
+    func play(_ sound: GameSound)
+    func playLooping(_ sound: GameSound)
+    func stop(_ sound: GameSound)
+}
+
 enum GameSound: Hashable {
     case ballparkAmbient
     case baseballHit
@@ -73,7 +80,7 @@ enum GameSound: Hashable {
 /// A class is used so each `AVAudioPlayer` remains alive for the duration of
 /// playback. Players are cached so subsequent effects do not reload the file.
 @MainActor
-final class SoundPlayer {
+final class SoundPlayer: SoundPlaying {
     private var players: [GameSound: AVAudioPlayer] = [:]
 
     init() {

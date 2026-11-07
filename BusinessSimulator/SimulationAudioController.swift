@@ -3,7 +3,7 @@ import Foundation
 /// A consistent portion of day playback in which a short simulation sound
 /// may begin. Stage zero plays immediately; stages one through five randomize
 /// the exact start time within their respective windows.
-enum SimulationSoundWindow {
+enum SimulationSoundWindow: Equatable {
     case stageZero
     case stageOne
     case stageTwo
@@ -158,13 +158,13 @@ struct SimulationAudioResolver {
 final class SimulationAudioController {
     typealias RandomProgress = (ClosedRange<Double>) -> Double
 
-    private let soundPlayer: SoundPlayer
+    private let soundPlayer: any SoundPlaying
     private let randomProgress: RandomProgress
     private var cueTasks: [Task<Void, Never>] = []
     private var activeSounds: Set<GameSound> = []
 
     init(
-        soundPlayer: SoundPlayer,
+        soundPlayer: any SoundPlaying,
         randomProgress: @escaping RandomProgress = { Double.random(in: $0) }
     ) {
         self.soundPlayer = soundPlayer
